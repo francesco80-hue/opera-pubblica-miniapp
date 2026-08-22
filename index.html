@@ -395,6 +395,35 @@
       </a>
 
 
+
+      <!-- DISPONIBILITA -->
+      <a
+        class="card"
+        href="#"
+        id="disponibilita"
+      >
+
+        <div class="card-icon blue">
+          📆
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Disponibilità
+          </div>
+
+          <div class="card-subtitle">
+            Indica quando sei disponibile
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+
       <!-- POSTAZIONI -->
       <a
         class="card"
@@ -586,6 +615,8 @@
   const TELEGRAM_VERIFY_URL =
     "https://whsynkeehtswdxcqeqxn.supabase.co/functions/v1/telegram-disponibilita";
 
+  let PROFILO_TELEGRAM = null;
+
   async function verificaUtenteTelegram() {
     const stato = document.getElementById("telegramStatus");
 
@@ -630,19 +661,26 @@
         throw new Error(dati.error || "Verifica Telegram non riuscita");
       }
 
-      const nomeCompleto = [
+      PROFILO_TELEGRAM = dati.profilo || { registrato: false };
+
+      const nomeTelegram = [
         dati.user?.first_name || "",
         dati.user?.last_name || ""
       ]
         .filter(Boolean)
         .join(" ");
 
+      const nomeVisualizzato =
+        PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.nome_completo
+          ? PROFILO_TELEGRAM.nome_completo
+          : nomeTelegram;
+
       stato.style.background = "#eef9f1";
       stato.style.borderColor = "#c7e9d0";
       stato.style.color = "#28733d";
       stato.textContent =
         "✅ Telegram verificato" +
-        (nomeCompleto ? ` — ${nomeCompleto}` : "");
+        (nomeVisualizzato ? ` — ${nomeVisualizzato}` : "");
     } catch (errore) {
       stato.style.display = "block";
       stato.style.background = "#fff1f1";
@@ -1923,6 +1961,865 @@ document
     .addEventListener("click", apriIstruzioniLocali);
 
 
+
+  document
+    .getElementById("disponibilita")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData || "";
+
+      const oggi = new Date();
+      let annoCorrente = oggi.getFullYear();
+      let meseCorrente = oggi.getMonth() + 1;
+      let giornoSelezionato = null;
+      let statoMese = {};
+
+      function meseKey() {
+        return `${annoCorrente}-${String(meseCorrente).padStart(2, "0")}`;
+      }
+
+      function nomeMese() {
+        return new Intl.DateTimeFormat("it-IT", {
+          month: "long",
+          year: "numeric"
+        }).format(new Date(annoCorrente, meseCorrente - 1, 1));
+      }
+
+      function giorniNelMese() {
+        return new Date(annoCorrente, meseCorrente, 0).getDate();
+      }
+
+      function primoGiornoLunedi() {
+        const jsDay = new Date(annoCorrente, meseCorrente - 1, 1).getDay();
+        return jsDay === 0 ? 6 : jsDay - 1;
+      }
+
+      function dataKey(giorno) {
+        return `${meseKey()}-${String(giorno).padStart(2, "0")}`;
+      }
+
+      function ensureDay(key) {
+        if (!statoMese[key]) {
+          statoMese[key] = {
+            mattina: false,
+            pomeriggio: false,
+            sera: false,
+            note: ""
+          };
+        }
+        return statoMese[key];
+      }
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button
+            id="tornaHomeDisponibilita"
+            style="
+              border:none;
+              background:#eef6ff;
+              color:#1768d7;
+              padding:12px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="
+          background:linear-gradient(135deg,#eef6ff,#fbfdff);
+          border:1px solid #cfe1f5;
+          border-radius:20px;
+          padding:20px;
+          margin-bottom:18px;
+        ">
+          <h2 style="font-size:25px;margin:0 0 6px 0;">
+            📆 Disponibilità
+          </h2>
+          <div style="color:#5f6f82;line-height:1.5;">
+            Seleziona un giorno e indica se sei disponibile
+            la mattina, il pomeriggio o la sera.
+          </div>
+        </div>
+
+
+        <div
+          id="profiloDisponibilita"
+          style="
+            display:none;
+            background:#fff8e8;
+            border:1px solid #ffe0a3;
+            border-radius:18px;
+            padding:18px;
+            margin-bottom:18px;
+          ">
+          <div style="font-size:18px;font-weight:750;margin-bottom:7px;">
+            👤 Nome e cognome per il programma
+          </div>
+
+          <div style="
+            color:#725315;
+            line-height:1.5;
+            margin-bottom:12px;
+          ">
+            Inseriscili solo la prima volta. In seguito la Mini App ti riconoscerà automaticamente tramite Telegram.
+          </div>
+
+          <input
+            id="nomeCompletoDisponibilita"
+            type="text"
+            maxlength="100"
+            placeholder="Nome e cognome"
+            style="
+              width:100%;
+              border:1px solid #dfe5ec;
+              border-radius:14px;
+              padding:12px;
+              font:inherit;
+              font-size:16px;
+              color:#344054;
+              background:#ffffff;
+              margin-bottom:10px;
+              box-sizing:border-box;
+            ">
+
+          <button
+            id="salvaProfiloDisponibilita"
+            data-no-scroll="true"
+            style="
+              width:100%;
+              border:none;
+              background:#1768d7;
+              color:white;
+              padding:13px 16px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ✅ Conferma nome e cognome
+          </button>
+        </div>
+
+        <div style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:10px;
+          margin-bottom:14px;
+        ">
+          <button
+            id="mesePrecedente"
+            data-no-scroll="true"
+            style="
+              border:none;
+              background:#eef6ff;
+              color:#1768d7;
+              width:44px;
+              height:44px;
+              border-radius:14px;
+              font-size:22px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ‹
+          </button>
+
+          <div
+            id="titoloMese"
+            style="
+              flex:1;
+              text-align:center;
+              font-size:20px;
+              font-weight:750;
+              text-transform:capitalize;
+            ">
+          </div>
+
+          <button
+            id="meseSuccessivo"
+            data-no-scroll="true"
+            style="
+              border:none;
+              background:#eef6ff;
+              color:#1768d7;
+              width:44px;
+              height:44px;
+              border-radius:14px;
+              font-size:22px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ›
+          </button>
+        </div>
+
+        <div style="
+          display:grid;
+          grid-template-columns:repeat(7,minmax(0,1fr));
+          gap:5px;
+          margin-bottom:5px;
+          color:#667085;
+          font-size:11px;
+          font-weight:700;
+          text-align:center;
+        ">
+          <div>LUN</div>
+          <div>MAR</div>
+          <div>MER</div>
+          <div>GIO</div>
+          <div>VEN</div>
+          <div>SAB</div>
+          <div>DOM</div>
+        </div>
+
+        <div
+          id="calendarioDisponibilita"
+          style="
+            display:grid;
+            grid-template-columns:repeat(7,minmax(0,1fr));
+            gap:5px;
+            margin-bottom:18px;
+          ">
+        </div>
+
+        <div
+          id="editorGiorno"
+          style="
+            display:none;
+            background:#ffffff;
+            border:1px solid #e1e7ef;
+            border-radius:18px;
+            padding:18px;
+            margin-bottom:18px;
+          ">
+
+          <div
+            id="titoloGiorno"
+            style="
+              font-size:19px;
+              font-weight:750;
+              margin-bottom:12px;
+            ">
+          </div>
+
+          <div style="
+            display:grid;
+            grid-template-columns:1fr;
+            gap:9px;
+            margin-bottom:14px;
+          ">
+
+            <button
+              id="fasciaMattina"
+              data-no-scroll="true"
+              style="
+                border:1px solid #dfe5ec;
+                background:#ffffff;
+                color:#344054;
+                padding:13px 14px;
+                border-radius:14px;
+                font-size:16px;
+                font-weight:700;
+                cursor:pointer;
+              ">
+              🌅 Mattina
+            </button>
+
+            <button
+              id="fasciaPomeriggio"
+              data-no-scroll="true"
+              style="
+                border:1px solid #dfe5ec;
+                background:#ffffff;
+                color:#344054;
+                padding:13px 14px;
+                border-radius:14px;
+                font-size:16px;
+                font-weight:700;
+                cursor:pointer;
+              ">
+              ☀️ Pomeriggio
+            </button>
+
+            <button
+              id="fasciaSera"
+              data-no-scroll="true"
+              style="
+                border:1px solid #dfe5ec;
+                background:#ffffff;
+                color:#344054;
+                padding:13px 14px;
+                border-radius:14px;
+                font-size:16px;
+                font-weight:700;
+                cursor:pointer;
+              ">
+              🌙 Sera
+            </button>
+
+          </div>
+
+          <label
+            for="noteDisponibilita"
+            style="
+              display:block;
+              font-weight:700;
+              margin-bottom:7px;
+            ">
+            Note facoltative
+          </label>
+
+          <textarea
+            id="noteDisponibilita"
+            rows="3"
+            maxlength="300"
+            placeholder="Es. disponibile dalle 11"
+            style="
+              width:100%;
+              resize:vertical;
+              border:1px solid #dfe5ec;
+              border-radius:14px;
+              padding:12px;
+              font:inherit;
+              font-size:16px;
+              color:#344054;
+              background:#ffffff;
+            "></textarea>
+        </div>
+
+        <div
+          id="statoDisponibilita"
+          style="
+            display:none;
+            padding:13px 14px;
+            border-radius:14px;
+            margin-bottom:14px;
+            line-height:1.45;
+            font-size:14px;
+          "
+          aria-live="polite">
+        </div>
+
+        <button
+          id="salvaDisponibilita"
+          data-no-scroll="true"
+          style="
+            width:100%;
+            border:none;
+            background:#168a4a;
+            color:white;
+            padding:16px;
+            border-radius:16px;
+            font-size:17px;
+            font-weight:750;
+            cursor:pointer;
+            margin-bottom:18px;
+          ">
+          ✅ Salva disponibilità
+        </button>
+
+        <button
+          id="tornaHomeDisponibilitaBasso"
+          style="
+            width:100%;
+            border:none;
+            background:#eef6ff;
+            color:#1768d7;
+            padding:14px 18px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+          ">
+          ← Torna alla Home
+        </button>
+      `;
+
+      const calendario = document.getElementById("calendarioDisponibilita");
+      const titoloMese = document.getElementById("titoloMese");
+      const editorGiorno = document.getElementById("editorGiorno");
+      const titoloGiorno = document.getElementById("titoloGiorno");
+      const note = document.getElementById("noteDisponibilita");
+      const stato = document.getElementById("statoDisponibilita");
+      const profiloBox = document.getElementById("profiloDisponibilita");
+      const nomeCompletoInput = document.getElementById("nomeCompletoDisponibilita");
+      const salvaProfiloBtn = document.getElementById("salvaProfiloDisponibilita");
+
+      const btnMattina = document.getElementById("fasciaMattina");
+      const btnPomeriggio = document.getElementById("fasciaPomeriggio");
+      const btnSera = document.getElementById("fasciaSera");
+
+      function mostraStato(messaggio, tipo) {
+        stato.style.display = "block";
+        stato.textContent = messaggio;
+
+        if (tipo === "ok") {
+          stato.style.background = "#eef9f1";
+          stato.style.border = "1px solid #c7e9d0";
+          stato.style.color = "#28733d";
+        } else if (tipo === "errore") {
+          stato.style.background = "#fff1f1";
+          stato.style.border = "1px solid #ffd0d0";
+          stato.style.color = "#a33a3a";
+        } else {
+          stato.style.background = "#eef6ff";
+          stato.style.border = "1px solid #cfe1f5";
+          stato.style.color = "#41607f";
+        }
+      }
+
+      function formattaGiorno(key) {
+        const [anno, mese, giorno] = key.split("-").map(Number);
+        return new Intl.DateTimeFormat("it-IT", {
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        }).format(new Date(anno, mese - 1, giorno));
+      }
+
+      function applicaStileFascia(bottone, attiva) {
+        bottone.style.background = attiva ? "#e8f8ee" : "#ffffff";
+        bottone.style.borderColor = attiva ? "#8ed1a4" : "#dfe5ec";
+        bottone.style.color = attiva ? "#168243" : "#344054";
+      }
+
+      function aggiornaEditor() {
+        if (!giornoSelezionato) {
+          editorGiorno.style.display = "none";
+          return;
+        }
+
+        const giorno = ensureDay(giornoSelezionato);
+
+        editorGiorno.style.display = "block";
+        titoloGiorno.textContent =
+          formattaGiorno(giornoSelezionato).replace(/^./, c => c.toUpperCase());
+
+        applicaStileFascia(btnMattina, giorno.mattina);
+        applicaStileFascia(btnPomeriggio, giorno.pomeriggio);
+        applicaStileFascia(btnSera, giorno.sera);
+
+        note.value = giorno.note || "";
+      }
+
+      function renderCalendario() {
+        titoloMese.textContent = nomeMese();
+        calendario.innerHTML = "";
+
+        const spazi = primoGiornoLunedi();
+
+        for (let i = 0; i < spazi; i++) {
+          const vuoto = document.createElement("div");
+          vuoto.style.minHeight = "54px";
+          calendario.appendChild(vuoto);
+        }
+
+        const totale = giorniNelMese();
+
+        for (let giorno = 1; giorno <= totale; giorno++) {
+          const key = dataKey(giorno);
+          const valore = ensureDay(key);
+
+          const count =
+            Number(valore.mattina) +
+            Number(valore.pomeriggio) +
+            Number(valore.sera);
+
+          const bottone = document.createElement("button");
+          bottone.type = "button";
+          bottone.dataset.noScroll = "true";
+          bottone.dataset.data = key;
+
+          bottone.style.minWidth = "0";
+          bottone.style.minHeight = "54px";
+          bottone.style.border = "1px solid #dfe5ec";
+          bottone.style.borderRadius = "12px";
+          bottone.style.background =
+            giornoSelezionato === key
+              ? "#eef6ff"
+              : count > 0
+                ? "#eef9f1"
+                : "#ffffff";
+          bottone.style.color = "#344054";
+          bottone.style.padding = "5px 2px";
+          bottone.style.cursor = "pointer";
+          bottone.style.fontFamily = "inherit";
+
+          bottone.innerHTML = `
+            <div style="font-size:15px;font-weight:750;">${giorno}</div>
+            <div style="
+              margin-top:3px;
+              font-size:10px;
+              color:${count > 0 ? "#168243" : "#98a2b3"};
+              white-space:nowrap;
+            ">
+              ${count > 0 ? "●".repeat(count) : "—"}
+            </div>
+          `;
+
+          bottone.addEventListener("click", function() {
+            giornoSelezionato = key;
+            renderCalendario();
+            aggiornaEditor();
+
+            setTimeout(function() {
+              editorGiorno.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest"
+              });
+            }, 0);
+          });
+
+          calendario.appendChild(bottone);
+        }
+      }
+
+
+      async function controllaProfilo() {
+        if (!initData) {
+          profiloBox.style.display = "none";
+          return false;
+        }
+
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              initData
+            })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Errore profilo");
+          }
+
+          PROFILO_TELEGRAM = dati.profilo || { registrato: false };
+
+          if (
+            PROFILO_TELEGRAM.registrato &&
+            PROFILO_TELEGRAM.nome_completo
+          ) {
+            profiloBox.style.display = "none";
+            return true;
+          }
+
+          profiloBox.style.display = "block";
+          return false;
+        } catch (errore) {
+          console.error(errore);
+          profiloBox.style.display = "block";
+          return false;
+        }
+      }
+
+      salvaProfiloBtn.addEventListener("click", async function() {
+        const nomeCompleto = nomeCompletoInput.value
+          .trim()
+          .replace(/\s+/g, " ");
+
+        if (nomeCompleto.length < 3 || !nomeCompleto.includes(" ")) {
+          mostraStato(
+            "⚠️ Inserisci nome e cognome completi.",
+            "errore"
+          );
+          return;
+        }
+
+        salvaProfiloBtn.disabled = true;
+        salvaProfiloBtn.style.opacity = "0.65";
+        salvaProfiloBtn.textContent = "⏳ Salvataggio…";
+
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              initData,
+              azione: "salva_profilo",
+              nome_completo: nomeCompleto
+            })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Errore nel salvataggio del profilo");
+          }
+
+          PROFILO_TELEGRAM = {
+            registrato: true,
+            nome_completo: dati.nome_completo,
+            ruolo: "utente",
+            attivo: true
+          };
+
+          profiloBox.style.display = "none";
+
+          const statoTelegram = document.getElementById("telegramStatus");
+          if (statoTelegram) {
+            statoTelegram.textContent =
+              `✅ Telegram verificato — ${dati.nome_completo}`;
+          }
+
+          mostraStato(
+            "✅ Nome e cognome salvati. Da ora in poi non dovrai inserirli di nuovo.",
+            "ok"
+          );
+        } catch (errore) {
+          console.error(errore);
+          mostraStato(
+            "⚠️ Non è stato possibile salvare nome e cognome.",
+            "errore"
+          );
+        } finally {
+          salvaProfiloBtn.disabled = false;
+          salvaProfiloBtn.style.opacity = "1";
+          salvaProfiloBtn.textContent = "✅ Conferma nome e cognome";
+        }
+      });
+
+      async function caricaMese() {
+        await controllaProfilo();
+
+        giornoSelezionato = null;
+        statoMese = {};
+        editorGiorno.style.display = "none";
+        mostraStato("⏳ Caricamento disponibilità…", "info");
+        renderCalendario();
+
+        if (!initData) {
+          mostraStato(
+            "⚠️ Apri la Mini App direttamente da Telegram per usare le disponibilità.",
+            "errore"
+          );
+          return;
+        }
+
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              initData,
+              azione: "leggi_disponibilita",
+              mese: meseKey()
+            })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Errore nel caricamento");
+          }
+
+          for (const riga of dati.disponibilita || []) {
+            const giorno = ensureDay(riga.data);
+
+            if (riga.fascia === "mattina") {
+              giorno.mattina = true;
+            }
+
+            if (riga.fascia === "pomeriggio") {
+              giorno.pomeriggio = true;
+            }
+
+            if (riga.fascia === "sera") {
+              giorno.sera = true;
+            }
+
+            if (riga.note && !giorno.note) {
+              giorno.note = riga.note;
+            }
+          }
+
+          renderCalendario();
+          mostraStato(
+            "✅ Disponibilità del mese caricate.",
+            "ok"
+          );
+        } catch (errore) {
+          console.error(errore);
+          mostraStato(
+            "⚠️ Non è stato possibile caricare le disponibilità.",
+            "errore"
+          );
+        }
+      }
+
+      btnMattina.addEventListener("click", function() {
+        if (!giornoSelezionato) return;
+        const giorno = ensureDay(giornoSelezionato);
+        giorno.mattina = !giorno.mattina;
+        aggiornaEditor();
+        renderCalendario();
+      });
+
+      btnPomeriggio.addEventListener("click", function() {
+        if (!giornoSelezionato) return;
+        const giorno = ensureDay(giornoSelezionato);
+        giorno.pomeriggio = !giorno.pomeriggio;
+        aggiornaEditor();
+        renderCalendario();
+      });
+
+      btnSera.addEventListener("click", function() {
+        if (!giornoSelezionato) return;
+        const giorno = ensureDay(giornoSelezionato);
+        giorno.sera = !giorno.sera;
+        aggiornaEditor();
+        renderCalendario();
+      });
+
+      note.addEventListener("input", function() {
+        if (!giornoSelezionato) return;
+        ensureDay(giornoSelezionato).note = note.value;
+      });
+
+      document
+        .getElementById("mesePrecedente")
+        .addEventListener("click", function() {
+          meseCorrente--;
+
+          if (meseCorrente === 0) {
+            meseCorrente = 12;
+            annoCorrente--;
+          }
+
+          caricaMese();
+        });
+
+      document
+        .getElementById("meseSuccessivo")
+        .addEventListener("click", function() {
+          meseCorrente++;
+
+          if (meseCorrente === 13) {
+            meseCorrente = 1;
+            annoCorrente++;
+          }
+
+          caricaMese();
+        });
+
+      document
+        .getElementById("salvaDisponibilita")
+        .addEventListener("click", async function() {
+
+          if (!initData) {
+            mostraStato(
+              "⚠️ Devi aprire la Mini App da Telegram.",
+              "errore"
+            );
+            return;
+          }
+
+          const disponibilitaDaSalvare = [];
+
+          for (const [data, giorno] of Object.entries(statoMese)) {
+            const notePulite = (giorno.note || "").trim();
+
+            if (giorno.mattina) {
+              disponibilitaDaSalvare.push({
+                data,
+                fascia: "mattina",
+                note: notePulite
+              });
+            }
+
+            if (giorno.pomeriggio) {
+              disponibilitaDaSalvare.push({
+                data,
+                fascia: "pomeriggio",
+                note: notePulite
+              });
+            }
+
+            if (giorno.sera) {
+              disponibilitaDaSalvare.push({
+                data,
+                fascia: "sera",
+                note: notePulite
+              });
+            }
+          }
+
+          const bottoneSalva =
+            document.getElementById("salvaDisponibilita");
+
+          bottoneSalva.disabled = true;
+          bottoneSalva.style.opacity = "0.65";
+          bottoneSalva.textContent = "⏳ Salvataggio…";
+
+          try {
+            const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                initData,
+                azione: "salva_disponibilita",
+                mese: meseKey(),
+                disponibilita: disponibilitaDaSalvare
+              })
+            });
+
+            const dati = await risposta.json();
+
+            if (!risposta.ok || !dati.ok) {
+              throw new Error(dati.error || "Errore nel salvataggio");
+            }
+
+            mostraStato(
+              `✅ Disponibilità salvate: ${dati.salvate}.`,
+              "ok"
+            );
+          } catch (errore) {
+            console.error(errore);
+            mostraStato(
+              "⚠️ Non è stato possibile salvare le disponibilità.",
+              "errore"
+            );
+          } finally {
+            bottoneSalva.disabled = false;
+            bottoneSalva.style.opacity = "1";
+            bottoneSalva.textContent = "✅ Salva disponibilità";
+          }
+        });
+
+      document
+        .getElementById("tornaHomeDisponibilita")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeDisponibilitaBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      caricaMese();
+
+    });
+
+
   document
     .getElementById("ultimoAggiornamento")
     .addEventListener("click", function(event) {
@@ -2435,6 +3332,7 @@ document
   document.addEventListener("click", function(event) {
     const elemento = event.target.closest("button, a");
     if (!elemento) return;
+    if (elemento.dataset.noScroll === "true") return;
 
     setTimeout(function() {
       window.scrollTo({
