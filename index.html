@@ -276,6 +276,7 @@
       }
     }
   </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
 <body>
@@ -289,6 +290,23 @@
       alt="Opera Pubblica Bordonaro"
     >
   </div>
+
+
+  <div
+    id="telegramStatus"
+    style="
+      margin:12px 16px 0;
+      padding:10px 12px;
+      border:1px solid #dfe5ec;
+      border-radius:14px;
+      background:#f8fafc;
+      color:#667085;
+      font-size:13px;
+      line-height:1.4;
+      display:none;
+    "
+    aria-live="polite"
+  ></div>
 
   <main class="content">
 
@@ -559,6 +577,85 @@
 
 
 <script>
+
+  /*
+    TEST RICONOSCIMENTO TELEGRAM
+    Verifica l'identità Telegram tramite la Edge Function Supabase.
+    In questa fase NON salva ancora nessuna disponibilità.
+  */
+  const TELEGRAM_VERIFY_URL =
+    "https://whsynkeehtswdxcqeqxn.supabase.co/functions/v1/telegram-disponibilita";
+
+  async function verificaUtenteTelegram() {
+    const stato = document.getElementById("telegramStatus");
+
+    try {
+      const tg = window.Telegram?.WebApp;
+
+      if (!tg) {
+        return;
+      }
+
+      tg.ready();
+      tg.expand();
+
+      const initData = tg.initData;
+
+      if (!initData) {
+        stato.style.display = "block";
+        stato.style.background = "#fff8e8";
+        stato.style.borderColor = "#ffe0a3";
+        stato.style.color = "#725315";
+        stato.textContent =
+          "ℹ️ Apri questa Mini App direttamente da Telegram per verificare l’utente.";
+        return;
+      }
+
+      stato.style.display = "block";
+      stato.textContent = "⏳ Verifica Telegram in corso…";
+
+      const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          initData: initData
+        })
+      });
+
+      const dati = await risposta.json();
+
+      if (!risposta.ok || !dati.ok) {
+        throw new Error(dati.error || "Verifica Telegram non riuscita");
+      }
+
+      const nomeCompleto = [
+        dati.user?.first_name || "",
+        dati.user?.last_name || ""
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      stato.style.background = "#eef9f1";
+      stato.style.borderColor = "#c7e9d0";
+      stato.style.color = "#28733d";
+      stato.textContent =
+        "✅ Telegram verificato" +
+        (nomeCompleto ? ` — ${nomeCompleto}` : "");
+    } catch (errore) {
+      stato.style.display = "block";
+      stato.style.background = "#fff1f1";
+      stato.style.borderColor = "#ffd0d0";
+      stato.style.color = "#a33a3a";
+      stato.textContent =
+        "⚠️ Verifica Telegram non riuscita. La Mini App resta consultabile.";
+      console.error("Verifica Telegram:", errore);
+    }
+  }
+
+  verificaUtenteTelegram();
+
 
   /*
     Questi pulsanti saranno completati
