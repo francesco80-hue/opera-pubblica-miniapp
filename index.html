@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eef6ff">
+
+  <title>Opera Pubblica Bordonaro</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #eef3f8;
+      color: #15213c;
+    }
+
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(0,0,0,0.08);
+    }
+
+    /* IMMAGINE PRINCIPALE */
+    .hero {
+      position: relative;
+      width: 100%;
+      background: linear-gradient(135deg, #17d6a3, #21b6ec, #8869ff);
+      overflow: hidden;
+    }
+
+    .hero img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* CONTENUTO */
+    .content {
+      padding: 18px;
+    }
+
+    /* SCRITTURA */
+    .verse {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 5px 16px rgba(0,0,0,0.06);
+    }
+
+    .verse-icon {
+      min-width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #72b7ff, #2876dc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+
+    .verse-text {
+      line-height: 1.4;
+      font-size: 17px;
+    }
+
+    .verse-text a {
+      display: inline-block;
+      margin-top: 5px;
+      color: #1670e8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* AGGIORNAMENTO */
+    .update {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #eef7ff;
+      border: 1px solid #a7d7ff;
+      border-radius: 20px;
+      padding: 17px;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #15213c;
+    }
+
+    .update-icon {
+      font-size: 34px;
+    }
+
+    .update-content {
+      flex: 1;
+    }
+
+    .update-title {
+      font-size: 18px;
+      font-weight: 750;
+      margin-bottom: 3px;
+    }
+
+    .update-subtitle {
+      color: #44506a;
+      line-height: 1.35;
+    }
+
+    .arrow {
+      font-size: 28px;
+      color: #1474e5;
+      font-weight: bold;
+    }
+
+    /* GRIGLIA PULSANTI */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 13px;
+    }
+
+    .card {
+      min-height: 135px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 16px;
+      border: 1px solid #e4e8ee;
+      border-radius: 20px;
+      background: #ffffff;
+      text-decoration: none;
+      color: #15213c;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.055);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .card:active {
+      transform: scale(.98);
+    }
+
+    .card-icon {
+      min-width: 62px;
+      height: 62px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 31px;
+      color: white;
+    }
+
+    .blue { background: linear-gradient(135deg, #69aeff, #1768d7); }
+    .green { background: linear-gradient(135deg, #59dc85, #0bb24d); }
+    .purple { background: linear-gradient(135deg, #a47aee, #6942d4); }
+    .orange { background: linear-gradient(135deg, #ffbb45, #ff8b00); }
+    .teal { background: linear-gradient(135deg, #37d7d0, #00a9a2); }
+    .red { background: linear-gradient(135deg, #ff6c6c, #ee3030); }
+
+    .card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 750;
+      margin-bottom: 6px;
+    }
+
+    .card-subtitle {
+      font-size: 14px;
+      line-height: 1.3;
+      color: #556078;
+    }
+
+    /* AMMINISTRATORI */
+    .admin {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 15px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: #f3f1ff;
+      border: 1px solid #d8d0ff;
+      color: #1d2852;
+      text-decoration: none;
+    }
+
+    .admin-icon {
+      min-width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ded8ff;
+      font-size: 28px;
+    }
+
+    .admin-content {
+      flex: 1;
+    }
+
+    .admin-title {
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    .admin-subtitle {
+      margin-top: 3px;
+      color: #505978;
+      font-size: 14px;
+    }
+
+    .footer {
+      text-align: center;
+      color: #8992a3;
+      font-size: 12px;
+      padding: 24px 10px 30px;
+    }
+
+    /* TELEFONI PICCOLI */
+    @media (max-width: 520px) {
+
+      .content {
+        padding: 12px;
+      }
+
+      .grid {
+        gap: 9px;
+      }
+
+      .card {
+        min-height: 120px;
+        padding: 12px;
+        gap: 9px;
+      }
+
+      .card-icon {
+        min-width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        font-size: 25px;
+      }
+
+      .card-title {
+        font-size: 15px;
+      }
+
+      .card-subtitle {
+        font-size: 12.5px;
+      }
+
+      .verse-text {
+        font-size: 15px;
+      }
+    }
+
+    /* TELEFONI MOLTO STRETTI */
+    @media (max-width: 360px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- IMMAGINE DI APERTURA -->
+  <div class="hero">
+    <img
+      src="opera-pubblica.jpg"
+      alt="Opera Pubblica Bordonaro"
+    >
+  </div>
+
+  <main class="content">
+
+    <!-- SCRITTURA -->
+    <div class="verse">
+
+      <div class="verse-icon">
+        📖
+      </div>
+
+      <div class="verse-text">
+
+        <strong>
+          «Tutto abbia luogo dignitosamente e con ordine.»
+        </strong>
+
+        <br>
+
+        <a
+          href="https://www.jw.org/finder?wtlocale=I&pub=nwtsty&srctype=wol&bible=46014040&srcid=share"
+          target="_blank"
+        >
+          1 Corinti 14:40
+        </a>
+
+      </div>
+
+    </div>
+
+
+    <!-- ULTIMO AGGIORNAMENTO -->
+    <a class="update" href="#" id="ultimoAggiornamento">
+
+      <div class="update-icon">
+        📢
+      </div>
+
+      <div class="update-content">
+
+        <div class="update-title">
+          Ultimo aggiornamento
+        </div>
+
+        <div class="update-subtitle">
+          Consulta qui le ultime comunicazioni e aggiornamenti.
+        </div>
+
+      </div>
+
+      <div class="arrow">
+        ›
+      </div>
+
+    </a>
+
+
+    <!-- MENU -->
+    <section class="grid">
+
+
+      <!-- PROGRAMMA -->
+      <a
+        class="card"
+        href="#"
+        id="programma"
+      >
+
+        <div class="card-icon blue">
+          📅
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Programma<br>Opera Pubblica
+          </div>
+
+          <div class="card-subtitle">
+            Orari, turni e incarichi
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+
+      <!-- POSTAZIONI -->
+      <a
+        class="card"
+        href="#"
+        id="postazioni"
+      >
+
+        <div class="card-icon green">
+          📍
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Postazioni
+          </div>
+
+          <div class="card-subtitle">
+            Dove le trovo?
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+
+      <!-- ISTRUZIONI -->
+      <a
+        class="card"
+        href="https://sites.google.com/view/operapubblica/home-page"
+        target="_blank"
+      >
+
+        <div class="card-icon purple">
+          📖
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Istruzioni
+          </div>
+
+          <div class="card-subtitle">
+            Linee guida e consigli utili
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+
+      <!-- DISPOSIZIONE -->
+      <a
+        class="card"
+        href="https://sites.google.com/view/disposizionepubblicazioni/home-page"
+        target="_blank"
+      >
+
+        <div class="card-icon orange">
+          📚
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Disposizione pubblicazioni
+          </div>
+
+          <div class="card-subtitle">
+            Come tenerle in ordine!
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+
+      <!-- RAPPORTO -->
+      <a
+        class="card"
+        href="https://forms.gle/thskP9i9hthC6uk8A"
+        target="_blank"
+      >
+
+        <div class="card-icon teal">
+          📝
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Rapporto ed Esperienze
+          </div>
+
+          <div class="card-subtitle">
+            Invia il tuo rapporto e le tue esperienze
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+
+      <!-- ASSISTENZA -->
+      <a
+        class="card"
+        href="https://t.me/SamMaio_2007"
+        target="_blank"
+      >
+
+        <div class="card-icon red">
+          🛟
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            Assistenza
+          </div>
+
+          <div class="card-subtitle">
+            Supporto e contatti utili
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
+
+    </section>
+
+
+    <!-- AREA AMMINISTRATORI -->
+    <a
+      class="admin"
+      href="#"
+      id="amministratori"
+    >
+
+      <div class="admin-icon">
+        🔒
+      </div>
+
+      <div class="admin-content">
+
+        <div class="admin-title">
+          Area amministratori
+        </div>
+
+        <div class="admin-subtitle">
+          Accesso riservato agli amministratori
+        </div>
+
+      </div>
+
+      <div class="arrow">
+        ›
+      </div>
+
+    </a>
+
+
+    <div class="footer">
+      Opera Pubblica Bordonaro
+    </div>
+
+  </main>
+
+</div>
+
+
+<script>
+
+  /*
+    Questi pulsanti saranno completati
+    nei prossimi passaggi della Mini App.
+  */
+
+  document
+    .getElementById("postazioni")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      alert(
+        "Nel prossimo passaggio inseriremo qui Piazza Cairoli, Provinciale e Mercato ZIR."
+      );
+
+    });
+
+
+  document
+    .getElementById("ultimoAggiornamento")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      alert(
+        "Qui compariranno le ultime comunicazioni e gli aggiornamenti."
+      );
+
+    });
+
+
+  document
+    .getElementById("programma")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      alert(
+        "Qui collegheremo il programma Opera Pubblica / Hourglass."
+      );
+
+    });
+
+
+  document
+    .getElementById("amministratori")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      alert(
+        "L'area amministratori verrà attivata successivamente."
+      );
+
+    });
+
+</script>
+
+</body>
+</html>
