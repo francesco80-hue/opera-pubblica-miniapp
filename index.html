@@ -436,8 +436,8 @@
       <!-- DISPOSIZIONE -->
       <a
         class="card"
-        href="https://sites.google.com/view/disposizionepubblicazioni/home-page"
-        target="_blank"
+        href="#"
+        id="disposizionePubblicazioni"
       >
 
         <div class="card-icon orange">
@@ -1846,7 +1846,7 @@ document
       event.preventDefault();
 
       alert(
-        "Qui collegheremo il programma Opera Pubblica / Hourglass."
+        "🗓️ Programma Opera Pubblica\n\nPer consultare il programma aggiornato, apri direttamente l’app Hourglass."
       );
 
     });
@@ -1895,9 +1895,7 @@ document
     });
 
 
-  document
-    .getElementById("apriProvinciale")
-    .addEventListener("click", function() {
+  function apriPaginaProvinciale() {
 
       document.querySelector(".content").innerHTML = `
 
@@ -1953,6 +1951,179 @@ document
 
       document.getElementById("tornaPostazioniProvinciale").addEventListener("click", function(){ apriPostazioni(); });
       document.getElementById("tornaPostazioniProvincialeBasso").addEventListener("click", function(){ apriPostazioni(); });
+  }
+
+  // Delegazione: il pulsante Provinciale viene creato solo quando si apre il menu Postazioni.
+  document.addEventListener("click", function(event) {
+    const bottoneProvinciale = event.target.closest("#apriProvinciale");
+    if (bottoneProvinciale) {
+      event.preventDefault();
+      apriPaginaProvinciale();
+    }
+  });
+
+
+
+
+  document
+    .getElementById("disposizionePubblicazioni")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button
+            id="tornaHomeDisposizione"
+            style="
+              border:none;
+              background:#fff5e8;
+              color:#b96810;
+              padding:12px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="
+          background:linear-gradient(135deg,#fff7ed,#fffdf9);
+          border:1px solid #f5d7b2;
+          border-radius:20px;
+          padding:20px;
+          margin-bottom:18px;
+        ">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="
+              min-width:52px;
+              height:52px;
+              border-radius:16px;
+              background:linear-gradient(135deg,#f4a340,#d97913);
+              color:white;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:27px;
+            ">📚</div>
+            <div>
+              <h2 style="font-size:25px;margin:0;">Disposizione delle pubblicazioni</h2>
+              <div style="color:#80694e;margin-top:4px;">Configurazione da seguire nel periodo in corso</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:16px;
+          line-height:1.65;
+          color:#3f4a5f;
+        ">
+          <p>
+            Cari fratelli, questa sezione viene aggiornata regolarmente per indicare
+            la disposizione attuale delle pubblicazioni per l'opera pubblica.
+          </p>
+          <p style="margin-top:10px;">
+            La configurazione mostrata è quella da seguire nel periodo in corso.
+            Controllate questa pagina di tanto in tanto, così da mantenere
+            l'espositore sempre allineato alle indicazioni più recenti.
+          </p>
+        </div>
+
+        <div style="
+          background:#eef6ff;
+          border:1px solid #c8ddf7;
+          border-radius:18px;
+          padding:17px;
+          margin-bottom:16px;
+          line-height:1.6;
+          color:#33435f;
+        ">
+          <strong style="color:#1768d7;">Da settembre</strong>
+          <div style="margin-top:8px;">
+            Nei <strong>Settori 1, 2 e 3</strong> inserire due copie dell'opuscolo
+            <strong>“Puoi vivere felice per sempre”</strong>, disposte affiancate
+            come nell'immagine qui sotto.
+          </div>
+          <div style="margin-top:8px;">
+            Il poster da esporre è <strong>“Corso biblico gratuito”</strong>.
+          </div>
+        </div>
+
+        <img
+          src="disposizione-pubblicazioni.png"
+          loading="lazy"
+          alt="Disposizione aggiornata delle pubblicazioni"
+          style="
+            width:100%;
+            display:block;
+            border-radius:18px;
+            margin-bottom:18px;
+          ">
+
+        <div style="
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:16px;
+          line-height:1.65;
+          color:#3f4a5f;
+        ">
+          <div style="font-weight:750;margin-bottom:8px;">✅ Ricordate di:</div>
+          <div>• consultare sempre l'immagine aggiornata;</div>
+          <div>• riprodurre la disposizione esattamente come mostrato;</div>
+          <div>• mantenere opuscoli ed espositore puliti e in ordine;</div>
+          <div>• verificare periodicamente eventuali modifiche.</div>
+        </div>
+
+        <div style="
+          background:#fff8e8;
+          border:1px solid #ffe0a3;
+          border-radius:18px;
+          padding:16px;
+          margin-bottom:18px;
+          color:#725315;
+          line-height:1.55;
+        ">
+          📌 <strong>Nota importante:</strong> gli aggiornamenti possono essere frequenti.
+          La disposizione visibile nella Mini App rappresenta la versione più recente da seguire.
+        </div>
+
+        <button
+          id="tornaHomeDisposizioneBasso"
+          style="
+            width:100%;
+            border:none;
+            background:#fff5e8;
+            color:#b96810;
+            padding:14px 18px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+          ">
+          ← Torna alla Home
+        </button>
+      `;
+
+      document
+        .getElementById("tornaHomeDisposizione")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeDisposizioneBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
     });
 
 
