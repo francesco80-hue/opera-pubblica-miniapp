@@ -329,7 +329,7 @@
       <div class="update-content">
 
         <div class="update-title">
-          Ultimo aggiornamento
+          Ultimi aggiornamenti
         </div>
 
         <div class="update-subtitle">
@@ -1832,9 +1832,60 @@ document
 
       event.preventDefault();
 
-      alert(
-        "Qui compariranno le ultime comunicazioni e gli aggiornamenti."
-      );
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button id="tornaHomeAggiornamenti" style="border:none;background:#fff5e8;color:#b96810;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#fff8ee,#fffdf8);border:1px solid #f4d8b8;border-radius:20px;padding:20px;margin-bottom:18px;">
+          <h2 style="font-size:25px;margin:0 0 6px 0;">📢 Ultimi aggiornamenti</h2>
+          <div style="color:#80694e;">Comunicazioni utili per l'Opera Pubblica</div>
+          <div style="
+            display:inline-block;
+            margin-top:10px;
+            background:#ffffff;
+            border:1px solid #efd8bd;
+            color:#80694e;
+            padding:6px 10px;
+            border-radius:20px;
+            font-size:13px;
+            font-weight:700;
+          ">
+            📅 Aggiornato il 22 agosto 2026
+          </div>
+        </div>
+
+        <div style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
+          <h3 style="font-size:19px;margin:0 0 9px 0;">🛒 Espositori mobili</h3>
+          <p>
+            Abbiamo a disposizione <strong>due espositori mobili</strong> per l'opera.
+            Uno si trova a <strong>Casa Vinci</strong>; l'altro, nei primi giorni di settembre,
+            si troverà al <strong>chiosco di Villaggio Ardisio</strong>.
+          </p>
+          <p style="margin-top:10px;">
+            Per il momento entrambi sono identici per quanto riguarda la disposizione delle pubblicazioni.
+          </p>
+        </div>
+
+        <div style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
+          <h3 style="font-size:19px;margin:0 0 9px 0;">📚 Disposizione delle pubblicazioni</h3>
+          <p>Nei settori inserire l'opuscolo <strong>“Puoi vivere felice per sempre”</strong>, come da immagine.</p>
+          <p style="margin-top:8px;">Il poster da esporre è <strong>“Corso biblico gratuito”</strong>.</p>
+        </div>
+
+        <img src="disposizione-pubblicazioni.png" loading="lazy" alt="Disposizione delle pubblicazioni"
+             style="width:100%;display:block;border-radius:18px;margin-bottom:18px;">
+
+        <button id="tornaHomeAggiornamentiBasso" style="width:100%;border:none;background:#fff5e8;color:#b96810;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+          ← Torna alla Home
+        </button>
+      `;
+
+      document.getElementById("tornaHomeAggiornamenti").addEventListener("click", function(){ location.reload(); });
+      document.getElementById("tornaHomeAggiornamentiBasso").addEventListener("click", function(){ location.reload(); });
 
     });
 
@@ -2045,11 +2096,9 @@ document
           line-height:1.6;
           color:#33435f;
         ">
-          <strong style="color:#1768d7;">Da settembre</strong>
-          <div style="margin-top:8px;">
-            Nei <strong>Settori 1, 2 e 3</strong> inserire due copie dell'opuscolo
-            <strong>“Puoi vivere felice per sempre”</strong>, disposte affiancate
-            come nell'immagine qui sotto.
+          <div>
+            Nei settori inserire l'opuscolo
+            <strong>“Puoi vivere felice per sempre”</strong>, come da immagine.
           </div>
           <div style="margin-top:8px;">
             Il poster da esporre è <strong>“Corso biblico gratuito”</strong>.
@@ -2163,7 +2212,7 @@ document
             🛟 Assistenza
           </h2>
           <div style="color:#765858;">
-            Contatta uno dei fratelli indicati direttamente su Telegram.
+            Contatta uno dei fratelli indicati sotto direttamente su Telegram.
           </div>
         </div>
 
