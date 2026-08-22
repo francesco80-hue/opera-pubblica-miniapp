@@ -408,8 +408,8 @@
       <!-- ISTRUZIONI -->
       <a
         class="card"
-        href="https://sites.google.com/view/operapubblica/home-page"
-        target="_blank"
+        href="#"
+        id="istruzioni"
       >
 
         <div class="card-icon purple">
@@ -492,8 +492,8 @@
       <!-- ASSISTENZA -->
       <a
         class="card"
-        href="https://t.me/SamMaio_2007"
-        target="_blank"
+        href="#"
+        id="assistenza"
       >
 
         <div class="card-icon red">
@@ -565,13 +565,13 @@
     nei prossimi passaggi della Mini App.
   */
 
-  document
-  .getElementById("postazioni")
-  .addEventListener("click", function(event) {
+  const contenutoOriginale = document.querySelector(".content").innerHTML;
 
-    event.preventDefault();
+  function apriPostazioni(event) {
 
-    const contenutoOriginale = document.querySelector(".content").innerHTML;
+    if (event) {
+      event.preventDefault();
+    }
 
     document.querySelector(".content").innerHTML = `
 
@@ -771,6 +771,24 @@
   </button>
 
 </div>
+
+      <div style="margin-top:18px; margin-bottom:10px;">
+        <button
+          id="tornaHomeBasso"
+          style="
+            width:100%;
+            border:none;
+            background:#eef6ff;
+            color:#1768d7;
+            padding:14px 18px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+          ">
+          ← Torna alla Home
+        </button>
+      </div>
 
     `;
 
@@ -1001,13 +1019,13 @@
   .getElementById("tornaPostazioni")
   .addEventListener("click", function() {
 
-    location.reload();
+    apriPostazioni();
 
   });
 document
   .getElementById("tornaPostazioniCairoliBasso")
   .addEventListener("click", function() {
-    location.reload();
+    apriPostazioni();
   });
 });   // CHIUDE PIAZZA CAIROLI
 
@@ -1230,13 +1248,13 @@ document
     document
       .getElementById("tornaPostazioniZir")
       .addEventListener("click", function() {
-        location.reload();
+        apriPostazioni();
       });
 
     document
       .getElementById("tornaPostazioniZirBasso")
       .addEventListener("click", function() {
-        location.reload();
+        apriPostazioni();
       });
 
   });
@@ -1244,14 +1262,555 @@ document
     document
       .getElementById("tornaHome")
       .addEventListener("click", function() {
-
-        document.querySelector(".content").innerHTML = contenutoOriginale;
-
         location.reload();
-
       });
 
-  });
+    document
+      .getElementById("tornaHomeBasso")
+      .addEventListener("click", function() {
+        location.reload();
+      });
+
+  }
+
+  document
+    .getElementById("postazioni")
+    .addEventListener("click", apriPostazioni);
+
+
+  document
+    .getElementById("istruzioni")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button
+            id="tornaHomeIstruzioni"
+            style="
+              border:none;
+              background:#f3f1ff;
+              color:#6942d4;
+              padding:12px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="
+          background:linear-gradient(135deg,#f5f1ff,#fbfaff);
+          border:1px solid #ded6ff;
+          border-radius:20px;
+          padding:20px;
+          margin-bottom:18px;
+        ">
+          <div style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:10px;
+          ">
+            <div style="
+              min-width:52px;
+              height:52px;
+              border-radius:16px;
+              background:linear-gradient(135deg,#a47aee,#6942d4);
+              color:white;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:27px;
+            ">📖</div>
+
+            <div>
+              <h2 style="font-size:25px; margin:0;">
+                Istruzioni locali
+              </h2>
+              <div style="color:#6a6380; margin-top:3px;">
+                Opera Pubblica — Congregazione Messina Bordonaro
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:15px;
+          line-height:1.65;
+          color:#3f4a5f;
+        ">
+          <p>
+            Cari fratelli e sorelle, tutti noi siamo stati scelti per svolgere
+            questo tipo di opera nel territorio a noi assegnato.
+            L'accuratezza e la puntualità che dimostreremo nello svolgere
+            anche questo tipo di opera dimostreranno che apprezziamo
+            il privilegio che ci è stato affidato.
+          </p>
+
+          <a
+            href="https://www.jw.org/finder?wtlocale=I&pub=nwtsty&srctype=wol&bible=46014040&srcid=share"
+            target="_blank"
+            style="
+              display:inline-block;
+              margin-top:10px;
+              color:#6942d4;
+              font-weight:700;
+              text-decoration:none;
+            ">
+            📖 1 Corinti 14:40
+          </a>
+        </div>
+
+        <div style="
+          background:#eef7ff;
+          border:1px solid #a7d7ff;
+          border-radius:18px;
+          padding:17px;
+          margin-bottom:18px;
+          line-height:1.55;
+          color:#33435f;
+        ">
+          <div style="
+            font-size:18px;
+            font-weight:750;
+            margin-bottom:7px;
+            color:#1768d7;
+          ">
+            🔄 Un'opera che può cambiare
+          </div>
+
+          <p>
+            Visto che si tratta di un'opera interattiva, può subire modifiche
+            nelle postazioni, nell'esposizione delle pubblicazioni,
+            nei cambi turno e in altre indicazioni.
+          </p>
+
+          <p style="margin-top:10px;">
+            Per questo motivo è stato creato un gruppo specifico su Telegram,
+            dove troviamo tutte le informazioni e i cambiamenti in tempo reale.
+          </p>
+
+          <p style="margin-top:10px; font-weight:700;">
+            Siamo invitati a collegarci di tanto in tanto per mantenerci aggiornati.
+          </p>
+        </div>
+
+        <h3 style="
+          font-size:20px;
+          margin:0 0 12px 0;
+        ">
+          ✅ Istruzioni generali locali
+        </h3>
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr;
+          gap:11px;
+        ">
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>⏰ Turni</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Avvisare in tempo se non possiamo svolgere un turno a noi assegnato.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>🧼 Pulizia e ordine</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Mantenere l'espositore pulito e ordinato. Nel retro dell'espositore
+              trovate l'occorrente per la pulizia. Al ritiro e alla consegna
+              è responsabilità di tutti controllare la condizione degli espositori.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>📚 Fine turno e rapporto</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              A fine turno riponete le pubblicazioni esposte nell'apposito
+              raccoglitore che trovate nel retro dell'espositore.
+              Mettetevi inoltre d'accordo con il vostro compagno su chi compilerà
+              il Rapporto usando l'apposito pulsante.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>✍️ Esperienze</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Se volete, potete condividere le vostre belle esperienze
+              usando il pulsante dedicato.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>📦 Pubblicazioni mancanti</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Se dovessero mancare le pubblicazioni, avvisate
+              i fratelli responsabili indicati nel gruppo.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>🗂️ Materiale nel retro dell'espositore</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Il retro degli espositori contiene due porta documenti con
+              inviti per le adunanze e biglietti da visita JW.ORG.
+              Inoltre, da non esporre, sono disponibili l'opuscolo
+              “Ritorna a Geova” e una Bibbia.
+            </p>
+          </div>
+
+        </div>
+
+        <div style="
+          margin-top:18px;
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:14px;
+        ">
+          <h3 style="font-size:19px; margin-bottom:10px;">
+            📷 Retro dell'espositore
+          </h3>
+          <img
+            src="istruzioni-locali-retro-espositore.png"
+            loading="lazy"
+            alt="Retro dell'espositore con materiale e raccoglitore"
+            style="
+              width:100%;
+              display:block;
+              border-radius:14px;
+            ">
+        </div>
+
+        <div style="
+          margin-top:18px;
+          background:#fff8e8;
+          border:1px solid #ffe0a3;
+          border-radius:18px;
+          padding:16px;
+          color:#725315;
+          line-height:1.5;
+        ">
+          📌 Prima di svolgere il turno, controllate sempre
+          eventuali nuove comunicazioni o aggiornamenti.
+        </div>
+
+        <button
+          id="apriIstruzioniGenerali"
+          style="
+            width:100%;
+            border:none;
+            background:#6942d4;
+            color:white;
+            padding:16px;
+            margin-top:18px;
+            border-radius:16px;
+            font-size:17px;
+            font-weight:750;
+            cursor:pointer;
+          ">
+          📘 ISTRUZIONI GENERALI
+        </button>
+
+        <div style="margin-top:18px; margin-bottom:10px;">
+          <button
+            id="tornaHomeIstruzioniBasso"
+            style="
+              width:100%;
+              border:none;
+              background:#f3f1ff;
+              color:#6942d4;
+              padding:14px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+      `;
+
+
+      document
+        .getElementById("apriIstruzioniGenerali")
+        .addEventListener("click", function() {
+
+          document.querySelector(".content").innerHTML = `
+
+            <div style="margin-bottom:18px;">
+              <button
+                id="tornaIstruzioniLocali"
+                style="
+                  border:none;
+                  background:#f3f1ff;
+                  color:#6942d4;
+                  padding:12px 18px;
+                  border-radius:14px;
+                  font-size:16px;
+                  font-weight:700;
+                  cursor:pointer;
+                ">
+                ← Torna alle Istruzioni locali
+              </button>
+            </div>
+
+            <div style="
+              background:linear-gradient(135deg,#f5f1ff,#fbfaff);
+              border:1px solid #ded6ff;
+              border-radius:20px;
+              padding:20px;
+              margin-bottom:18px;
+            ">
+              <h2 style="font-size:25px; margin-bottom:6px;">
+                📘 Istruzioni generali
+              </h2>
+              <div style="color:#6a6380;">
+                S-148-I 11/23 — Istruzioni per la testimonianza pubblica
+              </div>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">🤝 Atteggiamento e obiettivo</h3>
+              <p>
+                La testimonianza pubblica favorisce il contatto con persone che forse altrimenti
+                non avrebbero l'opportunità di ascoltare la buona notizia. Si dà risalto
+                all'iniziare studi biblici, indirizzare le persone a jw.org, coltivare subito
+                l'interesse e non limitarsi a distribuire pubblicazioni.
+              </p>
+              <p style="margin-top:10px;">
+                È importante essere calorosi e amichevoli, mantenere una distanza appropriata
+                dall'espositore, sorridere e stabilire un buon contatto visivo.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">📚 Pubblicazioni esposte</h3>
+              <p>
+                L'esposizione deve essere ordinata e dignitosa, evitando troppe pubblicazioni diverse.
+                La Bibbia non va esposta, ma si possono tenere copie a portata di mano per chi
+                ne faccia richiesta o manifesti sincero interesse.
+              </p>
+              <p style="margin-top:10px;">
+                Va inoltre tenuta a portata di mano una piccola scorta dell'opuscolo
+                “Ritorna a Geova”, senza esporlo.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">🛡️ Sicurezza</h3>
+              <p>
+                Di solito per ogni espositore mobile vengono incaricati due proclamatori.
+                È necessario rimanere in allerta perché le condizioni della zona possono cambiare.
+              </p>
+              <p style="margin-top:10px;">
+                Quando possibile, è meglio disporre gli espositori in modo che non ci si possa
+                avvicinare ai proclamatori da dietro. Se le forze dell'ordine chiedono di lasciare
+                la zona, occorre farlo e informare successivamente un anziano.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">⚠️ Disturbatori</h3>
+              <p>
+                Evitare discussioni. Rimanere calmi e amichevoli e cercare di concludere
+                la conversazione in modo gentile. Se la situazione peggiora, può essere meglio
+                allontanarsi; in casi estremi si può chiedere aiuto alle autorità.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">👤 Disassociati</h3>
+              <p>
+                Se una persona disassociata desidera riavvicinarsi alla congregazione,
+                può essere indirizzata alla pagina “Vieni a una delle nostre adunanze”
+                su jw.org per individuare la congregazione più vicina.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:18px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">📰 Media</h3>
+              <p>
+                In genere non si rilasciano interviste. I rappresentanti dei media possono
+                essere invitati a consultare le sezioni “Notizie” o “Chi siamo” di jw.org.
+                Se insistono, informare prontamente un anziano.
+              </p>
+            </div>
+
+            <a
+              href="S-148-I-11-23.pdf"
+              target="_blank"
+              style="
+                display:block;
+                text-align:center;
+                background:#1768d7;
+                color:white;
+                padding:15px;
+                border-radius:15px;
+                text-decoration:none;
+                font-size:16px;
+                font-weight:750;
+                margin-bottom:12px;
+              ">
+              📄 APRI / SCARICA PDF
+            </a>
+
+            <a
+              href="https://drive.google.com/file/d/1RWVpiSkRgKVOZpQjhpmFqZq9OT0QuriD/view?usp=drivesdk"
+              target="_blank"
+              style="
+                display:block;
+                text-align:center;
+                background:#168a4a;
+                color:white;
+                padding:15px;
+                border-radius:15px;
+                text-decoration:none;
+                font-size:16px;
+                font-weight:750;
+                margin-bottom:18px;
+              ">
+              📘 APRI IN JWPUB
+            </a>
+
+            <div style="margin-bottom:10px;">
+              <button
+                id="tornaIstruzioniLocaliBasso"
+                style="
+                  width:100%;
+                  border:none;
+                  background:#f3f1ff;
+                  color:#6942d4;
+                  padding:14px 18px;
+                  border-radius:14px;
+                  font-size:16px;
+                  font-weight:700;
+                  cursor:pointer;
+                ">
+                ← Torna alle Istruzioni locali
+              </button>
+            </div>
+
+          `;
+
+          document
+            .getElementById("tornaIstruzioniLocali")
+            .addEventListener("click", function() {
+              location.reload();
+            });
+
+          document
+            .getElementById("tornaIstruzioniLocaliBasso")
+            .addEventListener("click", function() {
+              location.reload();
+            });
+
+        });
+
+
+      document
+        .getElementById("tornaHomeIstruzioni")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeIstruzioniBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+    });
+
 
   document
     .getElementById("ultimoAggiornamento")
@@ -1275,6 +1834,148 @@ document
       alert(
         "Qui collegheremo il programma Opera Pubblica / Hourglass."
       );
+
+    });
+
+
+
+  document
+    .getElementById("assistenza")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button
+            id="tornaHomeAssistenza"
+            style="
+              border:none;
+              background:#fff1f1;
+              color:#d83737;
+              padding:12px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="
+          background:linear-gradient(135deg,#fff5f5,#fffafa);
+          border:1px solid #ffd5d5;
+          border-radius:20px;
+          padding:20px;
+          margin-bottom:18px;
+        ">
+          <h2 style="font-size:25px; margin-bottom:6px;">
+            🛟 Assistenza
+          </h2>
+          <div style="color:#765858;">
+            Contatta uno dei fratelli indicati direttamente su Telegram.
+          </div>
+        </div>
+
+        <a
+          href="https://t.me/SamMaio_2007"
+          target="_blank"
+          style="
+            display:flex;
+            align-items:center;
+            gap:14px;
+            padding:18px;
+            margin-bottom:12px;
+            border:1px solid #dfe5ec;
+            border-radius:18px;
+            background:#ffffff;
+            color:#15213c;
+            text-decoration:none;
+          ">
+          <div style="
+            min-width:52px;
+            height:52px;
+            border-radius:16px;
+            background:#229ED9;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:27px;
+          ">👤</div>
+          <div style="flex:1;">
+            <div style="font-size:18px; font-weight:750;">Samuele</div>
+            <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a
+          href="https://t.me/fre_80"
+          target="_blank"
+          style="
+            display:flex;
+            align-items:center;
+            gap:14px;
+            padding:18px;
+            margin-bottom:18px;
+            border:1px solid #dfe5ec;
+            border-radius:18px;
+            background:#ffffff;
+            color:#15213c;
+            text-decoration:none;
+          ">
+          <div style="
+            min-width:52px;
+            height:52px;
+            border-radius:16px;
+            background:#229ED9;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:27px;
+          ">👤</div>
+          <div style="flex:1;">
+            <div style="font-size:18px; font-weight:750;">Francesco</div>
+            <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <div style="margin-bottom:10px;">
+          <button
+            id="tornaHomeAssistenzaBasso"
+            style="
+              width:100%;
+              border:none;
+              background:#fff1f1;
+              color:#d83737;
+              padding:14px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+      `;
+
+      document
+        .getElementById("tornaHomeAssistenza")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeAssistenzaBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
 
     });
 
