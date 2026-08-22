@@ -710,67 +710,67 @@
       </div>
 
 
-      <!-- MERCATO ZIR -->
+     <!-- MERCATO ZIR -->
 
-      <div style="
-        border:1px solid #dfe5ec;
-        border-radius:20px;
-        padding:18px;
-        margin-bottom:15px;
-        box-shadow:0 4px 14px rgba(0,0,0,.06);
-      ">
+<div style="
+  border:1px solid #dfe5ec;
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:15px;
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+">
 
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          margin-bottom:10px;
-        ">
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  ">
 
-          <h3 style="font-size:20px;">
-            Mercato ZIR
-          </h3>
+    <h3 style="font-size:20px;">
+      Mercato ZIR
+    </h3>
 
-          <span style="
-            background:#e8f8ee;
-            color:#168243;
-            padding:6px 10px;
-            border-radius:20px;
-            font-size:13px;
-            font-weight:700;
-          ">
-            🟢 ATTIVA
-          </span>
+    <span style="
+      background:#e8f8ee;
+      color:#168243;
+      padding:6px 10px;
+      border-radius:20px;
+      font-size:13px;
+      font-weight:700;
+    ">
+      🟢 ATTIVA
+    </span>
 
-        </div>
+  </div>
 
-        <p style="
-          color:#667085;
-          line-height:1.5;
-          margin-bottom:14px;
-        ">
-          Visualizza fotografie, posizione e indicazioni relative
-          alla postazione del Mercato ZIR.
-        </p>
+  <p style="
+    color:#667085;
+    line-height:1.5;
+    margin-bottom:14px;
+  ">
+    Consulta la posizione precisa e le indicazioni
+    per collocare correttamente l'espositore.
+  </p>
 
-        <a
-          href="https://sites.google.com/view/postazionemercatozir/home-page"
-          target="_blank"
-          style="
-            display:block;
-            text-align:center;
-            background:#1877e8;
-            color:white;
-            padding:13px;
-            border-radius:14px;
-            text-decoration:none;
-            font-weight:700;
-          ">
-          📍 Vedi postazione
-        </a>
+  <button
+    id="apriZir"
+    style="
+      width:100%;
+      border:none;
+      background:#1877e8;
+      color:white;
+      padding:13px;
+      border-radius:14px;
+      font-weight:700;
+      font-size:15px;
+      cursor:pointer;
+    ">
+    📍 Apri Mercato ZIR
+  </button>
 
-      </div>
+</div>
 
     `;
 
@@ -988,7 +988,211 @@
             location.reload();
 
           });
+document
+  .getElementById("apriZir")
+  .addEventListener("click", function() {
 
+    document.querySelector(".content").innerHTML = `
+
+      <div style="margin-bottom:18px;">
+        <button
+          id="tornaPostazioniZir"
+          style="
+            border:none;
+            background:#eef6ff;
+            color:#1768d7;
+            padding:12px 18px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+          ">
+          ← Torna alle Postazioni
+        </button>
+      </div>
+
+      <div style="margin-bottom:20px;">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          margin-bottom:10px;
+        ">
+
+          <h2 style="font-size:26px;">
+            📍 Mercato ZIR
+          </h2>
+
+          <span style="
+            background:#e8f8ee;
+            color:#168243;
+            padding:6px 10px;
+            border-radius:20px;
+            font-size:13px;
+            font-weight:700;
+          ">
+            🟢 ATTIVA
+          </span>
+
+        </div>
+
+        <p style="color:#667085; line-height:1.5;">
+          Indicazioni per individuare la postazione
+          e collocare correttamente l'espositore.
+        </p>
+
+      </div>
+
+
+      <!-- VISTA AEREA -->
+
+      <div style="
+        border-radius:18px;
+        overflow:hidden;
+        margin-bottom:18px;
+      ">
+        <img
+          src="zir-posizione-aerea.png"
+          loading="lazy"
+          alt="Posizione aerea Mercato ZIR"
+          style="
+            width:100%;
+            display:block;
+          ">
+      </div>
+
+
+      <!-- ISTRUZIONI -->
+
+      <div style="
+        background:#f7f9fc;
+        border:1px solid #e1e7ef;
+        border-radius:18px;
+        padding:18px;
+        margin-bottom:18px;
+      ">
+
+        <h3 style="
+          font-size:19px;
+          margin-bottom:10px;
+        ">
+          ℹ️ Come posizionare l'espositore
+        </h3>
+
+        <p style="
+          line-height:1.6;
+          color:#3f4a5f;
+        ">
+          Prendete come punto di riferimento
+          <strong>l'entrata del Play Planet</strong>.
+        </p>
+
+        <p style="
+          line-height:1.6;
+          color:#3f4a5f;
+          margin-top:10px;
+        ">
+          L'espositore va collocato sul
+          <strong>marciapiede di fronte</strong>,
+          con il <strong>retro rivolto verso il muro</strong>.
+        </p>
+
+        <p style="
+          line-height:1.6;
+          color:#3f4a5f;
+          margin-top:10px;
+        ">
+          La postazione si trova inoltre alla
+          <strong>destra della concessionaria Toyota</strong>,
+          considerando come punto di riferimento la parete.
+        </p>
+
+      </div>
+
+
+      <!-- FOTO -->
+
+      <h3 style="
+        font-size:20px;
+        margin-bottom:12px;
+      ">
+        📷 Riferimenti fotografici
+      </h3>
+
+      <div style="
+        display:grid;
+        grid-template-columns:1fr;
+        gap:12px;
+      ">
+
+        <img
+          src="zir-espositore.png"
+          loading="lazy"
+          alt="Espositore Mercato ZIR"
+          style="
+            width:100%;
+            border-radius:18px;
+            display:block;
+          ">
+
+        <img
+          src="zir-posizione-frontale.png"
+          loading="lazy"
+          alt="Posizione frontale Mercato ZIR"
+          style="
+            width:100%;
+            border-radius:18px;
+            display:block;
+          ">
+
+      </div>
+
+
+      <!-- GPS -->
+
+      <a
+        href="https://www.google.com/maps/dir/?api=1&destination=38.162804,15.541121"
+        target="_blank"
+        style="
+          display:block;
+          text-align:center;
+          background:#168a4a;
+          color:white;
+          padding:16px;
+          margin-top:18px;
+          margin-bottom:14px;
+          border-radius:16px;
+          text-decoration:none;
+          font-size:17px;
+          font-weight:750;
+        ">
+        🧭 APRI NEL NAVIGATORE
+      </a>
+
+
+      <div style="
+        background:#fff8e8;
+        border:1px solid #ffe0a3;
+        border-radius:18px;
+        padding:16px;
+        color:#725315;
+        line-height:1.5;
+      ">
+        📌 Verificate sempre eventuali aggiornamenti
+        prima di utilizzare la postazione.
+      </div>
+
+    `;
+
+    document
+      .getElementById("tornaPostazioniZir")
+      .addEventListener("click", function() {
+        location.reload();
+      });
+
+  });
       });
     document
       .getElementById("tornaHome")
