@@ -571,6 +571,7 @@
       class="admin"
       href="#"
       id="amministratori"
+      style="display:none;"
     >
 
       <div class="admin-icon">
@@ -662,6 +663,15 @@
       }
 
       PROFILO_TELEGRAM = dati.profilo || { registrato: false };
+
+      const areaAdmin = document.getElementById("amministratori");
+      if (areaAdmin) {
+        areaAdmin.style.display =
+          PROFILO_TELEGRAM?.registrato &&
+          PROFILO_TELEGRAM?.ruolo === "admin"
+            ? "flex"
+            : "none";
+      }
 
       const nomeTelegram = [
         dati.user?.first_name || "",
@@ -3317,9 +3327,232 @@ document
 
       event.preventDefault();
 
-      alert(
-        "L'area amministratori verrà attivata successivamente."
-      );
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData || "";
+
+      const oggi = new Date();
+      let annoAdmin = oggi.getFullYear();
+      let meseAdmin = oggi.getMonth() + 1;
+
+      const meseKeyAdmin = () =>
+        `${annoAdmin}-${String(meseAdmin).padStart(2, "0")}`;
+
+      const nomeMeseAdmin = () =>
+        new Intl.DateTimeFormat("it-IT", {
+          month: "long",
+          year: "numeric"
+        }).format(new Date(annoAdmin, meseAdmin - 1, 1));
+
+      const formattaDataAdmin = (iso) => {
+        const [a, m, g] = iso.split("-").map(Number);
+        return new Intl.DateTimeFormat("it-IT", {
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        }).format(new Date(a, m - 1, g));
+      };
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button id="tornaHomeAdmin"
+            style="border:none;background:#f3f1ff;color:#6942d4;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#f5f1ff,#fbfaff);border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:18px;">
+          <h2 style="font-size:25px;margin:0 0 6px 0;">👥 Area amministratori</h2>
+          <div style="color:#6a6380;line-height:1.5;">
+            Consulta le disponibilità ricevute per il mese selezionato.
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;">
+          <button id="meseAdminPrecedente" data-no-scroll="true"
+            style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:700;cursor:pointer;">‹</button>
+
+          <div id="titoloMeseAdmin"
+            style="flex:1;text-align:center;font-size:20px;font-weight:750;text-transform:capitalize;"></div>
+
+          <button id="meseAdminSuccessivo" data-no-scroll="true"
+            style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:700;cursor:pointer;">›</button>
+        </div>
+
+        <div id="statoAdmin"
+          style="display:none;padding:13px 14px;border-radius:14px;margin-bottom:14px;line-height:1.45;font-size:14px;"
+          aria-live="polite"></div>
+
+        <div id="elencoDisponibilitaAdmin"></div>
+
+        <button id="tornaHomeAdminBasso"
+          style="width:100%;border:none;background:#f3f1ff;color:#6942d4;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:18px;">
+          ← Torna alla Home
+        </button>
+      `;
+
+      const titolo = document.getElementById("titoloMeseAdmin");
+      const elenco = document.getElementById("elencoDisponibilitaAdmin");
+      const stato = document.getElementById("statoAdmin");
+
+      function mostraStatoAdmin(msg, tipo) {
+        stato.style.display = "block";
+        stato.textContent = msg;
+        stato.style.background =
+          tipo === "ok" ? "#eef9f1" :
+          tipo === "errore" ? "#fff1f1" : "#f3f1ff";
+        stato.style.border =
+          tipo === "ok" ? "1px solid #c7e9d0" :
+          tipo === "errore" ? "1px solid #ffd0d0" :
+          "1px solid #ded6ff";
+        stato.style.color =
+          tipo === "ok" ? "#28733d" :
+          tipo === "errore" ? "#a33a3a" : "#655a84";
+      }
+
+      function etichettaFascia(fascia) {
+        if (fascia === "mattina") return "🌅 Mattina";
+        if (fascia === "pomeriggio") return "☀️ Pomeriggio";
+        if (fascia === "sera") return "🌙 Sera";
+        return fascia;
+      }
+
+      function renderAdmin(righe) {
+        elenco.innerHTML = "";
+
+        if (!righe.length) {
+          elenco.innerHTML = `
+            <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:20px;text-align:center;color:#667085;">
+              Nessuna disponibilità inserita per questo mese.
+            </div>`;
+          return;
+        }
+
+        const gruppi = {};
+
+        for (const riga of righe) {
+          if (!gruppi[riga.data]) {
+            gruppi[riga.data] = { mattina: [], pomeriggio: [], sera: [] };
+          }
+          if (gruppi[riga.data][riga.fascia]) {
+            gruppi[riga.data][riga.fascia].push(riga);
+          }
+        }
+
+        Object.keys(gruppi).sort().forEach((data) => {
+          const card = document.createElement("div");
+          card.style.cssText =
+            "background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:12px;";
+
+          const h = document.createElement("div");
+          h.style.cssText =
+            "font-size:18px;font-weight:750;margin-bottom:12px;text-transform:capitalize;";
+          h.textContent = formattaDataAdmin(data);
+          card.appendChild(h);
+
+          ["mattina","pomeriggio","sera"].forEach((fascia) => {
+            const persone = gruppi[data][fascia];
+            if (!persone.length) return;
+
+            const box = document.createElement("div");
+            box.style.cssText =
+              "margin-top:10px;padding-top:10px;border-top:1px solid #eef1f4;";
+
+            const th = document.createElement("div");
+            th.style.cssText = "font-weight:750;margin-bottom:6px;";
+            th.textContent = `${etichettaFascia(fascia)} — ${persone.length}`;
+            box.appendChild(th);
+
+            persone.forEach((persona) => {
+              const r = document.createElement("div");
+              r.style.cssText = "padding:5px 0;color:#3f4a5f;line-height:1.4;";
+
+              const n = document.createElement("strong");
+              n.textContent = persona.nome || "Senza nome";
+              r.appendChild(n);
+
+              if (persona.note) {
+                const nota = document.createElement("div");
+                nota.style.cssText = "margin-top:2px;color:#667085;font-size:14px;";
+                nota.textContent = `📝 ${persona.note}`;
+                r.appendChild(nota);
+              }
+
+              box.appendChild(r);
+            });
+
+            card.appendChild(box);
+          });
+
+          elenco.appendChild(card);
+        });
+      }
+
+      async function caricaAdmin() {
+        titolo.textContent = nomeMeseAdmin();
+        elenco.innerHTML = "";
+        mostraStatoAdmin("⏳ Caricamento disponibilità…", "info");
+
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              initData,
+              azione: "leggi_disponibilita_admin",
+              mese: meseKeyAdmin()
+            })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Errore nel caricamento");
+          }
+
+          const righe = dati.disponibilita || [];
+          renderAdmin(righe);
+          mostraStatoAdmin(`✅ Disponibilità ricevute: ${righe.length}.`, "ok");
+        } catch (errore) {
+          elenco.innerHTML = "";
+          mostraStatoAdmin(
+            "⚠️ " + (errore instanceof Error ? errore.message : "Errore nel caricamento."),
+            "errore"
+          );
+        }
+      }
+
+      document.getElementById("meseAdminPrecedente")
+        .addEventListener("click", function() {
+          meseAdmin--;
+          if (meseAdmin === 0) {
+            meseAdmin = 12;
+            annoAdmin--;
+          }
+          caricaAdmin();
+        });
+
+      document.getElementById("meseAdminSuccessivo")
+        .addEventListener("click", function() {
+          meseAdmin++;
+          if (meseAdmin === 13) {
+            meseAdmin = 1;
+            annoAdmin++;
+          }
+          caricaAdmin();
+        });
+
+      document.getElementById("tornaHomeAdmin")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document.getElementById("tornaHomeAdminBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      caricaAdmin();
 
     });
 
