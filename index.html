@@ -980,7 +980,7 @@
           </div>
 <div style="margin-top:18px; margin-bottom:10px;">
   <button
-    id="tornaPostazioniZirBasso"
+    id="tornaPostazioniCairoliBasso"
     style="
       width:100%;
       border:none;
@@ -1005,7 +1005,7 @@
 
   });
 document
-  .getElementById("tornaPostazioniZirBasso")
+  .getElementById("tornaPostazioniCairoliBasso")
   .addEventListener("click", function() {
     location.reload();
   });
@@ -1207,10 +1207,34 @@ document
         prima di utilizzare la postazione.
       </div>
 
+      <div style="margin-top:18px; margin-bottom:10px;">
+        <button
+          id="tornaPostazioniZirBasso"
+          style="
+            width:100%;
+            border:none;
+            background:#eef6ff;
+            color:#1768d7;
+            padding:14px 18px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+          ">
+          ← Torna alle Postazioni
+        </button>
+      </div>
+
     `;
 
     document
       .getElementById("tornaPostazioniZir")
+      .addEventListener("click", function() {
+        location.reload();
+      });
+
+    document
+      .getElementById("tornaPostazioniZirBasso")
       .addEventListener("click", function() {
         location.reload();
       });
