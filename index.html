@@ -668,7 +668,8 @@
       if (areaAdmin) {
         areaAdmin.style.display =
           PROFILO_TELEGRAM?.registrato &&
-          PROFILO_TELEGRAM?.ruolo === "admin"
+          PROFILO_TELEGRAM?.ruolo === "admin" &&
+          PROFILO_TELEGRAM?.attivo === true
             ? "flex"
             : "none";
       }
@@ -685,12 +686,25 @@
           ? PROFILO_TELEGRAM.nome_completo
           : nomeTelegram;
 
-      stato.style.background = "#eef9f1";
-      stato.style.borderColor = "#c7e9d0";
-      stato.style.color = "#28733d";
-      stato.textContent =
-        "✅ Telegram verificato" +
-        (nomeVisualizzato ? ` — ${nomeVisualizzato}` : "");
+      if (
+        PROFILO_TELEGRAM?.registrato &&
+        PROFILO_TELEGRAM?.attivo === false
+      ) {
+        stato.style.background = "#fff8e8";
+        stato.style.borderColor = "#ffe0a3";
+        stato.style.color = "#725315";
+        stato.textContent =
+          "⏳ Telegram verificato" +
+          (nomeVisualizzato ? ` — ${nomeVisualizzato}` : "") +
+          " · In attesa di approvazione";
+      } else {
+        stato.style.background = "#eef9f1";
+        stato.style.borderColor = "#c7e9d0";
+        stato.style.color = "#28733d";
+        stato.textContent =
+          "✅ Telegram verificato" +
+          (nomeVisualizzato ? ` — ${nomeVisualizzato}` : "");
+      }
     } catch (errore) {
       stato.style.display = "block";
       stato.style.background = "#fff1f1";
@@ -2522,6 +2536,15 @@ document
             PROFILO_TELEGRAM.nome_completo
           ) {
             profiloBox.style.display = "none";
+
+            if (PROFILO_TELEGRAM.attivo === false) {
+              mostraStato(
+                "⏳ Il tuo nome è stato registrato. Attendi l’approvazione di un amministratore prima di inserire disponibilità.",
+                "info"
+              );
+              return false;
+            }
+
             return true;
           }
 
@@ -2574,19 +2597,22 @@ document
             registrato: true,
             nome_completo: dati.nome_completo,
             ruolo: "utente",
-            attivo: true
+            attivo: false
           };
 
           profiloBox.style.display = "none";
 
           const statoTelegram = document.getElementById("telegramStatus");
           if (statoTelegram) {
+            statoTelegram.style.background = "#fff8e8";
+            statoTelegram.style.borderColor = "#ffe0a3";
+            statoTelegram.style.color = "#725315";
             statoTelegram.textContent =
-              `✅ Telegram verificato — ${dati.nome_completo}`;
+              `⏳ Telegram verificato — ${dati.nome_completo} · In attesa di approvazione`;
           }
 
           mostraStato(
-            "✅ Nome e cognome salvati. Da ora in poi non dovrai inserirli di nuovo.",
+            "✅ Nome e cognome salvati. Ora attendi l’approvazione di un amministratore; non dovrai inserirli di nuovo.",
             "ok"
           );
         } catch (errore) {
@@ -2603,12 +2629,11 @@ document
       });
 
       async function caricaMese() {
-        await controllaProfilo();
+        const profiloPronto = await controllaProfilo();
 
         giornoSelezionato = null;
         statoMese = {};
         editorGiorno.style.display = "none";
-        mostraStato("⏳ Caricamento disponibilità…", "info");
         renderCalendario();
 
         if (!initData) {
@@ -2618,6 +2643,27 @@ document
           );
           return;
         }
+
+        if (
+          PROFILO_TELEGRAM?.registrato &&
+          PROFILO_TELEGRAM?.attivo === false
+        ) {
+          mostraStato(
+            "⏳ Profilo registrato. Attendi l’approvazione di un amministratore per usare le disponibilità.",
+            "info"
+          );
+          return;
+        }
+
+        if (!profiloPronto) {
+          mostraStato(
+            "ℹ️ Inserisci prima nome e cognome.",
+            "info"
+          );
+          return;
+        }
+
+        mostraStato("⏳ Caricamento disponibilità…", "info");
 
         try {
           const risposta = await fetch(TELEGRAM_VERIFY_URL, {
@@ -2735,6 +2781,17 @@ document
             mostraStato(
               "⚠️ Devi aprire la Mini App da Telegram.",
               "errore"
+            );
+            return;
+          }
+
+          if (
+            !PROFILO_TELEGRAM?.registrato ||
+            PROFILO_TELEGRAM?.attivo !== true
+          ) {
+            mostraStato(
+              "⏳ Il tuo profilo è in attesa di approvazione. Non puoi ancora salvare disponibilità.",
+              "info"
             );
             return;
           }
@@ -3368,6 +3425,54 @@ document
           </div>
         </div>
 
+
+        <div style="
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:18px;
+        ">
+          <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom:10px;
+          ">
+            <div>
+              <div style="font-size:19px;font-weight:750;">👤 Richieste di accesso</div>
+              <div style="color:#667085;font-size:14px;margin-top:3px;">
+                Approva i nuovi utenti prima che possano inserire disponibilità.
+              </div>
+            </div>
+            <div
+              id="conteggioRichiesteAdmin"
+              style="
+                min-width:30px;
+                height:30px;
+                padding:0 8px;
+                border-radius:15px;
+                background:#fff1f1;
+                color:#c92c2c;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-weight:750;
+              ">
+              0
+            </div>
+          </div>
+
+          <div id="richiesteAccessoAdmin">
+            <div style="color:#667085;">⏳ Caricamento richieste…</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:20px;margin:0 0 12px 0;">
+          📋 Disponibilità ricevute
+        </h3>
+
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;">
           <button id="meseAdminPrecedente" data-no-scroll="true"
             style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:700;cursor:pointer;">‹</button>
@@ -3394,6 +3499,8 @@ document
       const titolo = document.getElementById("titoloMeseAdmin");
       const elenco = document.getElementById("elencoDisponibilitaAdmin");
       const stato = document.getElementById("statoAdmin");
+      const richiesteBox = document.getElementById("richiesteAccessoAdmin");
+      const conteggioRichieste = document.getElementById("conteggioRichiesteAdmin");
 
       function mostraStatoAdmin(msg, tipo) {
         stato.style.display = "block";
@@ -3488,6 +3595,139 @@ document
         });
       }
 
+
+      async function caricaRichiesteAccesso() {
+        richiesteBox.innerHTML =
+          '<div style="color:#667085;">⏳ Caricamento richieste…</div>';
+
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              initData,
+              azione: "leggi_richieste_accesso"
+            })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Errore nel caricamento richieste");
+          }
+
+          const richieste = dati.richieste || [];
+          conteggioRichieste.textContent = String(richieste.length);
+          richiesteBox.innerHTML = "";
+
+          if (!richieste.length) {
+            richiesteBox.innerHTML = `
+              <div style="
+                background:#eef9f1;
+                border:1px solid #c7e9d0;
+                color:#28733d;
+                border-radius:14px;
+                padding:13px;
+                line-height:1.45;
+              ">
+                ✅ Nessuna richiesta in attesa.
+              </div>
+            `;
+            return;
+          }
+
+          richieste.forEach((richiesta) => {
+            const card = document.createElement("div");
+            card.style.cssText =
+              "border-top:1px solid #eef1f4;padding:13px 0;";
+
+            const nome = document.createElement("div");
+            nome.style.cssText =
+              "font-size:17px;font-weight:750;color:#344054;margin-bottom:8px;";
+            nome.textContent =
+              richiesta.nome_completo || "Nome non disponibile";
+
+            const info = document.createElement("div");
+            info.style.cssText =
+              "font-size:13px;color:#667085;margin-bottom:10px;";
+            info.textContent = "Nuovo utente Telegram in attesa";
+
+            const approva = document.createElement("button");
+            approva.type = "button";
+            approva.dataset.noScroll = "true";
+            approva.style.cssText =
+              "width:100%;border:none;background:#168a4a;color:white;padding:12px 14px;border-radius:13px;font-size:15px;font-weight:750;cursor:pointer;";
+            approva.textContent = "✅ Approva accesso";
+
+            approva.addEventListener("click", async function() {
+              approva.disabled = true;
+              approva.style.opacity = "0.65";
+              approva.textContent = "⏳ Approvazione…";
+
+              try {
+                const rispostaApprova = await fetch(TELEGRAM_VERIFY_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    initData,
+                    azione: "approva_utente",
+                    telegram_id: richiesta.telegram_id
+                  })
+                });
+
+                const risultato = await rispostaApprova.json();
+
+                if (!rispostaApprova.ok || !risultato.ok) {
+                  throw new Error(
+                    risultato.error || "Errore durante l’approvazione"
+                  );
+                }
+
+                mostraStatoAdmin(
+                  `✅ ${richiesta.nome_completo} è stato approvato.`,
+                  "ok"
+                );
+
+                await caricaRichiesteAccesso();
+              } catch (errore) {
+                mostraStatoAdmin(
+                  "⚠️ " +
+                  (
+                    errore instanceof Error
+                      ? errore.message
+                      : "Non è stato possibile approvare l’utente."
+                  ),
+                  "errore"
+                );
+
+                approva.disabled = false;
+                approva.style.opacity = "1";
+                approva.textContent = "✅ Approva accesso";
+              }
+            });
+
+            card.appendChild(nome);
+            card.appendChild(info);
+            card.appendChild(approva);
+            richiesteBox.appendChild(card);
+          });
+        } catch (errore) {
+          conteggioRichieste.textContent = "!";
+          richiesteBox.innerHTML = `
+            <div style="
+              background:#fff1f1;
+              border:1px solid #ffd0d0;
+              color:#a33a3a;
+              border-radius:14px;
+              padding:13px;
+              line-height:1.45;
+            ">
+              ⚠️ Non è stato possibile caricare le richieste.
+            </div>
+          `;
+        }
+      }
+
       async function caricaAdmin() {
         titolo.textContent = nomeMeseAdmin();
         elenco.innerHTML = "";
@@ -3552,6 +3792,7 @@ document
           location.reload();
         });
 
+      caricaRichiesteAccesso();
       caricaAdmin();
 
     });
