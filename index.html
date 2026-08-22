@@ -1862,7 +1862,7 @@ document
           <h3 style="font-size:19px;margin:0 0 9px 0;">🛒 Espositori mobili</h3>
           <p>
             Abbiamo a disposizione <strong>due espositori mobili</strong> per l'opera.
-            Uno si trova a <strong>Casa Vinci</strong>; l'altro, nei primi giorni di settembre,
+            Uno si trova a <strong>Casa Vinci</strong>; l'altro, dai primi giorni di settembre,
             si troverà al <strong>chiosco di Villaggio Ardisio</strong>.
           </p>
           <p style="margin-top:10px;">
@@ -1927,13 +1927,13 @@ document
         <a href="https://forms.gle/thskP9i9hthC6uk8A" target="_blank"
            style="display:block;text-decoration:none;background:#ffffff;border:1px solid #dce8e7;border-radius:18px;padding:20px;margin-bottom:14px;color:#15213c;">
           <div style="font-size:21px;font-weight:750;margin-bottom:7px;">🔢 Inserisci Rapporto</div>
-          <div style="color:#667085;line-height:1.5;">Compila il rapporto tramite il modulo già in uso.</div>
+          <div style="color:#667085;line-height:1.5;">Compila il rapporto tramite il modulo.</div>
         </a>
 
         <a href="https://forms.gle/JKc9zNUE9R4aTYreA" target="_blank"
            style="display:block;text-decoration:none;background:#ffffff;border:1px solid #dce8e7;border-radius:18px;padding:20px;margin-bottom:18px;color:#15213c;">
           <div style="font-size:21px;font-weight:750;margin-bottom:7px;">✍️ Condividi un'Esperienza</div>
-          <div style="color:#667085;line-height:1.5;">Racconta una bella esperienza tramite il modulo dedicato.</div>
+          <div style="color:#667085;line-height:1.5;">Se hai avuto una bella esperienza raccontala compilando il modulo dedicato.</div>
         </a>
 
         <button id="tornaHomeRapportoBasso" style="width:100%;border:none;background:#eaf8f7;color:#147c78;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
@@ -2328,6 +2328,25 @@ document
       );
 
     });
+
+
+  /*
+    Navigazione Mini App:
+    dopo ogni pulsante o collegamento, riporta la vista all'inizio.
+    Il piccolo ritardo permette prima alla nuova pagina interna di essere renderizzata.
+  */
+  document.addEventListener("click", function(event) {
+    const elemento = event.target.closest("button, a");
+    if (!elemento) return;
+
+    setTimeout(function() {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto"
+      });
+    }, 0);
+  });
 
 </script>
 
