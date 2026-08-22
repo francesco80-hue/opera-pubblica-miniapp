@@ -464,8 +464,8 @@
       <!-- RAPPORTO -->
       <a
         class="card"
-        href="https://forms.gle/thskP9i9hthC6uk8A"
-        target="_blank"
+        href="#"
+        id="rapportoEsperienze"
       >
 
         <div class="card-icon teal">
@@ -706,6 +706,23 @@
           Questa postazione è attualmente sospesa.
           Non deve essere utilizzata fino a nuova comunicazione.
         </p>
+
+        <button
+          id="apriProvinciale"
+          style="
+            width:100%;
+            border:none;
+            background:#c92c2c;
+            color:white;
+            padding:13px;
+            margin-top:14px;
+            border-radius:14px;
+            font-weight:700;
+            font-size:15px;
+            cursor:pointer;
+          ">
+          📍 Consulta istruzioni Provinciale
+        </button>
 
       </div>
 
@@ -1278,11 +1295,11 @@ document
     .addEventListener("click", apriPostazioni);
 
 
-  document
-    .getElementById("istruzioni")
-    .addEventListener("click", function(event) {
+  function apriIstruzioniLocali(event) {
 
-      event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
 
       document.querySelector(".content").innerHTML = `
 
@@ -1403,13 +1420,6 @@ document
             Siamo invitati a collegarci di tanto in tanto per mantenerci aggiornati.
           </p>
         </div>
-
-        <h3 style="
-          font-size:20px;
-          margin:0 0 12px 0;
-        ">
-          ✅ Istruzioni generali locali
-        </h3>
 
         <div style="
           display:grid;
@@ -1785,13 +1795,13 @@ document
           document
             .getElementById("tornaIstruzioniLocali")
             .addEventListener("click", function() {
-              location.reload();
+              apriIstruzioniLocali();
             });
 
           document
             .getElementById("tornaIstruzioniLocaliBasso")
             .addEventListener("click", function() {
-              location.reload();
+              apriIstruzioniLocali();
             });
 
         });
@@ -1809,7 +1819,11 @@ document
           location.reload();
         });
 
-    });
+    }
+
+  document
+    .getElementById("istruzioni")
+    .addEventListener("click", apriIstruzioniLocali);
 
 
   document
@@ -1837,6 +1851,109 @@ document
 
     });
 
+
+
+
+  document
+    .getElementById("rapportoEsperienze")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button id="tornaHomeRapporto" style="border:none;background:#eaf8f7;color:#147c78;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#eefaf9,#fbffff);border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:18px;">
+          <h2 style="font-size:25px;margin-bottom:6px;">📝 Rapporto ed Esperienze</h2>
+          <div style="color:#607674;">Scegli cosa desideri inserire.</div>
+        </div>
+
+        <a href="https://forms.gle/thskP9i9hthC6uk8A" target="_blank"
+           style="display:block;text-decoration:none;background:#ffffff;border:1px solid #dce8e7;border-radius:18px;padding:20px;margin-bottom:14px;color:#15213c;">
+          <div style="font-size:21px;font-weight:750;margin-bottom:7px;">🔢 Inserisci Rapporto</div>
+          <div style="color:#667085;line-height:1.5;">Compila il rapporto tramite il modulo già in uso.</div>
+        </a>
+
+        <a href="https://forms.gle/JKc9zNUE9R4aTYreA" target="_blank"
+           style="display:block;text-decoration:none;background:#ffffff;border:1px solid #dce8e7;border-radius:18px;padding:20px;margin-bottom:18px;color:#15213c;">
+          <div style="font-size:21px;font-weight:750;margin-bottom:7px;">✍️ Condividi un'Esperienza</div>
+          <div style="color:#667085;line-height:1.5;">Racconta una bella esperienza tramite il modulo dedicato.</div>
+        </a>
+
+        <button id="tornaHomeRapportoBasso" style="width:100%;border:none;background:#eaf8f7;color:#147c78;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+          ← Torna alla Home
+        </button>
+      `;
+
+      document.getElementById("tornaHomeRapporto").addEventListener("click", function(){ location.reload(); });
+      document.getElementById("tornaHomeRapportoBasso").addEventListener("click", function(){ location.reload(); });
+    });
+
+
+  document
+    .getElementById("apriProvinciale")
+    .addEventListener("click", function() {
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button id="tornaPostazioniProvinciale" style="border:none;background:#eef6ff;color:#1768d7;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+            ← Torna alle Postazioni
+          </button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;">
+          <h2 style="font-size:26px;">📍 Provinciale</h2>
+          <span style="background:#ffe5e5;color:#c92c2c;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:700;">🔴 SOSPESA</span>
+        </div>
+
+        <div style="background:#fff3f3;border:1px solid #ffd2d2;border-radius:18px;padding:16px;margin-bottom:18px;color:#8a3434;line-height:1.5;">
+          ⚠️ La postazione è attualmente sospesa. Le indicazioni sono consultabili, ma la postazione non deve essere utilizzata fino a nuova comunicazione.
+        </div>
+
+        <img src="provinciale-panoramica.png" loading="lazy" alt="Panoramica Provinciale"
+             style="width:100%;display:block;border-radius:18px;margin-bottom:18px;">
+
+        <h3 style="font-size:21px;margin-bottom:10px;">📍 Postazione principale</h3>
+        <div style="background:#f7f9fc;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:14px;line-height:1.6;color:#3f4a5f;">
+          Prendete come riferimento la Banca Intesa Sanpaolo. L'espositore va posizionato sotto l'insegna della banca, perfettamente dritto e visibile da entrambi i lati. Chi è in turno si dispone ai lati dell'espositore con le spalle verso il muro.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px;">
+          <img src="provinciale-principale-1.png" loading="lazy" alt="Provinciale posizione principale 1" style="width:100%;border-radius:16px;">
+          <img src="provinciale-principale-2.png" loading="lazy" alt="Provinciale posizione principale 2" style="width:100%;border-radius:16px;">
+          <img src="provinciale-principale-3.png" loading="lazy" alt="Provinciale posizione principale 3" style="width:100%;border-radius:16px;">
+        </div>
+
+        <h3 style="font-size:21px;margin-bottom:10px;">🔄 Postazione alternativa</h3>
+        <div style="background:#f7f9fc;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:14px;line-height:1.6;color:#3f4a5f;">
+          La postazione alternativa si trova di fronte alla banca. L'espositore va rivolto verso la banca e mantenuto perfettamente dritto. Chi è in turno si posiziona di fronte all'espositore con le spalle verso la banca.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:18px;">
+          <img src="provinciale-alternativa-1.png" loading="lazy" alt="Provinciale posizione alternativa 1" style="width:100%;border-radius:16px;">
+          <img src="provinciale-alternativa-2.png" loading="lazy" alt="Provinciale posizione alternativa 2" style="width:100%;border-radius:16px;">
+          <img src="provinciale-alternativa-3.png" loading="lazy" alt="Provinciale posizione alternativa 3" style="width:100%;border-radius:16px;">
+        </div>
+
+        <a href="https://www.google.com/maps/search/?api=1&query=38.172556,15.543250" target="_blank"
+           style="display:block;text-align:center;background:#1877e8;color:white;padding:15px;border-radius:15px;text-decoration:none;font-size:16px;font-weight:750;margin-bottom:18px;">
+          🧭 APRI NEL NAVIGATORE
+        </a>
+
+        <button id="tornaPostazioniProvincialeBasso" style="width:100%;border:none;background:#eef6ff;color:#1768d7;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+          ← Torna alle Postazioni
+        </button>
+      `;
+
+      document.getElementById("tornaPostazioniProvinciale").addEventListener("click", function(){ apriPostazioni(); });
+      document.getElementById("tornaPostazioniProvincialeBasso").addEventListener("click", function(){ apriPostazioni(); });
+    });
 
 
   document
