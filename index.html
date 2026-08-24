@@ -405,7 +405,7 @@
         <div class="card-body">
 
           <div class="card-title">
-            Programma<br>Opera Pubblica
+            Programma
           </div>
 
         </div>
@@ -3109,14 +3109,14 @@ document
     const fine = `${anno}${mese}${giorno}T${oraFine}${minFine}00`;
 
     const dettagli = [
-      "Opera Pubblica",
+      "Opera Pubblica Bordonaro",
       turno.postazione_nome ? `Postazione: ${turno.postazione_nome}` : "",
       turno.note ? `Note: ${turno.note}` : ""
     ].filter(Boolean).join("\n");
 
     const url =
       "https://calendar.google.com/calendar/render?action=TEMPLATE" +
-      `&text=${encodeURIComponent("Opera Pubblica")}` +
+      `&text=${encodeURIComponent("Opera Pubblica Bordonaro")}` +
       `&dates=${encodeURIComponent(inizio + "/" + fine)}` +
       `&ctz=${encodeURIComponent("Europe/Rome")}` +
       `&location=${encodeURIComponent(turno.postazione_nome || "")}` +
@@ -3184,6 +3184,37 @@ document
     return Array.from(gruppi.values());
   }
 
+  function settimanaConclusa(settimana) {
+    if (!settimana?.turni?.length) return false;
+
+    const ultimaData = settimana.turni
+      .map(t => String(t.data))
+      .sort()
+      .at(-1);
+
+    const [a, m, g] = ultimaData.split("-").map(Number);
+    const fineGiorno = new Date(a, m - 1, g, 23, 59, 59, 999);
+
+    return fineGiorno < new Date();
+  }
+
+  function creaContenitoreSettimanePassate() {
+    const details = document.createElement("details");
+    details.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;background:#fafbfc;margin-bottom:18px;overflow:hidden;";
+
+    const summary = document.createElement("summary");
+    summary.style.cssText = "cursor:pointer;padding:14px 16px;font-weight:800;color:#596273;";
+    summary.textContent = "🗂️ Turni passati";
+
+    const corpo = document.createElement("div");
+    corpo.style.cssText = "padding:0 12px 12px;";
+
+    details.appendChild(summary);
+    details.appendChild(corpo);
+
+    return { details, corpo };
+  }
+
   async function chiamaApi(azione, extra = {}) {
     const initData = window.Telegram?.WebApp?.initData || "";
 
@@ -3244,7 +3275,12 @@ document
   }
 
   function collegaRitornoDoppio(idAlto, idBasso, destinazione = "home") {
-    const torna = () => {
+    const torna = (event) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
       if (destinazione === "admin") {
         apriAreaAmministratori();
       } else {
@@ -3263,7 +3299,7 @@ document
     document.querySelector(".content").innerHTML = `
       ${pulsanteIndietro("tornaHomeProgramma")}
       <div style="background:#eef6ff;border:1px solid #cfe1f5;border-radius:20px;padding:20px;margin-bottom:16px;">
-        <h2 style="font-size:25px;margin:0;">📅 Programma Opera Pubblica</h2>
+        <h2 style="font-size:25px;margin:0;">📅 Programma</h2>
       </div>
 
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
@@ -3312,6 +3348,8 @@ document
         statoEl.style.display = "none";
 
         const settimane = raggruppaTurniPerSettimana(turni);
+        const passate = creaContenitoreSettimanePassate();
+        let numeroSettimanePassate = 0;
 
         settimane.forEach(settimana => {
           const sezione = document.createElement("section");
@@ -3363,8 +3401,20 @@ document
 
           sezione.appendChild(titolo);
           sezione.appendChild(griglia);
-          elencoEl.appendChild(sezione);
+
+          if (settimanaConclusa(settimana)) {
+            passate.corpo.appendChild(sezione);
+            numeroSettimanePassate++;
+          } else {
+            elencoEl.appendChild(sezione);
+          }
         });
+
+        if (numeroSettimanePassate > 0) {
+          passate.details.querySelector("summary").textContent =
+            `🗂️ Turni passati (${numeroSettimanePassate} ${numeroSettimanePassate === 1 ? "settimana" : "settimane"})`;
+          elencoEl.appendChild(passate.details);
+        }
       } catch (errore) {
         stato(errore.message || "Errore nel caricamento.", true);
       }
@@ -3565,44 +3615,132 @@ document
 
 
 
+  async function apriRapportiEsperienze() {
+    let mese = meseCorrenteKey();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeRapporto")}
+
+      <div style="background:linear-gradient(135deg,#eefaf9,#fbffff);border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:18px;">
+        <h2 style="font-size:25px;margin:0;">📝 Rapporti ed esperienze</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <button id="rapportiPrev" type="button" data-no-scroll="true" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+        <div id="rapportiMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+        <button id="rapportiNext" type="button" data-no-scroll="true" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+      </div>
+
+      <div id="rapportiStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+      <div id="rapportiElenco"></div>
+
+      ${pulsanteIndietroFondo("tornaHomeRapportoFondo")}
+    `;
+
+    collegaRitornoDoppio("tornaHomeRapporto", "tornaHomeRapportoFondo");
+
+    const meseEl = document.getElementById("rapportiMese");
+    const statoEl = document.getElementById("rapportiStato");
+    const elencoEl = document.getElementById("rapportiElenco");
+
+    function stato(msg, errore = false) {
+      statoEl.style.display = "block";
+      statoEl.style.background = errore ? "#fff1f1" : "#eef9f1";
+      statoEl.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+      statoEl.style.color = errore ? "#a33a3a" : "#28733d";
+      statoEl.textContent = msg;
+    }
+
+    async function carica() {
+      meseEl.textContent = titoloMese(mese);
+      elencoEl.innerHTML = "";
+
+      try {
+        const dati = await chiamaApi("leggi_turni_rapporto", { mese });
+        const turni = dati.turni || [];
+
+        if (!turni.length) {
+          elencoEl.innerHTML = `
+            <div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">
+              Nessun turno concluso da compilare in questo mese.
+            </div>`;
+          return;
+        }
+
+        turni.forEach(turno => {
+          const rapporto = turno.rapporto || {};
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #dce8e7;border-radius:18px;padding:16px;margin-bottom:12px;background:#fff;";
+
+          const options = Array.from({ length: 11 }, (_, n) =>
+            `<option value="${n}" ${Number(rapporto.pubblicazioni ?? 0) === n ? "selected" : ""}>${n}</option>`
+          ).join("");
+
+          card.innerHTML = `
+            <div style="font-size:18px;font-weight:800;text-transform:capitalize;">${dataItaliana(turno.data)}</div>
+            <div style="color:#556078;margin:4px 0 12px;">🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)} · 📍 ${turno.postazione_nome}</div>
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Pubblicazioni distribuite</label>
+            <select class="rapportoPubblicazioni" style="width:100%;padding:11px;border:1px solid #dce8e7;border-radius:12px;font-size:16px;margin-bottom:11px;">
+              ${options}
+            </select>
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Esperienza <span style="font-weight:500;color:#667085;">(facoltativa)</span></label>
+            <textarea class="rapportoEsperienza" maxlength="1500" rows="4" placeholder="Se vuoi, racconta una bella esperienza…" style="width:100%;padding:11px;border:1px solid #dce8e7;border-radius:12px;font-size:15px;">${rapporto.esperienza || ""}</textarea>
+
+            <button type="button" data-no-scroll="true" class="salvaRapporto" data-turno="${turno.id}" style="width:100%;border:none;background:#147c78;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;margin-top:10px;">
+              💾 ${rapporto.id ? "Aggiorna rapporto" : "Salva rapporto"}
+            </button>
+          `;
+
+          elencoEl.appendChild(card);
+        });
+
+        elencoEl.querySelectorAll(".salvaRapporto").forEach(btn => {
+          btn.addEventListener("click", async event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const card = btn.closest("div[style*='border:1px solid #dce8e7']");
+            try {
+              await chiamaApi("salva_rapporto", {
+                turno_id: Number(btn.dataset.turno),
+                pubblicazioni: Number(card.querySelector(".rapportoPubblicazioni").value),
+                esperienza: card.querySelector(".rapportoEsperienza").value.trim()
+              });
+              stato("✅ Rapporto salvato.");
+              await carica();
+            } catch (errore) {
+              stato(errore.message || "Impossibile salvare il rapporto.", true);
+            }
+          });
+        });
+
+      } catch (errore) {
+        stato(errore.message || "Errore nel caricamento.", true);
+      }
+    }
+
+    document.getElementById("rapportiPrev").addEventListener("click", event => {
+      event.preventDefault();
+      mese = spostaMese(mese, -1);
+      carica();
+    });
+
+    document.getElementById("rapportiNext").addEventListener("click", event => {
+      event.preventDefault();
+      mese = spostaMese(mese, 1);
+      carica();
+    });
+
+    carica();
+  }
+
   document
     .getElementById("rapportoEsperienze")
     .addEventListener("click", function(event) {
-
       event.preventDefault();
-
-      document.querySelector(".content").innerHTML = `
-
-        <div style="margin-bottom:18px;">
-          <button id="tornaHomeRapporto" style="border:none;background:#eaf8f7;color:#147c78;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
-            ← Torna alla Home
-          </button>
-        </div>
-
-        <div style="background:linear-gradient(135deg,#eefaf9,#fbffff);border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:18px;">
-          <h2 style="font-size:25px;margin-bottom:6px;">📝 Rapporto ed Esperienze</h2>
-          <div style="color:#607674;">Scegli cosa desideri inserire.</div>
-        </div>
-
-        <a href="https://forms.gle/thskP9i9hthC6uk8A" target="_blank"
-           style="display:block;text-decoration:none;background:#ffffff;border:1px solid #dce8e7;border-radius:18px;padding:20px;margin-bottom:14px;color:#15213c;">
-          <div style="font-size:21px;font-weight:750;margin-bottom:7px;">🔢 Inserisci Rapporto</div>
-          <div style="color:#667085;line-height:1.5;">Compila il rapporto tramite il modulo.</div>
-        </a>
-
-        <a href="https://forms.gle/JKc9zNUE9R4aTYreA" target="_blank"
-           style="display:block;text-decoration:none;background:#ffffff;border:1px solid #dce8e7;border-radius:18px;padding:20px;margin-bottom:18px;color:#15213c;">
-          <div style="font-size:21px;font-weight:750;margin-bottom:7px;">✍️ Condividi un'Esperienza</div>
-          <div style="color:#667085;line-height:1.5;">Se hai avuto una bella esperienza raccontala compilando il modulo dedicato.</div>
-        </a>
-
-        <button id="tornaHomeRapportoBasso" style="width:100%;border:none;background:#eaf8f7;color:#147c78;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
-          ← Torna alla Home
-        </button>
-      `;
-
-      document.getElementById("tornaHomeRapporto").addEventListener("click", function(){ location.reload(); });
-      document.getElementById("tornaHomeRapportoBasso").addEventListener("click", function(){ location.reload(); });
+      apriRapportiEsperienze();
     });
 
 
@@ -3979,7 +4117,7 @@ document
 
   async function apriAreaAmministratori(event) {
 
-      event.preventDefault();
+      event?.preventDefault?.();
 
       const tg = window.Telegram?.WebApp;
       const initData = tg?.initData || "";
@@ -4050,6 +4188,11 @@ document
             style="position:relative;border:1px solid #f0ddba;background:#fffaf0;color:#8a5b13;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
             <span id="badgeDaGestire" style="display:none;position:absolute;right:8px;top:8px;background:#c92c2c;color:#fff;border-radius:999px;padding:3px 7px;font-size:11px;">0</span>
             ✅<br>Conferme / rifiuti
+          </button>
+
+          <button id="adminRapportiEsperienze" data-no-scroll="true"
+            style="border:1px solid #cce9e7;background:#f4fbfa;color:#147c78;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📝<br>Rapporti ed esperienze
           </button>
 
           <button id="adminProgrammaPdf" data-no-scroll="true"
@@ -4161,13 +4304,14 @@ document
       const adminGestionePostazioni = document.getElementById("adminGestionePostazioni");
       const adminGestioneUtenti = document.getElementById("adminGestioneUtenti");
       const adminConfermeTurni = document.getElementById("adminConfermeTurni");
+      const adminRapportiEsperienze = document.getElementById("adminRapportiEsperienze");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
       const adminGestioneAmministratori = document.getElementById("adminGestioneAmministratori");
       const badgeDaGestire = document.getElementById("badgeDaGestire");
 
 
-      async function apriGestioneProgrammaAdmin() {
+      async function apriGestioneProgrammaAdmin(turnoDaEvidenziare = null) {
         let mese = meseCorrenteKey();
         let utentiPriorita = [];
         let postazioniAttive = [];
@@ -4318,6 +4462,8 @@ document
             }
 
             const settimane = raggruppaTurniPerSettimana(turni);
+            const passate = creaContenitoreSettimanePassate();
+            let numeroSettimanePassate = 0;
 
             settimane.forEach(settimana => {
               const sezione = document.createElement("section");
@@ -4333,6 +4479,7 @@ document
               settimana.turni.forEach(t => {
                 const card = document.createElement("div");
                 card.style.cssText = "border:1px solid #e1e7ef;border-radius:17px;padding:15px;background:#fff;min-width:0;";
+                card.dataset.turnoCard = String(t.id);
 
                 const assegnatiIds = (t.assegnazioni || []).map(x => Number(x.telegram_id));
 
@@ -4394,8 +4541,34 @@ document
 
               sezione.appendChild(titoloSet);
               sezione.appendChild(griglia);
-              elencoBox.appendChild(sezione);
+
+              if (settimanaConclusa(settimana)) {
+                passate.corpo.appendChild(sezione);
+                numeroSettimanePassate++;
+              } else {
+                elencoBox.appendChild(sezione);
+              }
             });
+
+            if (numeroSettimanePassate > 0) {
+              passate.details.querySelector("summary").textContent =
+                `🗂️ Turni passati (${numeroSettimanePassate} ${numeroSettimanePassate === 1 ? "settimana" : "settimane"})`;
+              elencoBox.appendChild(passate.details);
+            }
+
+            if (turnoDaEvidenziare) {
+              const targetCard = elencoBox.querySelector(`[data-turno-card="${turnoDaEvidenziare}"]`);
+              if (targetCard) {
+                targetCard.style.border = "2px solid #c92c2c";
+                targetCard.style.boxShadow = "0 0 0 4px rgba(201,44,44,.10)";
+                setTimeout(() => {
+                  targetCard.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                  });
+                }, 120);
+              }
+            }
 
             elencoBox.querySelectorAll(".sostituisciSelect").forEach(select => {
               select.addEventListener("change", () =>
@@ -4804,10 +4977,81 @@ document
         }
       }
 
+
+      async function apriRapportiEsperienzeAdmin() {
+        let mese = meseCorrenteKey();
+
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminRapporti", "← Torna all’Area amministratori")}
+
+          <div style="background:#eefaf9;border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">📝 Rapporti ed esperienze</h2>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <button id="adminRapportiPrev" type="button" data-no-scroll="true" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+            <div id="adminRapportiMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+            <button id="adminRapportiNext" type="button" data-no-scroll="true" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+          </div>
+
+          <div id="adminRapportiElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminRapportiFondo", "← Torna all’Area amministratori")}
+        `;
+
+        collegaRitornoDoppio("tornaAreaAdminRapporti", "tornaAreaAdminRapportiFondo", "admin");
+
+        const meseEl = document.getElementById("adminRapportiMese");
+        const elenco = document.getElementById("adminRapportiElenco");
+
+        async function carica() {
+          meseEl.textContent = titoloMese(mese);
+          elenco.innerHTML = "";
+
+          try {
+            const dati = await chiamaApi("leggi_rapporti_admin", { mese });
+            const rapporti = dati.rapporti || [];
+
+            if (!rapporti.length) {
+              elenco.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">Nessun rapporto salvato in questo mese.</div>`;
+              return;
+            }
+
+            rapporti.forEach(r => {
+              const card = document.createElement("div");
+              card.style.cssText = "border:1px solid #dce8e7;border-radius:17px;padding:15px;margin-bottom:10px;background:#fff;";
+              card.innerHTML = `
+                <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(r.data)}</div>
+                <div style="color:#556078;margin:4px 0;">📍 ${r.postazione_nome} · 👤 ${r.nome_completo}</div>
+                <div style="font-size:16px;font-weight:800;margin-top:9px;">📚 Pubblicazioni: ${r.pubblicazioni}</div>
+                ${r.esperienza ? `<div style="margin-top:9px;padding-top:9px;border-top:1px solid #eef1f4;white-space:pre-wrap;">${r.esperienza}</div>` : ""}
+              `;
+              elenco.appendChild(card);
+            });
+          } catch (errore) {
+            elenco.innerHTML = `<div style="padding:16px;border:1px solid #ffd0d0;border-radius:14px;color:#a33a3a;">${errore.message || "Errore nel caricamento."}</div>`;
+          }
+        }
+
+        document.getElementById("adminRapportiPrev").addEventListener("click", event => {
+          event.preventDefault();
+          mese = spostaMese(mese, -1);
+          carica();
+        });
+
+        document.getElementById("adminRapportiNext").addEventListener("click", event => {
+          event.preventDefault();
+          mese = spostaMese(mese, 1);
+          carica();
+        });
+
+        carica();
+      }
+
       adminGestioneProgramma.addEventListener("click", apriGestioneProgrammaAdmin);
       adminGestionePostazioni.addEventListener("click", apriGestionePostazioniAdmin);
       adminGestioneUtenti.addEventListener("click", apriGestioneUtentiAdmin);
       adminConfermeTurni.addEventListener("click", apriConfermeAdmin);
+      adminRapportiEsperienze.addEventListener("click", apriRapportiEsperienzeAdmin);
       adminGestioneAmministratori.addEventListener("click", apriGestioneAmministratori);
       configuraSuperAdmin();
 
@@ -5134,10 +5378,34 @@ document
 
     setTimeout(function() {
       if (startParam === "admin") {
-        const area = document.getElementById("amministratori");
-        if (area && area.style.display !== "none") {
+        if (
+          PROFILO_TELEGRAM?.registrato &&
+          (PROFILO_TELEGRAM?.ruolo === "admin" ||
+           PROFILO_TELEGRAM?.ruolo === "super_admin") &&
+          PROFILO_TELEGRAM?.attivo === true
+        ) {
           apriAreaAmministratori();
         }
+        return;
+      }
+
+      if (startParam.startsWith("admin_turno_")) {
+        const turnoId = Number(startParam.replace("admin_turno_", ""));
+
+        if (
+          Number.isSafeInteger(turnoId) &&
+          turnoId > 0 &&
+          PROFILO_TELEGRAM?.registrato &&
+          (PROFILO_TELEGRAM?.ruolo === "admin" ||
+           PROFILO_TELEGRAM?.ruolo === "super_admin") &&
+          PROFILO_TELEGRAM?.attivo === true
+        ) {
+          apriAreaAmministratori();
+          setTimeout(() => {
+            apriGestioneProgrammaAdmin(turnoId);
+          }, 80);
+        }
+        return;
       }
 
       if (startParam === "miei_turni") {
