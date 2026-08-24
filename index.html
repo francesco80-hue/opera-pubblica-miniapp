@@ -3086,6 +3086,67 @@ document
     return String(ora || "").slice(0, 5);
   }
 
+  function escapeIcs(value) {
+    return String(value ?? "")
+      .replace(/\\/g, "\\\\")
+      .replace(/\r?\n/g, "\\n")
+      .replace(/,/g, "\\,")
+      .replace(/;/g, "\\;");
+  }
+
+  function dataOraIcs(dataIso, ora) {
+    const [anno, mese, giorno] = String(dataIso).split("-");
+    const [ore = "00", minuti = "00"] = String(ora || "00:00").split(":");
+    return `${anno}${mese}${giorno}T${ore}${minuti}00`;
+  }
+
+  function scaricaTurnoCalendario(turno) {
+    const inizio = dataOraIcs(turno.data, turno.ora_inizio);
+    const fine = dataOraIcs(turno.data, turno.ora_fine);
+    const nomeFile = `opera-pubblica-${turno.data}.ics`;
+
+    const descrizione = [
+      "Opera Pubblica",
+      turno.postazione_nome ? `Postazione: ${turno.postazione_nome}` : "",
+      turno.note ? `Note: ${turno.note}` : ""
+    ].filter(Boolean).join("\\n");
+
+    const uid = `opera-pubblica-${turno.id || turno.assegnazione?.id || Date.now()}@bordonaro`;
+
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Opera Pubblica Bordonaro//Mini App//IT",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")}`,
+      `DTSTART;TZID=Europe/Rome:${inizio}`,
+      `DTEND;TZID=Europe/Rome:${fine}`,
+      "SUMMARY:Opera Pubblica",
+      `LOCATION:${escapeIcs(turno.postazione_nome || "")}`,
+      `DESCRIPTION:${escapeIcs(descrizione)}`,
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = nomeFile;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      link.remove();
+    }, 1500);
+  }
+
   function inizioSettimana(dataIso) {
     const [a, m, g] = String(dataIso).split("-").map(Number);
     const d = new Date(a, m - 1, g);
@@ -3421,6 +3482,16 @@ document
             <div style="color:#44506a;margin-bottom:4px;">🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}</div>
             <div style="color:#44506a;margin-bottom:10px;">📍 ${turno.postazione_nome}</div>
             <div style="font-weight:750;margin-bottom:12px;">${statoTesto}</div>
+
+            ${a.stato === "accettato" ? `
+              <button
+                class="aggiungiCalendario"
+                data-turno="${turno.id}"
+                style="width:100%;border:none;background:#1768d7;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;margin-bottom:9px;">
+                📅 Aggiungi al calendario
+              </button>
+            ` : ""}
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
               <button class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
               <button class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
@@ -3436,6 +3507,20 @@ document
 
         elencoEl.querySelectorAll(".rifiutaTurno").forEach(btn => {
           btn.addEventListener("click", () => rispondi(Number(btn.dataset.id), "rifiutato"));
+        });
+
+        elencoEl.querySelectorAll(".aggiungiCalendario").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const turnoId = Number(btn.dataset.turno);
+            const turno = turni.find(t => Number(t.id) === turnoId);
+
+            if (!turno) {
+              stato("Turno non trovato.", true);
+              return;
+            }
+
+            scaricaTurnoCalendario(turno);
+          });
         });
 
       } catch (errore) {
