@@ -585,6 +585,30 @@
 
 
     <!-- AREA AMMINISTRATORI -->
+
+    <div
+      id="boxPermessoNotifiche"
+      style="display:none;background:#eef6ff;border:1px solid #cfe1f5;border-radius:18px;padding:15px;margin:14px 0;"
+    >
+      <div style="font-weight:800;font-size:16px;margin-bottom:5px;">
+        🔔 Attiva le notifiche personali
+      </div>
+
+      <div style="font-size:14px;color:#556078;line-height:1.45;margin-bottom:11px;">
+        Serve una sola volta per ricevere direttamente su Telegram
+        nuovi turni e variazioni, senza dover usare la chat del bot.
+      </div>
+
+      <button
+        id="attivaNotificheTelegram"
+        type="button"
+        data-no-scroll="true"
+        style="width:100%;border:none;background:#1768d7;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;"
+      >
+        🔔 Attiva notifiche
+      </button>
+    </div>
+
     <a
       class="admin"
       href="#"
@@ -3184,6 +3208,80 @@ document
 
   function oraBreve(ora) {
     return String(ora || "").slice(0, 5);
+  }
+
+  function notificheTelegramGiaConsentite() {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    return user?.allows_write_to_pm === true ||
+      localStorage.getItem("opera_pubblica_notifiche_ok") === "1";
+  }
+
+  function aggiornaBoxNotifiche() {
+    const box = document.getElementById("boxPermessoNotifiche");
+    if (!box) return;
+
+    if (!window.Telegram?.WebApp?.initData) {
+      box.style.display = "none";
+      return;
+    }
+
+    if (notificheTelegramGiaConsentite()) {
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "block";
+  }
+
+  async function richiediPermessoNotificheTelegram() {
+    const tg = window.Telegram?.WebApp;
+
+    if (!tg?.requestWriteAccess) {
+      alert(
+        "Per attivare le notifiche aggiorna Telegram all’ultima versione disponibile."
+      );
+      return;
+    }
+
+    const btn = document.getElementById("attivaNotificheTelegram");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "⏳ Attivazione…";
+    }
+
+    try {
+      tg.requestWriteAccess((consentito) => {
+        if (consentito === true) {
+          localStorage.setItem("opera_pubblica_notifiche_ok", "1");
+
+          const box = document.getElementById("boxPermessoNotifiche");
+          if (box) {
+            box.innerHTML = `
+              <div style="font-weight:800;color:#28733d;">✅ Notifiche attivate</div>
+              <div style="font-size:14px;color:#4f6656;margin-top:4px;">
+                Da ora puoi ricevere direttamente gli avvisi personali dei turni.
+              </div>
+            `;
+
+            setTimeout(() => {
+              box.style.display = "none";
+            }, 1800);
+          }
+        } else {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🔔 Attiva notifiche";
+          }
+        }
+      });
+    } catch (errore) {
+      console.error("Errore richiesta notifiche Telegram:", errore);
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "🔔 Attiva notifiche";
+      }
+    }
   }
 
   function escapeIcs(value) {
@@ -6056,6 +6154,19 @@ document
         document.getElementById("mieiTurni")?.click();
       }
     }, 80);
+  });
+
+
+  document
+    .getElementById("attivaNotificheTelegram")
+    ?.addEventListener("click", function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      richiediPermessoNotificheTelegram();
+    });
+
+  verificaPromise.then(function() {
+    aggiornaBoxNotifiche();
   });
 
   /*
