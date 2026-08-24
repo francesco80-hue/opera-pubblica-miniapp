@@ -589,8 +589,9 @@
       class="admin"
       href="#"
       id="amministratori"
-      style="display:none;"
+      style="display:none;position:relative;"
     >
+      <span id="badgeAdminHome" style="display:none;position:absolute;right:12px;top:10px;background:#c92c2c;color:white;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;">0</span>
 
       <div class="admin-icon">
         🔒
@@ -694,6 +695,24 @@
           PROFILO_TELEGRAM?.attivo === true
             ? "flex"
             : "none";
+      }
+
+      if (
+        PROFILO_TELEGRAM?.registrato &&
+        (PROFILO_TELEGRAM?.ruolo === "admin" ||
+         PROFILO_TELEGRAM?.ruolo === "super_admin") &&
+        PROFILO_TELEGRAM?.attivo === true
+      ) {
+        chiamaApi("contatore_rapporti_admin")
+          .then(d => {
+            const b = document.getElementById("badgeAdminHome");
+            const n = Number(d.nuovi_rapporti || 0);
+            if (b && n > 0) {
+              b.textContent = String(n);
+              b.style.display = "block";
+            }
+          })
+          .catch(() => {});
       }
 
       const nomeTelegram = [
@@ -4224,7 +4243,7 @@ document
           </button>
 
           <button id="adminRapportiEsperienze" data-no-scroll="true"
-            style="border:1px solid #cce9e7;background:#f4fbfa;color:#147c78;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            style="position:relative;border:1px solid #cce9e7;background:#f4fbfa;color:#147c78;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
             📝<br>Rapporti ed esperienze
           </button>
 
@@ -4343,6 +4362,7 @@ document
       const adminGestioneUtenti = document.getElementById("adminGestioneUtenti");
       const adminConfermeTurni = document.getElementById("adminConfermeTurni");
       const adminRapportiEsperienze = document.getElementById("adminRapportiEsperienze");
+      const badgeRapportiAdmin = document.getElementById("badgeRapportiAdmin");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
       const adminGestioneAggiornamenti = document.getElementById("adminGestioneAggiornamenti");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
@@ -4920,25 +4940,6 @@ document
               elenco.appendChild(card);
             });
 
-            elenco.querySelectorAll(".approvaEsperienzaAdmin").forEach(btn => {
-              btn.addEventListener("click", async event => {
-                event.preventDefault();
-                event.stopPropagation();
-
-                try {
-                  await chiamaApi("approva_esperienza_admin", {
-                    rapporto_id: Number(btn.dataset.id),
-                    approvata: btn.dataset.approvata !== "true"
-                  });
-                  await carica();
-                } catch (errore) {
-                  elenco.insertAdjacentHTML(
-                    "afterbegin",
-                    `<div style="padding:12px;border:1px solid #ffd0d0;border-radius:12px;color:#a33a3a;margin-bottom:10px;">${errore.message || "Errore."}</div>`
-                  );
-                }
-              });
-            });
           } catch (errore) {
             elenco.innerHTML = `<div style="padding:14px;background:#fff1f1;color:#a33a3a;border-radius:14px;">⚠️ ${errore.message}</div>`;
           }
@@ -4949,6 +4950,30 @@ document
         carica();
       }
 
+
+      async function aggiornaBadgeRapporti() {
+        try {
+          const dati = await chiamaApi("contatore_rapporti_admin");
+          const n = Number(dati.nuovi_rapporti || 0);
+
+          const homeBadge = document.getElementById("badgeAdminHome");
+
+          if (n > 0) {
+            if (badgeRapportiAdmin) {
+              badgeRapportiAdmin.textContent = String(n);
+              badgeRapportiAdmin.style.display = "block";
+            }
+
+            if (homeBadge) {
+              homeBadge.textContent = String(n);
+              homeBadge.style.display = "block";
+            }
+          } else {
+            if (badgeRapportiAdmin) badgeRapportiAdmin.style.display = "none";
+            if (homeBadge) homeBadge.style.display = "none";
+          }
+        } catch (_) {}
+      }
 
       async function aggiornaBadgeDaGestire() {
         try {
@@ -4968,6 +4993,7 @@ document
           adminGestioneAmministratori.style.display = "block";
         }
         aggiornaBadgeDaGestire();
+        aggiornaBadgeRapporti();
       }
 
       async function apriGestioneAmministratori() {
@@ -5097,6 +5123,26 @@ document
               `;
               elenco.appendChild(card);
             });
+
+            elenco.querySelectorAll(".approvaEsperienzaAdmin").forEach(btn => {
+              btn.addEventListener("click", async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                try {
+                  await chiamaApi("approva_esperienza_admin", {
+                    rapporto_id: Number(btn.dataset.id),
+                    approvata: btn.dataset.approvata !== "true"
+                  });
+                  await carica();
+                } catch (errore) {
+                  elenco.insertAdjacentHTML(
+                    "afterbegin",
+                    `<div style="padding:12px;border:1px solid #ffd0d0;border-radius:12px;color:#a33a3a;margin-bottom:10px;">${errore.message || "Errore."}</div>`
+                  );
+                }
+              });
+            });
           } catch (errore) {
             elenco.innerHTML = `<div style="padding:16px;border:1px solid #ffd0d0;border-radius:14px;color:#a33a3a;">${errore.message || "Errore nel caricamento."}</div>`;
           }
@@ -5113,6 +5159,10 @@ document
           mese = spostaMese(mese, 1);
           carica();
         });
+
+        try {
+          await chiamaApi("segna_rapporti_letti_admin");
+        } catch (_) {}
 
         carica();
       }
@@ -5812,6 +5862,21 @@ document
           apriAreaAmministratori();
           setTimeout(() => {
             apriGestioneProgrammaAdmin(turnoId);
+          }, 80);
+        }
+        return;
+      }
+
+      if (startParam === "admin_rapporti") {
+        if (
+          PROFILO_TELEGRAM?.registrato &&
+          (PROFILO_TELEGRAM?.ruolo === "admin" ||
+           PROFILO_TELEGRAM?.ruolo === "super_admin") &&
+          PROFILO_TELEGRAM?.attivo === true
+        ) {
+          apriAreaAmministratori();
+          setTimeout(() => {
+            apriRapportiEsperienzeAdmin();
           }, 80);
         }
         return;
