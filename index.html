@@ -3695,12 +3695,20 @@ document
             event.preventDefault();
             event.stopPropagation();
 
-            const card = btn.closest("div[style*='border:1px solid #dce8e7']");
+            const card = btn.parentElement;
+            const pubblicazioniEl = card?.querySelector(".rapportoPubblicazioni");
+            const esperienzaEl = card?.querySelector(".rapportoEsperienza");
+
+            if (!card || !pubblicazioniEl || !esperienzaEl) {
+              stato("Non riesco a leggere i dati del rapporto. Riprova.", true);
+              return;
+            }
+
             try {
               await chiamaApi("salva_rapporto", {
                 turno_id: Number(btn.dataset.turno),
-                pubblicazioni: Number(card.querySelector(".rapportoPubblicazioni").value),
-                esperienza: card.querySelector(".rapportoEsperienza").value.trim()
+                pubblicazioni: Number(pubblicazioniEl.value),
+                esperienza: esperienzaEl.value.trim()
               });
               stato("✅ Rapporto salvato.");
               await carica();
