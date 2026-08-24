@@ -3103,7 +3103,6 @@ document
   function scaricaTurnoCalendario(turno) {
     const inizio = dataOraIcs(turno.data, turno.ora_inizio);
     const fine = dataOraIcs(turno.data, turno.ora_fine);
-    const nomeFile = `opera-pubblica-${turno.data}.ics`;
 
     const descrizione = [
       "Opera Pubblica",
@@ -3131,20 +3130,16 @@ document
       "END:VCALENDAR"
     ].join("\r\n");
 
-    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const dataUrl = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
 
-    link.href = url;
-    link.download = nomeFile;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
+    try {
+      if (window.Telegram?.WebApp?.openLink) {
+        window.Telegram.WebApp.openLink(dataUrl, { try_instant_view: false });
+        return;
+      }
+    } catch (_) {}
 
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-      link.remove();
-    }, 1500);
+    window.location.href = dataUrl;
   }
 
   function inizioSettimana(dataIso) {
@@ -3261,8 +3256,7 @@ document
   function collegaRitornoDoppio(idAlto, idBasso, destinazione = "home") {
     const torna = () => {
       if (destinazione === "admin") {
-        sessionStorage.setItem("opera_pubblica_apri_admin", "1");
-        location.reload();
+        apriAreaAmministratori();
       } else {
         location.reload();
       }
@@ -3485,6 +3479,7 @@ document
 
             ${a.stato === "accettato" ? `
               <button
+                type="button"
                 class="aggiungiCalendario"
                 data-turno="${turno.id}"
                 style="width:100%;border:none;background:#1768d7;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;margin-bottom:9px;">
@@ -3510,7 +3505,9 @@ document
         });
 
         elencoEl.querySelectorAll(".aggiungiCalendario").forEach(btn => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
             const turnoId = Number(btn.dataset.turno);
             const turno = turni.find(t => Number(t.id) === turnoId);
 
@@ -5120,15 +5117,6 @@ document
 
 
   verificaPromise.then(function() {
-    if (sessionStorage.getItem("opera_pubblica_apri_admin") === "1") {
-      sessionStorage.removeItem("opera_pubblica_apri_admin");
-      setTimeout(function() {
-        const area = document.getElementById("amministratori");
-        if (area && area.style.display !== "none") area.click();
-      }, 80);
-      return;
-    }
-
     const startParam =
       window.Telegram?.WebApp?.initDataUnsafe?.start_param || "";
 
