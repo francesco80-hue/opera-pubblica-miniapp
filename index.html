@@ -384,10 +384,6 @@
             Programma<br>Opera Pubblica
           </div>
 
-          <div class="card-subtitle">
-            Orari, turni e incarichi
-          </div>
-
         </div>
 
         <div class="arrow">›</div>
@@ -409,10 +405,6 @@
 
           <div class="card-title">
             I miei turni
-          </div>
-
-          <div class="card-subtitle">
-            Incarichi assegnati e conferme
           </div>
 
         </div>
@@ -439,10 +431,6 @@
             Disponibilità
           </div>
 
-          <div class="card-subtitle">
-            Indica quando sei disponibile
-          </div>
-
         </div>
 
         <div class="arrow">›</div>
@@ -465,10 +453,6 @@
 
           <div class="card-title">
             Postazioni
-          </div>
-
-          <div class="card-subtitle">
-            Dove le trovo?
           </div>
 
         </div>
@@ -495,10 +479,6 @@
             Istruzioni
           </div>
 
-          <div class="card-subtitle">
-            Linee guida e consigli utili
-          </div>
-
         </div>
 
         <div class="arrow">›</div>
@@ -521,10 +501,6 @@
 
           <div class="card-title">
             Disposizione pubblicazioni
-          </div>
-
-          <div class="card-subtitle">
-            Come tenerle in ordine!
           </div>
 
         </div>
@@ -551,10 +527,6 @@
             Rapporto ed Esperienze
           </div>
 
-          <div class="card-subtitle">
-            Invia il tuo rapporto e le tue esperienze
-          </div>
-
         </div>
 
         <div class="arrow">›</div>
@@ -577,10 +549,6 @@
 
           <div class="card-title">
             Assistenza
-          </div>
-
-          <div class="card-subtitle">
-            Supporto e contatti utili
           </div>
 
         </div>
@@ -3058,30 +3026,318 @@ document
     });
 
 
+
+  function meseCorrenteKey() {
+    const oggi = new Date();
+    return `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function spostaMese(meseKey, delta) {
+    const [anno, mese] = meseKey.split("-").map(Number);
+    const d = new Date(anno, mese - 1 + delta, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function titoloMese(meseKey) {
+    const [anno, mese] = meseKey.split("-").map(Number);
+    return new Intl.DateTimeFormat("it-IT", {
+      month: "long",
+      year: "numeric"
+    }).format(new Date(anno, mese - 1, 1));
+  }
+
+  function dataItaliana(dataIso) {
+    const [a, m, g] = dataIso.split("-").map(Number);
+    return new Intl.DateTimeFormat("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    }).format(new Date(a, m - 1, g));
+  }
+
+  function oraBreve(ora) {
+    return String(ora || "").slice(0, 5);
+  }
+
+  async function chiamaApi(azione, extra = {}) {
+    const initData = window.Telegram?.WebApp?.initData || "";
+
+    if (!initData) {
+      throw new Error("Apri la Mini App direttamente da Telegram.");
+    }
+
+    const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        initData,
+        azione,
+        ...extra
+      })
+    });
+
+    const dati = await risposta.json();
+
+    if (!risposta.ok || !dati.ok) {
+      throw new Error(dati.error || "Operazione non riuscita");
+    }
+
+    return dati;
+  }
+
+  function pulsanteIndietro(id, testo = "← Torna alla Home") {
+    return `
+      <button id="${id}" style="
+        border:none;
+        background:#eef6ff;
+        color:#1768d7;
+        padding:12px 18px;
+        border-radius:14px;
+        font-size:16px;
+        font-weight:700;
+        cursor:pointer;
+        margin-bottom:18px;
+      ">${testo}</button>
+    `;
+  }
+
+  async function apriProgrammaGenerale() {
+    let mese = meseCorrenteKey();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeProgramma")}
+      <div style="background:#eef6ff;border:1px solid #cfe1f5;border-radius:20px;padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:25px;margin:0;">📅 Programma Opera Pubblica</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <button id="programmaPrev" style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+        <div id="programmaMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+        <button id="programmaNext" style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+      </div>
+
+      <div id="programmaStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:14px;"></div>
+      <div id="programmaElenco"></div>
+    `;
+
+    document.getElementById("tornaHomeProgramma").addEventListener("click", () => location.reload());
+
+    const meseEl = document.getElementById("programmaMese");
+    const statoEl = document.getElementById("programmaStato");
+    const elencoEl = document.getElementById("programmaElenco");
+
+    function stato(msg, errore = false) {
+      statoEl.style.display = "block";
+      statoEl.style.background = errore ? "#fff1f1" : "#f3f7fb";
+      statoEl.style.border = errore ? "1px solid #ffd0d0" : "1px solid #dfe7ef";
+      statoEl.style.color = errore ? "#a33a3a" : "#526174";
+      statoEl.textContent = msg;
+    }
+
+    async function carica() {
+      meseEl.textContent = titoloMese(mese);
+      elencoEl.innerHTML = "";
+      stato("⏳ Caricamento programma…");
+
+      try {
+        const dati = await chiamaApi("leggi_programma", { mese });
+        const turni = dati.programma || [];
+
+        if (!turni.length) {
+          statoEl.style.display = "none";
+          elencoEl.innerHTML = `
+            <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;">
+              Nessun turno programmato per questo mese.
+            </div>`;
+          return;
+        }
+
+        statoEl.style.display = "none";
+
+        turni.forEach(turno => {
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:12px;background:#fff;";
+
+          const nomi = (turno.assegnazioni || [])
+            .map(a => {
+              const simbolo =
+                a.stato === "accettato" ? "✅" :
+                a.stato === "rifiutato" ? "❌" : "⏳";
+              return `<div style="padding:5px 0;"><strong>${simbolo} ${a.nome_completo}</strong></div>`;
+            })
+            .join("");
+
+          const postiLiberi = Math.max(
+            0,
+            Number(turno.numero_persone || 0) - (turno.assegnazioni || []).length
+          );
+
+          card.innerHTML = `
+            <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
+              ${dataItaliana(turno.data)}
+            </div>
+            <div style="color:#44506a;margin-bottom:4px;">
+              🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}
+            </div>
+            <div style="color:#44506a;margin-bottom:10px;">
+              📍 ${turno.postazione_nome}
+            </div>
+            <div style="border-top:1px solid #eef1f4;padding-top:8px;">
+              ${nomi || '<div style="color:#667085;">Nessuna persona ancora assegnata.</div>'}
+              ${postiLiberi > 0 ? `<div style="color:#b36b00;margin-top:5px;">👤 Posti da assegnare: ${postiLiberi}</div>` : ""}
+            </div>
+            ${turno.note ? `<div style="margin-top:9px;color:#667085;font-size:14px;">📝 ${turno.note}</div>` : ""}
+          `;
+
+          elencoEl.appendChild(card);
+        });
+      } catch (errore) {
+        stato(errore.message || "Errore nel caricamento.", true);
+      }
+    }
+
+    document.getElementById("programmaPrev").addEventListener("click", () => {
+      mese = spostaMese(mese, -1);
+      carica();
+    });
+
+    document.getElementById("programmaNext").addEventListener("click", () => {
+      mese = spostaMese(mese, 1);
+      carica();
+    });
+
+    carica();
+  }
+
+  async function apriMieiTurni() {
+    let mese = meseCorrenteKey();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeMieiTurni")}
+      <div style="background:#eefaf9;border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:25px;margin:0;">👤 I miei turni</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <button id="mieiPrev" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+        <div id="mieiMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+        <button id="mieiNext" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+      </div>
+
+      <div id="mieiStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:14px;"></div>
+      <div id="mieiElenco"></div>
+    `;
+
+    document.getElementById("tornaHomeMieiTurni").addEventListener("click", () => location.reload());
+
+    const meseEl = document.getElementById("mieiMese");
+    const statoEl = document.getElementById("mieiStato");
+    const elencoEl = document.getElementById("mieiElenco");
+
+    function stato(msg, errore = false) {
+      statoEl.style.display = "block";
+      statoEl.style.background = errore ? "#fff1f1" : "#f3f7fb";
+      statoEl.style.border = errore ? "1px solid #ffd0d0" : "1px solid #dfe7ef";
+      statoEl.style.color = errore ? "#a33a3a" : "#526174";
+      statoEl.textContent = msg;
+    }
+
+    async function rispondi(id, risposta) {
+      try {
+        await chiamaApi("rispondi_turno", {
+          assegnazione_id: id,
+          stato: risposta
+        });
+        await carica();
+      } catch (errore) {
+        stato(errore.message || "Impossibile salvare la risposta.", true);
+      }
+    }
+
+    async function carica() {
+      meseEl.textContent = titoloMese(mese);
+      elencoEl.innerHTML = "";
+      stato("⏳ Caricamento turni…");
+
+      try {
+        const dati = await chiamaApi("leggi_miei_turni", { mese });
+        const turni = dati.turni || [];
+
+        if (!turni.length) {
+          statoEl.style.display = "none";
+          elencoEl.innerHTML = `
+            <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;">
+              Nessun turno assegnato per questo mese.
+            </div>`;
+          return;
+        }
+
+        statoEl.style.display = "none";
+
+        turni.forEach(turno => {
+          const a = turno.assegnazione || {};
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:12px;background:#fff;";
+
+          const statoTesto =
+            a.stato === "accettato" ? "✅ Accettato" :
+            a.stato === "rifiutato" ? "❌ Rifiutato" :
+            "⏳ In attesa";
+
+          card.innerHTML = `
+            <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
+              ${dataItaliana(turno.data)}
+            </div>
+            <div style="color:#44506a;margin-bottom:4px;">🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}</div>
+            <div style="color:#44506a;margin-bottom:10px;">📍 ${turno.postazione_nome}</div>
+            <div style="font-weight:750;margin-bottom:12px;">${statoTesto}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+              <button class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
+              <button class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
+            </div>
+          `;
+
+          elencoEl.appendChild(card);
+        });
+
+        elencoEl.querySelectorAll(".accettaTurno").forEach(btn => {
+          btn.addEventListener("click", () => rispondi(Number(btn.dataset.id), "accettato"));
+        });
+
+        elencoEl.querySelectorAll(".rifiutaTurno").forEach(btn => {
+          btn.addEventListener("click", () => rispondi(Number(btn.dataset.id), "rifiutato"));
+        });
+
+      } catch (errore) {
+        stato(errore.message || "Errore nel caricamento.", true);
+      }
+    }
+
+    document.getElementById("mieiPrev").addEventListener("click", () => {
+      mese = spostaMese(mese, -1);
+      carica();
+    });
+
+    document.getElementById("mieiNext").addEventListener("click", () => {
+      mese = spostaMese(mese, 1);
+      carica();
+    });
+
+    carica();
+  }
+
   document
     .getElementById("programma")
     .addEventListener("click", function(event) {
-
       event.preventDefault();
-
-      mostraFunzioneInAggiornamento(
-        "📅 Programma generale",
-        "Qui sarà visibile il programma completo del mese con date, orari, postazioni e nominativi assegnati. Tutti gli utenti autorizzati potranno consultarlo."
-      );
-
+      apriProgrammaGenerale();
     });
 
   document
     .getElementById("mieiTurni")
     .addEventListener("click", function(event) {
-
       event.preventDefault();
-
-      mostraFunzioneInAggiornamento(
-        "👤 I miei turni",
-        "Qui ogni utente vedrà soltanto i propri incarichi e potrà accettare o rifiutare il turno. Le risposte saranno registrate e rese visibili agli amministratori."
-      );
-
+      apriMieiTurni();
     });
 
 
@@ -3425,7 +3681,7 @@ document
             font-size:27px;
           ">👤</div>
           <div style="flex:1;">
-            <div style="font-size:18px; font-weight:750;">Samuele</div>
+            <div style="font-size:18px; font-weight:750;">Samuel</div>
             <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
           </div>
           <div class="arrow">›</div>
@@ -3682,38 +3938,392 @@ document
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
 
-      adminGestioneProgramma.addEventListener("click", function() {
-        mostraFunzioneInAggiornamento(
-          "🗓️ Gestione programma",
-          "Gli amministratori potranno creare, modificare e disattivare turni scegliendo liberamente data, orario, postazione, numero di persone e assegnazioni."
-        );
-      });
 
-      adminGestionePostazioni.addEventListener("click", function() {
-        mostraFunzioneInAggiornamento(
-          "📍 Gestione postazioni",
-          "Da qui sarà possibile aggiungere nuove postazioni e attivarle o sospenderle senza modificare il codice della Mini App."
-        );
-      });
+      async function apriGestioneProgrammaAdmin() {
+        let mese = meseCorrenteKey();
 
-      adminGestioneUtenti.addEventListener("click", function() {
-        mostraFunzioneInAggiornamento(
-          "👥 Gestione utenti",
-          "Gli amministratori potranno correggere nome e cognome, attivare o disattivare utenti e assegnare o revocare il ruolo amministratore."
-        );
-      });
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminProgramma", "← Torna all’Area amministratori")}
 
-      adminConfermeTurni.addEventListener("click", function() {
-        mostraFunzioneInAggiornamento(
-          "✅ Conferme e rifiuti",
-          "Qui saranno raccolte le risposte ai turni assegnati: accettato, rifiutato o ancora in attesa. I rifiuti potranno essere evidenziati agli amministratori."
-        );
-      });
+          <div style="background:#f5f1ff;border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">🗓️ Gestione programma</h2>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:16px;">
+            <h3 style="font-size:19px;margin-bottom:12px;">➕ Nuovo turno</h3>
+
+            <label style="display:block;font-weight:700;margin-bottom:5px;">Data</label>
+            <input id="nuovoTurnoData" type="date" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;">Inizio</label>
+                <input id="nuovoTurnoInizio" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+              </div>
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;">Fine</label>
+                <input id="nuovoTurnoFine" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+              </div>
+            </div>
+
+            <label style="display:block;font-weight:700;margin:10px 0 5px;">Postazione</label>
+            <select id="nuovoTurnoPostazione" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></select>
+
+            <label style="display:block;font-weight:700;margin:10px 0 5px;">Numero persone</label>
+            <input id="nuovoTurnoNumero" type="number" min="1" max="20" value="3" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+
+            <label style="display:block;font-weight:700;margin:10px 0 5px;">Persone da assegnare</label>
+            <div id="nuovoTurnoUtenti" style="max-height:260px;overflow:auto;border:1px solid #e1e7ef;border-radius:13px;padding:8px;"></div>
+
+            <label style="display:block;font-weight:700;margin:10px 0 5px;">Note</label>
+            <textarea id="nuovoTurnoNote" maxlength="300" rows="2" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></textarea>
+
+            <button id="salvaNuovoTurno" style="width:100%;border:none;background:#6942d4;color:white;padding:14px;border-radius:14px;font-size:16px;font-weight:800;margin-top:12px;">
+              Salva turno
+            </button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <button id="adminTurniPrev" style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+            <div id="adminTurniMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+            <button id="adminTurniNext" style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+          </div>
+
+          <div id="adminTurniStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+          <div id="adminTurniElenco"></div>
+        `;
+
+        document.getElementById("tornaAreaAdminProgramma").addEventListener("click", () => location.reload());
+
+        const postazioneSelect = document.getElementById("nuovoTurnoPostazione");
+        const utentiBox = document.getElementById("nuovoTurnoUtenti");
+        const statoBox = document.getElementById("adminTurniStato");
+        const elencoBox = document.getElementById("adminTurniElenco");
+        const meseBox = document.getElementById("adminTurniMese");
+
+        function stato(msg, errore = false) {
+          statoBox.style.display = "block";
+          statoBox.style.background = errore ? "#fff1f1" : "#eef9f1";
+          statoBox.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+          statoBox.style.color = errore ? "#a33a3a" : "#28733d";
+          statoBox.textContent = msg;
+        }
+
+        async function caricaScelte() {
+          const [p, u] = await Promise.all([
+            chiamaApi("leggi_postazioni_programma_admin"),
+            chiamaApi("leggi_utenti_admin")
+          ]);
+
+          const postazioni = (p.postazioni || []).filter(x => x.attiva === true);
+          postazioneSelect.innerHTML = postazioni
+            .map(x => `<option value="${x.id}">${x.nome}</option>`)
+            .join("");
+
+          const utenti = (u.utenti || []).filter(x => x.attivo === true);
+          utentiBox.innerHTML = utenti.map(x => `
+            <label style="display:flex;align-items:center;gap:9px;padding:8px;border-bottom:1px solid #f0f2f5;">
+              <input type="checkbox" class="utenteTurnoCheck" value="${x.telegram_id}" style="width:20px;height:20px;">
+              <span>${x.nome_completo}${x.ruolo === "admin" ? " · admin" : ""}</span>
+            </label>
+          `).join("");
+        }
+
+        async function caricaTurni() {
+          meseBox.textContent = titoloMese(mese);
+          elencoBox.innerHTML = "";
+          statoBox.style.display = "none";
+
+          try {
+            const dati = await chiamaApi("leggi_turni_admin", { mese });
+            const turni = dati.turni || [];
+
+            if (!turni.length) {
+              elencoBox.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">Nessun turno nel mese.</div>`;
+              return;
+            }
+
+            turni.forEach(t => {
+              const card = document.createElement("div");
+              card.style.cssText = "border:1px solid #e1e7ef;border-radius:17px;padding:15px;margin-bottom:10px;background:#fff;";
+              const persone = (t.assegnazioni || []).map(a => {
+                const s = a.stato === "accettato" ? "✅" : a.stato === "rifiutato" ? "❌" : "⏳";
+                return `<div style="padding:3px 0;">${s} ${a.nome_completo}</div>`;
+              }).join("");
+
+              card.innerHTML = `
+                <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
+                <div style="color:#556078;margin-top:4px;">🕒 ${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)} · 📍 ${t.postazione_nome}</div>
+                <div style="margin-top:8px;">${persone || "<span style='color:#667085'>Nessuna assegnazione</span>"}</div>
+              `;
+              elencoBox.appendChild(card);
+            });
+          } catch (errore) {
+            stato(errore.message || "Errore nel caricamento turni.", true);
+          }
+        }
+
+        await caricaScelte();
+        await caricaTurni();
+
+        document.getElementById("salvaNuovoTurno").addEventListener("click", async function() {
+          const telegramIds = Array.from(document.querySelectorAll(".utenteTurnoCheck:checked"))
+            .map(x => Number(x.value));
+
+          try {
+            await chiamaApi("crea_turno", {
+              data: document.getElementById("nuovoTurnoData").value,
+              ora_inizio: document.getElementById("nuovoTurnoInizio").value,
+              ora_fine: document.getElementById("nuovoTurnoFine").value,
+              postazione_id: Number(postazioneSelect.value),
+              numero_persone: Number(document.getElementById("nuovoTurnoNumero").value),
+              telegram_ids: telegramIds,
+              note: document.getElementById("nuovoTurnoNote").value
+            });
+
+            stato("✅ Turno salvato.");
+            document.getElementById("nuovoTurnoNote").value = "";
+            document.querySelectorAll(".utenteTurnoCheck").forEach(x => x.checked = false);
+            await caricaTurni();
+          } catch (errore) {
+            stato(errore.message || "Impossibile salvare il turno.", true);
+          }
+        });
+
+        document.getElementById("adminTurniPrev").addEventListener("click", () => {
+          mese = spostaMese(mese, -1);
+          caricaTurni();
+        });
+
+        document.getElementById("adminTurniNext").addEventListener("click", () => {
+          mese = spostaMese(mese, 1);
+          caricaTurni();
+        });
+      }
+
+      async function apriGestionePostazioniAdmin() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminPostazioni", "← Torna all’Area amministratori")}
+          <div style="background:#f4fbf7;border:1px solid #cfe8dc;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">📍 Gestione postazioni</h2>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <input id="nuovaPostazioneNome" placeholder="Nuova postazione" style="flex:1;min-width:0;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+            <button id="creaNuovaPostazione" style="border:none;background:#168a4a;color:white;padding:12px 14px;border-radius:13px;font-weight:750;">Aggiungi</button>
+          </div>
+
+          <div id="postazioniAdminStato" style="display:none;padding:12px;border-radius:13px;margin-bottom:12px;"></div>
+          <div id="postazioniAdminElenco"></div>
+        `;
+
+        document.getElementById("tornaAreaAdminPostazioni").addEventListener("click", () => location.reload());
+
+        const elenco = document.getElementById("postazioniAdminElenco");
+        const stato = document.getElementById("postazioniAdminStato");
+
+        function mostra(msg, errore=false) {
+          stato.style.display = "block";
+          stato.style.background = errore ? "#fff1f1" : "#eef9f1";
+          stato.style.color = errore ? "#a33a3a" : "#28733d";
+          stato.textContent = msg;
+        }
+
+        async function carica() {
+          try {
+            const dati = await chiamaApi("leggi_postazioni_programma_admin");
+            elenco.innerHTML = "";
+
+            (dati.postazioni || []).forEach(p => {
+              const card = document.createElement("div");
+              card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
+              card.innerHTML = `
+                <input class="postNome" data-id="${p.id}" value="${p.nome.replace(/"/g, "&quot;")}" style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;margin-bottom:8px;">
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <input class="postAttiva" data-id="${p.id}" type="checkbox" ${p.attiva ? "checked" : ""} style="width:20px;height:20px;">
+                  Attiva
+                </label>
+                <button class="salvaPostazione" data-id="${p.id}" style="width:100%;border:none;background:#168a4a;color:white;padding:11px;border-radius:12px;font-weight:750;">Salva</button>
+              `;
+              elenco.appendChild(card);
+            });
+
+            elenco.querySelectorAll(".salvaPostazione").forEach(btn => {
+              btn.addEventListener("click", async () => {
+                const id = Number(btn.dataset.id);
+                const nome = elenco.querySelector(`.postNome[data-id="${id}"]`).value;
+                const attiva = elenco.querySelector(`.postAttiva[data-id="${id}"]`).checked;
+                try {
+                  await chiamaApi("aggiorna_postazione", { id, nome, attiva });
+                  mostra("✅ Postazione aggiornata.");
+                  await carica();
+                } catch (errore) {
+                  mostra(errore.message, true);
+                }
+              });
+            });
+
+          } catch (errore) {
+            mostra(errore.message || "Errore.", true);
+          }
+        }
+
+        document.getElementById("creaNuovaPostazione").addEventListener("click", async () => {
+          const nome = document.getElementById("nuovaPostazioneNome").value.trim();
+          try {
+            await chiamaApi("crea_postazione", { nome });
+            document.getElementById("nuovaPostazioneNome").value = "";
+            mostra("✅ Postazione aggiunta.");
+            await carica();
+          } catch (errore) {
+            mostra(errore.message || "Errore.", true);
+          }
+        });
+
+        carica();
+      }
+
+      async function apriGestioneUtentiAdmin() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminUtenti", "← Torna all’Area amministratori")}
+          <div style="background:#f5f9ff;border:1px solid #d8e5f7;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">👥 Gestione utenti</h2>
+          </div>
+          <div id="utentiAdminStato" style="display:none;padding:12px;border-radius:13px;margin-bottom:12px;"></div>
+          <div id="utentiAdminElenco"></div>
+        `;
+
+        document.getElementById("tornaAreaAdminUtenti").addEventListener("click", () => location.reload());
+
+        const elenco = document.getElementById("utentiAdminElenco");
+        const stato = document.getElementById("utentiAdminStato");
+
+        function mostra(msg, errore=false) {
+          stato.style.display = "block";
+          stato.style.background = errore ? "#fff1f1" : "#eef9f1";
+          stato.style.color = errore ? "#a33a3a" : "#28733d";
+          stato.textContent = msg;
+        }
+
+        async function carica() {
+          try {
+            const dati = await chiamaApi("leggi_utenti_admin");
+            elenco.innerHTML = "";
+
+            (dati.utenti || []).forEach(u => {
+              const card = document.createElement("div");
+              card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
+              card.innerHTML = `
+                <input class="utenteNomeAdmin" data-id="${u.telegram_id}" value="${(u.nome_completo || "").replace(/"/g, "&quot;")}" style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;margin-bottom:8px;">
+                <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;">
+                  <select class="utenteRuoloAdmin" data-id="${u.telegram_id}" style="padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;">
+                    <option value="utente" ${u.ruolo === "utente" ? "selected" : ""}>Utente</option>
+                    <option value="admin" ${u.ruolo === "admin" ? "selected" : ""}>Admin</option>
+                  </select>
+                  <label style="display:flex;align-items:center;gap:6px;">
+                    <input class="utenteAttivoAdmin" data-id="${u.telegram_id}" type="checkbox" ${u.attivo ? "checked" : ""} style="width:20px;height:20px;">
+                    Attivo
+                  </label>
+                </div>
+                <button class="salvaUtenteAdmin" data-id="${u.telegram_id}" style="width:100%;border:none;background:#1768d7;color:white;padding:11px;border-radius:12px;font-weight:750;">Salva</button>
+              `;
+              elenco.appendChild(card);
+            });
+
+            elenco.querySelectorAll(".salvaUtenteAdmin").forEach(btn => {
+              btn.addEventListener("click", async () => {
+                const id = Number(btn.dataset.id);
+                const nome_completo = elenco.querySelector(`.utenteNomeAdmin[data-id="${id}"]`).value;
+                const ruolo = elenco.querySelector(`.utenteRuoloAdmin[data-id="${id}"]`).value;
+                const attivo = elenco.querySelector(`.utenteAttivoAdmin[data-id="${id}"]`).checked;
+
+                try {
+                  await chiamaApi("aggiorna_utente_admin", {
+                    telegram_id: id,
+                    nome_completo,
+                    ruolo,
+                    attivo
+                  });
+                  mostra("✅ Utente aggiornato.");
+                  await carica();
+                } catch (errore) {
+                  mostra(errore.message || "Errore.", true);
+                }
+              });
+            });
+          } catch (errore) {
+            mostra(errore.message || "Errore.", true);
+          }
+        }
+
+        carica();
+      }
+
+      async function apriConfermeAdmin() {
+        let mese = meseCorrenteKey();
+
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminConferme", "← Torna all’Area amministratori")}
+          <div style="background:#fffaf0;border:1px solid #f0ddba;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">✅ Conferme / rifiuti</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <button id="confPrev" style="border:none;background:#fff3dc;color:#8a5b13;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+            <div id="confMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+            <button id="confNext" style="border:none;background:#fff3dc;color:#8a5b13;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+          </div>
+          <div id="confElenco"></div>
+        `;
+
+        document.getElementById("tornaAreaAdminConferme").addEventListener("click", () => location.reload());
+
+        const meseEl = document.getElementById("confMese");
+        const elenco = document.getElementById("confElenco");
+
+        async function carica() {
+          meseEl.textContent = titoloMese(mese);
+          elenco.innerHTML = "⏳ Caricamento…";
+          try {
+            const dati = await chiamaApi("leggi_turni_admin", { mese });
+            const turni = dati.turni || [];
+            if (!turni.length) {
+              elenco.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;">Nessun turno.</div>`;
+              return;
+            }
+            elenco.innerHTML = "";
+            turni.forEach(t => {
+              const card = document.createElement("div");
+              card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
+              const persone = (t.assegnazioni || []).map(a => {
+                const s = a.stato === "accettato" ? "✅ Accettato" : a.stato === "rifiutato" ? "❌ Rifiutato" : "⏳ In attesa";
+                return `<div style="padding:5px 0;border-top:1px solid #f0f2f5;"><strong>${a.nome_completo}</strong><br><span style="font-size:14px;color:#667085;">${s}</span></div>`;
+              }).join("");
+              card.innerHTML = `
+                <div style="font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
+                <div style="color:#667085;margin:4px 0 8px;">${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)} · ${t.postazione_nome}</div>
+                ${persone || "<div style='color:#667085'>Nessuna persona assegnata.</div>"}
+              `;
+              elenco.appendChild(card);
+            });
+          } catch (errore) {
+            elenco.innerHTML = `<div style="padding:14px;background:#fff1f1;color:#a33a3a;border-radius:14px;">⚠️ ${errore.message}</div>`;
+          }
+        }
+
+        document.getElementById("confPrev").addEventListener("click", () => { mese = spostaMese(mese, -1); carica(); });
+        document.getElementById("confNext").addEventListener("click", () => { mese = spostaMese(mese, 1); carica(); });
+        carica();
+      }
+
+      adminGestioneProgramma.addEventListener("click", apriGestioneProgrammaAdmin);
+      adminGestionePostazioni.addEventListener("click", apriGestionePostazioniAdmin);
+      adminGestioneUtenti.addEventListener("click", apriGestioneUtentiAdmin);
+      adminConfermeTurni.addEventListener("click", apriConfermeAdmin);
 
       adminProgrammaPdf.addEventListener("click", function() {
         mostraFunzioneInAggiornamento(
           "📄 Programma mensile PDF",
-          "Da qui verrà generata una versione del programma del mese pronta da stampare e mettere in bacheca, usando gli stessi dati già presenti nella Mini App."
+          "La generazione del PDF verrà collegata ai dati reali del programma dopo aver completato il flusso di creazione e modifica dei turni."
         );
       });
 
