@@ -225,6 +225,30 @@
       font-size: 14px;
     }
 
+    .program-week {
+      margin-bottom: 20px;
+    }
+
+    .program-week-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #44506a;
+      margin: 0 0 9px 2px;
+      text-transform: capitalize;
+    }
+
+    .program-week-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 560px) {
+      .program-week-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .footer {
       text-align: center;
       color: #8992a3;
@@ -714,7 +738,7 @@
     }
   }
 
-  verificaUtenteTelegram();
+  const verificaPromise = verificaUtenteTelegram();
 
 
   /*
@@ -3062,6 +3086,58 @@ document
     return String(ora || "").slice(0, 5);
   }
 
+  function inizioSettimana(dataIso) {
+    const [a, m, g] = String(dataIso).split("-").map(Number);
+    const d = new Date(a, m - 1, g);
+    const giorno = d.getDay();
+    const delta = giorno === 0 ? -6 : 1 - giorno;
+    d.setDate(d.getDate() + delta);
+    return d;
+  }
+
+  function chiaveSettimana(dataIso) {
+    const d = inizioSettimana(dataIso);
+    const a = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const g = String(d.getDate()).padStart(2, "0");
+    return `${a}-${m}-${g}`;
+  }
+
+  function titoloSettimana(dataIso) {
+    const lunedi = inizioSettimana(dataIso);
+    const domenica = new Date(lunedi);
+    domenica.setDate(domenica.getDate() + 6);
+
+    const f1 = new Intl.DateTimeFormat("it-IT", {
+      day: "numeric",
+      month: "short"
+    }).format(lunedi);
+
+    const f2 = new Intl.DateTimeFormat("it-IT", {
+      day: "numeric",
+      month: "short"
+    }).format(domenica);
+
+    return `Settimana ${f1} – ${f2}`;
+  }
+
+  function raggruppaTurniPerSettimana(turni) {
+    const gruppi = new Map();
+
+    (turni || []).forEach(turno => {
+      const key = chiaveSettimana(turno.data);
+      if (!gruppi.has(key)) {
+        gruppi.set(key, {
+          titolo: titoloSettimana(turno.data),
+          turni: []
+        });
+      }
+      gruppi.get(key).turni.push(turno);
+    });
+
+    return Array.from(gruppi.values());
+  }
+
   async function chiamaApi(azione, extra = {}) {
     const initData = window.Telegram?.WebApp?.initData || "";
 
@@ -3121,8 +3197,15 @@ document
     `;
   }
 
-  function collegaRitornoDoppio(idAlto, idBasso) {
-    const torna = () => location.reload();
+  function collegaRitornoDoppio(idAlto, idBasso, destinazione = "home") {
+    const torna = () => {
+      if (destinazione === "admin") {
+        apriAreaAmministratori();
+      } else {
+        location.reload();
+      }
+    };
+
     document.getElementById(idAlto)?.addEventListener("click", torna);
     document.getElementById(idBasso)?.addEventListener("click", torna);
   }
@@ -3182,42 +3265,60 @@ document
 
         statoEl.style.display = "none";
 
-        turni.forEach(turno => {
-          const card = document.createElement("div");
-          card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:12px;background:#fff;";
+        const settimane = raggruppaTurniPerSettimana(turni);
 
-          const nomi = (turno.assegnazioni || [])
-            .map(a => {
-              const simbolo =
-                a.stato === "accettato" ? "✅" :
-                a.stato === "rifiutato" ? "❌" : "⏳";
-              return `<div style="padding:5px 0;"><strong>${simbolo} ${a.nome_completo}</strong></div>`;
-            })
-            .join("");
+        settimane.forEach(settimana => {
+          const sezione = document.createElement("section");
+          sezione.className = "program-week";
 
-          const postiLiberi = Math.max(
-            0,
-            Number(turno.numero_persone || 0) - (turno.assegnazioni || []).length
-          );
+          const titolo = document.createElement("div");
+          titolo.className = "program-week-title";
+          titolo.textContent = settimana.titolo;
 
-          card.innerHTML = `
-            <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
-              ${dataItaliana(turno.data)}
-            </div>
-            <div style="color:#44506a;margin-bottom:4px;">
-              🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}
-            </div>
-            <div style="color:#44506a;margin-bottom:10px;">
-              📍 ${turno.postazione_nome}
-            </div>
-            <div style="border-top:1px solid #eef1f4;padding-top:8px;">
-              ${nomi || '<div style="color:#667085;">Nessuna persona ancora assegnata.</div>'}
-              ${postiLiberi > 0 ? `<div style="color:#b36b00;margin-top:5px;">👤 Posti da assegnare: ${postiLiberi}</div>` : ""}
-            </div>
-            ${turno.note ? `<div style="margin-top:9px;color:#667085;font-size:14px;">📝 ${turno.note}</div>` : ""}
-          `;
+          const griglia = document.createElement("div");
+          griglia.className = "program-week-grid";
 
-          elencoEl.appendChild(card);
+          settimana.turni.forEach(turno => {
+            const card = document.createElement("div");
+            card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:17px;background:#fff;min-width:0;";
+
+            const nomi = (turno.assegnazioni || [])
+              .map(a => {
+                const simbolo =
+                  a.stato === "accettato" ? "✅" :
+                  a.stato === "rifiutato" ? "❌" : "⏳";
+                return `<div style="padding:4px 0;"><strong>${simbolo} ${a.nome_completo}</strong></div>`;
+              })
+              .join("");
+
+            const postiLiberi = Math.max(
+              0,
+              Number(turno.numero_persone || 0) - (turno.assegnazioni || []).length
+            );
+
+            card.innerHTML = `
+              <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
+                ${dataItaliana(turno.data)}
+              </div>
+              <div style="color:#44506a;margin-bottom:4px;">
+                🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}
+              </div>
+              <div style="color:#44506a;margin-bottom:10px;">
+                📍 ${turno.postazione_nome}
+              </div>
+              <div style="border-top:1px solid #eef1f4;padding-top:8px;">
+                ${nomi || '<div style="color:#667085;">Nessuna persona ancora assegnata.</div>'}
+                ${postiLiberi > 0 ? `<div style="color:#b36b00;margin-top:5px;">👤 Posti da assegnare: ${postiLiberi}</div>` : ""}
+              </div>
+              ${turno.note ? `<div style="margin-top:9px;color:#667085;font-size:14px;">📝 ${turno.note}</div>` : ""}
+            `;
+
+            griglia.appendChild(card);
+          });
+
+          sezione.appendChild(titolo);
+          sezione.appendChild(griglia);
+          elencoEl.appendChild(sezione);
         });
       } catch (errore) {
         stato(errore.message || "Errore nel caricamento.", true);
@@ -3784,9 +3885,7 @@ document
     });
 
 
-  document
-    .getElementById("amministratori")
-    .addEventListener("click", function(event) {
+  async function apriAreaAmministratori(event) {
 
       event.preventDefault();
 
@@ -3988,8 +4087,13 @@ document
             <h2 style="font-size:25px;margin:0;">🗓️ Gestione programma</h2>
           </div>
 
+          <button id="toggleNuovoTurno" style="width:100%;border:none;background:#6942d4;color:#fff;padding:14px 16px;border-radius:15px;font-size:16px;font-weight:800;margin-bottom:14px;cursor:pointer;">
+            ➕ Nuovo turno
+          </button>
+
+          <div id="nuovoTurnoPanel" style="display:none;">
           <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:16px;">
-            <h3 style="font-size:19px;margin-bottom:12px;">➕ Nuovo turno</h3>
+            <h3 style="font-size:19px;margin-bottom:12px;">➕ Crea nuovo turno</h3>
 
             <label style="display:block;font-weight:700;margin-bottom:5px;">Data</label>
             <input id="nuovoTurnoData" type="date" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
@@ -4017,6 +4121,7 @@ document
 
             <button id="salvaNuovoTurno" style="width:100%;border:none;background:#6942d4;color:white;padding:14px;border-radius:14px;font-size:16px;font-weight:800;margin-top:12px;">Salva turno</button>
           </div>
+          </div>
 
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <button id="adminTurniPrev" style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
@@ -4029,7 +4134,7 @@ document
           ${pulsanteIndietroFondo("tornaAreaAdminProgrammaFondo", "← Torna all’Area amministratori")}
         `;
 
-        collegaRitornoDoppio("tornaAreaAdminProgramma", "tornaAreaAdminProgrammaFondo");
+        collegaRitornoDoppio("tornaAreaAdminProgramma", "tornaAreaAdminProgrammaFondo", "admin");
 
         const postazioneSelect = document.getElementById("nuovoTurnoPostazione");
         const selettoriPersone = document.getElementById("selettoriPersone");
@@ -4037,6 +4142,14 @@ document
         const statoBox = document.getElementById("adminTurniStato");
         const elencoBox = document.getElementById("adminTurniElenco");
         const meseBox = document.getElementById("adminTurniMese");
+        const toggleNuovoTurno = document.getElementById("toggleNuovoTurno");
+        const nuovoTurnoPanel = document.getElementById("nuovoTurnoPanel");
+
+        toggleNuovoTurno.addEventListener("click", function() {
+          const aperto = nuovoTurnoPanel.style.display !== "none";
+          nuovoTurnoPanel.style.display = aperto ? "none" : "block";
+          toggleNuovoTurno.textContent = aperto ? "➕ Nuovo turno" : "✖ Chiudi nuovo turno";
+        });
 
         function stato(msg, errore = false) {
           statoBox.style.display = "block";
@@ -4049,7 +4162,7 @@ document
         function opzioniUtenti(escludi = []) {
           return utentiPriorita
             .filter(u => !escludi.includes(Number(u.telegram_id)))
-            .map(u => `<option value="${u.telegram_id}">${u.nome_completo} — ${u.storico_testo}</option>`)
+            .map(u => `<option value="${u.telegram_id}">${u.nome_completo} — ${u.suggerimento_testo || u.storico_testo}</option>`)
             .join("");
         }
 
@@ -4102,6 +4215,7 @@ document
         async function caricaTurni() {
           meseBox.textContent = titoloMese(mese);
           elencoBox.innerHTML = "";
+
           try {
             const dati = await chiamaApi("leggi_turni_admin", { mese });
             const turni = dati.turni || [];
@@ -4111,39 +4225,143 @@ document
               return;
             }
 
-            turni.forEach(t => {
-              const card = document.createElement("div");
-              card.style.cssText = "border:1px solid #e1e7ef;border-radius:17px;padding:15px;margin-bottom:10px;background:#fff;";
+            const settimane = raggruppaTurniPerSettimana(turni);
 
-              const persone = (t.assegnazioni || []).map(a => {
-                const statoLabel = a.stato === "accettato" ? "✅ Accettato" : a.stato === "rifiutato" ? "❌ Rifiutato" : "⏳ In attesa";
-                const sostituzione = a.stato === "rifiutato" ? `
-                  <div style="margin-top:7px;">
-                    <select class="sostituisciSelect" data-assegnazione="${a.id}" style="width:100%;padding:10px;border:1px solid #efcaca;border-radius:11px;font-size:13px;">
-                      <option value="">Sostituisci con…</option>
-                      ${opzioniUtenti((t.assegnazioni || []).map(x => Number(x.telegram_id)))}
+            settimane.forEach(settimana => {
+              const sezione = document.createElement("section");
+              sezione.className = "program-week";
+
+              const titoloSet = document.createElement("div");
+              titoloSet.className = "program-week-title";
+              titoloSet.textContent = settimana.titolo;
+
+              const griglia = document.createElement("div");
+              griglia.className = "program-week-grid";
+
+              settimana.turni.forEach(t => {
+                const card = document.createElement("div");
+                card.style.cssText = "border:1px solid #e1e7ef;border-radius:17px;padding:15px;background:#fff;min-width:0;";
+
+                const assegnatiIds = (t.assegnazioni || []).map(x => Number(x.telegram_id));
+
+                const persone = (t.assegnazioni || []).map(a => {
+                  const statoLabel =
+                    a.stato === "accettato" ? "✅ Accettato" :
+                    a.stato === "rifiutato" ? "❌ Rifiutato" :
+                    "⏳ In attesa";
+
+                  const sostituzione = a.stato === "rifiutato" ? `
+                    <div style="margin-top:7px;">
+                      <select class="sostituisciSelect" data-assegnazione="${a.id}" style="width:100%;padding:10px;border:1px solid #efcaca;border-radius:11px;font-size:12px;">
+                        <option value="">Sostituisci con…</option>
+                        ${opzioniUtenti(assegnatiIds)}
+                      </select>
+                    </div>` : "";
+
+                  return `
+                    <div style="padding:8px 0;border-top:1px solid #f0f2f5;">
+                      <strong>${a.nome_completo}</strong>
+                      <div style="font-size:13px;color:${a.stato === "rifiutato" ? "#b42318" : "#667085"};margin-top:2px;">${statoLabel}</div>
+                      ${sostituzione}
+                    </div>`;
+                }).join("");
+
+                const opzioniPostazione = postazioniAttive.map(p =>
+                  `<option value="${p.id}" ${Number(p.id) === Number(t.postazione_id) ? "selected" : ""}>${p.nome}</option>`
+                ).join("");
+
+                card.innerHTML = `
+                  <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
+                  <div style="color:#556078;margin-top:4px;">🕒 ${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)}</div>
+                  <div style="color:#556078;margin-top:3px;">📍 ${t.postazione_nome}</div>
+
+                  <div style="margin-top:8px;">${persone || "<span style='color:#667085'>Nessuna assegnazione</span>"}</div>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px;">
+                    <button class="modificaTurnoBtn" data-turno="${t.id}" style="border:none;background:#eef6ff;color:#1768d7;padding:10px;border-radius:11px;font-weight:750;">✏️ Modifica</button>
+                    <button class="eliminaTurnoBtn" data-turno="${t.id}" style="border:none;background:#fff1f1;color:#b42318;padding:10px;border-radius:11px;font-weight:750;">🗑️ Elimina</button>
+                  </div>
+
+                  <div class="modificaTurnoPanel" data-turno="${t.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #edf0f3;">
+                    <input class="editData" type="date" value="${t.data}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;">
+                      <input class="editInizio" type="time" value="${oraBreve(t.ora_inizio)}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;">
+                      <input class="editFine" type="time" value="${oraBreve(t.ora_fine)}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;">
+                    </div>
+                    <select class="editPostazione" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">
+                      ${opzioniPostazione}
                     </select>
-                  </div>` : "";
+                    <input class="editNumero" type="number" min="1" max="20" value="${Number(t.numero_persone || 3)}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">
+                    <textarea class="editNote" rows="2" maxlength="300" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">${t.note || ""}</textarea>
+                    <button class="salvaModificaTurnoBtn" data-turno="${t.id}" style="width:100%;border:none;background:#168a4a;color:#fff;padding:10px;border-radius:11px;font-weight:750;">Salva modifiche</button>
+                  </div>
+                `;
 
-                return `
-                  <div style="padding:8px 0;border-top:1px solid #f0f2f5;">
-                    <strong>${a.nome_completo}</strong>
-                    <div style="font-size:14px;color:${a.stato === "rifiutato" ? "#b42318" : "#667085"};margin-top:2px;">${statoLabel}</div>
-                    ${sostituzione}
-                  </div>`;
-              }).join("");
+                griglia.appendChild(card);
+              });
 
-              card.innerHTML = `
-                <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
-                <div style="color:#556078;margin-top:4px;">🕒 ${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)} · 📍 ${t.postazione_nome}</div>
-                <div style="margin-top:8px;">${persone || "<span style='color:#667085'>Nessuna assegnazione</span>"}</div>
-              `;
-              elencoBox.appendChild(card);
+              sezione.appendChild(titoloSet);
+              sezione.appendChild(griglia);
+              elencoBox.appendChild(sezione);
             });
 
             elencoBox.querySelectorAll(".sostituisciSelect").forEach(select => {
-              select.addEventListener("change", () => sostituisci(Number(select.dataset.assegnazione), select));
+              select.addEventListener("change", () =>
+                sostituisci(Number(select.dataset.assegnazione), select)
+              );
             });
+
+            elencoBox.querySelectorAll(".modificaTurnoBtn").forEach(btn => {
+              btn.addEventListener("click", function() {
+                const id = btn.dataset.turno;
+                const panel = elencoBox.querySelector(`.modificaTurnoPanel[data-turno="${id}"]`);
+                panel.style.display = panel.style.display === "none" ? "block" : "none";
+              });
+            });
+
+            elencoBox.querySelectorAll(".salvaModificaTurnoBtn").forEach(btn => {
+              btn.addEventListener("click", async function() {
+                const id = Number(btn.dataset.turno);
+                const panel = elencoBox.querySelector(`.modificaTurnoPanel[data-turno="${id}"]`);
+
+                try {
+                  await chiamaApi("aggiorna_turno", {
+                    turno_id: id,
+                    data: panel.querySelector(".editData").value,
+                    ora_inizio: panel.querySelector(".editInizio").value,
+                    ora_fine: panel.querySelector(".editFine").value,
+                    postazione_id: Number(panel.querySelector(".editPostazione").value),
+                    numero_persone: Number(panel.querySelector(".editNumero").value),
+                    note: panel.querySelector(".editNote").value,
+                    attivo: true
+                  });
+
+                  stato("✅ Turno modificato.");
+                  await Promise.all([caricaScelte(), caricaTurni()]);
+                } catch (errore) {
+                  stato(errore.message || "Impossibile modificare il turno.", true);
+                }
+              });
+            });
+
+            elencoBox.querySelectorAll(".eliminaTurnoBtn").forEach(btn => {
+              btn.addEventListener("click", async function() {
+                const id = Number(btn.dataset.turno);
+
+                if (!confirm("Vuoi eliminare questo turno dal programma?")) {
+                  return;
+                }
+
+                try {
+                  await chiamaApi("elimina_turno_admin", { turno_id: id });
+                  stato("✅ Turno eliminato dal programma.");
+                  await Promise.all([caricaScelte(), caricaTurni()]);
+                } catch (errore) {
+                  stato(errore.message || "Impossibile eliminare il turno.", true);
+                }
+              });
+            });
+
           } catch (errore) {
             stato(errore.message || "Errore nel caricamento turni.", true);
           }
@@ -4177,6 +4395,8 @@ document
 
             stato("✅ Turno salvato e notifiche inviate agli assegnati.");
             document.getElementById("nuovoTurnoNote").value = "";
+            nuovoTurnoPanel.style.display = "none";
+            toggleNuovoTurno.textContent = "➕ Nuovo turno";
             await Promise.all([caricaScelte(), caricaTurni()]);
           } catch (errore) {
             stato(errore.message || "Impossibile salvare il turno.", true);
@@ -4204,7 +4424,7 @@ document
           ${pulsanteIndietroFondo("tornaAreaAdminPostazioniFondo", "← Torna all’Area amministratori")}
         `;
 
-        collegaRitornoDoppio("tornaAreaAdminPostazioni", "tornaAreaAdminPostazioniFondo");
+        collegaRitornoDoppio("tornaAreaAdminPostazioni", "tornaAreaAdminPostazioniFondo", "admin");
 
         const elenco = document.getElementById("postazioniAdminElenco");
         const stato = document.getElementById("postazioniAdminStato");
@@ -4281,7 +4501,7 @@ document
           ${pulsanteIndietroFondo("tornaAreaAdminUtentiFondo", "← Torna all’Area amministratori")}
         `;
 
-        collegaRitornoDoppio("tornaAreaAdminUtenti", "tornaAreaAdminUtentiFondo");
+        collegaRitornoDoppio("tornaAreaAdminUtenti", "tornaAreaAdminUtentiFondo", "admin");
 
         const elenco = document.getElementById("utentiAdminElenco");
         const stato = document.getElementById("utentiAdminStato");
@@ -4365,7 +4585,7 @@ document
           ${pulsanteIndietroFondo("tornaAreaAdminConfermeFondo", "← Torna all’Area amministratori")}
         `;
 
-        collegaRitornoDoppio("tornaAreaAdminConferme", "tornaAreaAdminConfermeFondo");
+        collegaRitornoDoppio("tornaAreaAdminConferme", "tornaAreaAdminConfermeFondo", "admin");
 
         const meseEl = document.getElementById("confMese");
         const elenco = document.getElementById("confElenco");
@@ -4437,7 +4657,7 @@ document
           <div id="adminRuoliElenco"></div>
           ${pulsanteIndietroFondo("tornaAreaAdminAdminsFondo", "← Torna all’Area amministratori")}
         `;
-        collegaRitornoDoppio("tornaAreaAdminAdmins", "tornaAreaAdminAdminsFondo");
+        collegaRitornoDoppio("tornaAreaAdminAdmins", "tornaAreaAdminAdminsFondo", "admin");
 
         const stato = document.getElementById("adminRuoliStato");
         const elenco = document.getElementById("adminRuoliElenco");
@@ -4806,8 +5026,33 @@ document
       caricaRichiesteAccesso();
       caricaAdmin();
 
-    });
+    }
 
+  document
+    .getElementById("amministratori")
+    .addEventListener("click", apriAreaAmministratori);
+
+
+
+  verificaPromise.then(function() {
+    const startParam =
+      window.Telegram?.WebApp?.initDataUnsafe?.start_param || "";
+
+    if (!startParam) return;
+
+    setTimeout(function() {
+      if (startParam === "admin") {
+        const area = document.getElementById("amministratori");
+        if (area && area.style.display !== "none") {
+          apriAreaAmministratori();
+        }
+      }
+
+      if (startParam === "miei_turni") {
+        document.getElementById("mieiTurni")?.click();
+      }
+    }, 80);
+  });
 
   /*
     Navigazione Mini App:
