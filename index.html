@@ -3200,7 +3200,8 @@ document
   function collegaRitornoDoppio(idAlto, idBasso, destinazione = "home") {
     const torna = () => {
       if (destinazione === "admin") {
-        apriAreaAmministratori();
+        sessionStorage.setItem("opera_pubblica_apri_admin", "1");
+        location.reload();
       } else {
         location.reload();
       }
@@ -3308,7 +3309,6 @@ document
               </div>
               <div style="border-top:1px solid #eef1f4;padding-top:8px;">
                 ${nomi || '<div style="color:#667085;">Nessuna persona ancora assegnata.</div>'}
-                ${postiLiberi > 0 ? `<div style="color:#b36b00;margin-top:5px;">👤 Posti da assegnare: ${postiLiberi}</div>` : ""}
               </div>
               ${turno.note ? `<div style="margin-top:9px;color:#667085;font-size:14px;">📝 ${turno.note}</div>` : ""}
             `;
@@ -5035,6 +5035,15 @@ document
 
 
   verificaPromise.then(function() {
+    if (sessionStorage.getItem("opera_pubblica_apri_admin") === "1") {
+      sessionStorage.removeItem("opera_pubblica_apri_admin");
+      setTimeout(function() {
+        const area = document.getElementById("amministratori");
+        if (area && area.style.display !== "none") area.click();
+      }, 80);
+      return;
+    }
+
     const startParam =
       window.Telegram?.WebApp?.initDataUnsafe?.start_param || "";
 
