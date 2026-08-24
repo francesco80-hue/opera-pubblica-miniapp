@@ -243,6 +243,7 @@
       gap: 12px;
     }
 
+    /* Telefono stretto: un turno per riga. Schermi più larghi: due per riga. */
     @media (max-width: 560px) {
       .program-week-grid {
         grid-template-columns: 1fr;
@@ -3213,11 +3214,40 @@ document
   }
 
   function iconaPersona(genere) {
-    if (genere === "donna") {
-      return `<span title="Donna" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:#f7e8ff;color:#a13ac4;font-size:17px;font-weight:900;margin-right:5px;flex:0 0 auto;">♀</span>`;
-    }
+    const donna = genere === "donna";
+    const colore = donna ? "#d42f6a" : "#285784";
+    const sfondo = donna ? "#fde8f0" : "#e9f2fb";
+    const titolo = donna ? "Donna" : "Uomo";
 
-    return `<span title="Uomo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:#e6f1ff;color:#2468b3;font-size:17px;font-weight:900;margin-right:5px;flex:0 0 auto;">♂</span>`;
+    const figura = donna
+      ? `
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <circle cx="12" cy="4.4" r="3" fill="${colore}"></circle>
+          <path d="M9.2 8h5.6l2.2 6.2h-2.5V21h-2v-5.4h-1V21h-2v-6.8H7L9.2 8z" fill="${colore}"></path>
+        </svg>`
+      : `
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <circle cx="12" cy="4.4" r="3" fill="${colore}"></circle>
+          <path d="M9 8h6c1.2 0 2 .9 2 2v5h-2v-4h-1V21h-2v-6h-1v6H9v-10H8v4H6v-5c0-1.1.8-2 2-2h1z" fill="${colore}"></path>
+        </svg>`;
+
+    return `
+      <span
+        title="${titolo}"
+        aria-label="${titolo}"
+        style="
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          width:24px;
+          height:24px;
+          border-radius:999px;
+          background:${sfondo};
+          margin-left:7px;
+          vertical-align:middle;
+          flex:0 0 auto;
+        "
+      >${figura}</span>`;
   }
 
 
@@ -3582,9 +3612,9 @@ document
                   a.stato === "accettato" ? "✅" :
                   a.stato === "rifiutato" ? "❌" : "⏳";
                 return `
-                  <div style="padding:4px 0;display:flex;align-items:center;gap:2px;">
-                    ${iconaPersona(a.genere)}
+                  <div style="padding:4px 0;display:flex;align-items:center;">
                     <strong>${simbolo} ${a.nome_completo}</strong>
+                    ${iconaPersona(a.genere)}
                   </div>`;
               })
               .join("");
@@ -4770,7 +4800,7 @@ document
 
                   return `
                     <div style="padding:8px 0;border-top:1px solid #f0f2f5;">
-                      ${iconaPersona(a.genere)}<strong>${a.nome_completo}</strong>
+                      <strong>${a.nome_completo}</strong>${iconaPersona(a.genere)}
                       <div style="font-size:13px;color:${a.stato === "rifiutato" ? "#b42318" : "#667085"};margin-top:2px;">${statoLabel}</div>
                       ${sostituzione}
                     </div>`;
@@ -5167,7 +5197,7 @@ document
               card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
               const persone = (t.assegnazioni || []).map(a => {
                 const s = a.stato === "accettato" ? "✅ Accettato" : a.stato === "rifiutato" ? "❌ Rifiutato" : "⏳ In attesa";
-                return `<div style="padding:5px 0;border-top:1px solid #f0f2f5;">${iconaPersona(a.genere)}<strong>${a.nome_completo}</strong><br><span style="font-size:14px;color:#667085;">${s}</span></div>`;
+                return `<div style="padding:5px 0;border-top:1px solid #f0f2f5;"><strong>${a.nome_completo}</strong>${iconaPersona(a.genere)}<br><span style="font-size:14px;color:#667085;">${s}</span></div>`;
               }).join("");
               card.innerHTML = `
                 <div style="font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
