@@ -394,6 +394,32 @@
 
       </a>
 
+      <!-- I MIEI TURNI -->
+      <a
+        class="card"
+        href="#"
+        id="mieiTurni"
+      >
+
+        <div class="card-icon teal">
+          👤
+        </div>
+
+        <div class="card-body">
+
+          <div class="card-title">
+            I miei turni
+          </div>
+
+          <div class="card-subtitle">
+            Incarichi assegnati e conferme
+          </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+      </a>
 
 
       <!-- DISPONIBILITA -->
@@ -598,7 +624,8 @@
 
 
     <div class="footer">
-      Opera Pubblica Bordonaro
+      Opera Pubblica Bordonaro<br>
+      <span style="font-size:11px;">Mini App in evoluzione</span>
     </div>
 
   </main>
@@ -725,6 +752,86 @@
   */
 
   const contenutoOriginale = document.querySelector(".content").innerHTML;
+
+  function mostraFunzioneInAggiornamento(titolo, descrizione) {
+    const overlayEsistente = document.getElementById("popupAggiornamento");
+    if (overlayEsistente) {
+      overlayEsistente.remove();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "popupAggiornamento";
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      background:rgba(21,33,60,.45);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    `;
+
+    const box = document.createElement("div");
+    box.style.cssText = `
+      width:min(100%,420px);
+      background:#ffffff;
+      border-radius:22px;
+      padding:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.20);
+      text-align:center;
+    `;
+
+    const icona = document.createElement("div");
+    icona.textContent = "🛠️";
+    icona.style.cssText = "font-size:42px;margin-bottom:10px;";
+
+    const titoloEl = document.createElement("div");
+    titoloEl.textContent = titolo || "Funzione in aggiornamento";
+    titoloEl.style.cssText =
+      "font-size:21px;font-weight:800;color:#15213c;margin-bottom:8px;";
+
+    const testo = document.createElement("div");
+    testo.textContent =
+      descrizione ||
+      "Questa funzione è già prevista nella Mini App e sarà attivata nei prossimi aggiornamenti.";
+    testo.style.cssText =
+      "font-size:15px;line-height:1.5;color:#667085;margin-bottom:18px;";
+
+    const chiudi = document.createElement("button");
+    chiudi.type = "button";
+    chiudi.dataset.noScroll = "true";
+    chiudi.textContent = "OK";
+    chiudi.style.cssText = `
+      width:100%;
+      border:none;
+      background:#1768d7;
+      color:white;
+      padding:13px 16px;
+      border-radius:14px;
+      font-size:16px;
+      font-weight:750;
+      cursor:pointer;
+    `;
+
+    chiudi.addEventListener("click", function() {
+      overlay.remove();
+    });
+
+    overlay.addEventListener("click", function(event) {
+      if (event.target === overlay) {
+        overlay.remove();
+      }
+    });
+
+    box.appendChild(icona);
+    box.appendChild(titoloEl);
+    box.appendChild(testo);
+    box.appendChild(chiudi);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  }
+
 
   function apriPostazioni(event) {
 
@@ -2957,8 +3064,22 @@ document
 
       event.preventDefault();
 
-      alert(
-        "🗓️ Programma Opera Pubblica\n\nPer consultare il programma aggiornato, apri direttamente l’app Hourglass."
+      mostraFunzioneInAggiornamento(
+        "📅 Programma generale",
+        "Qui sarà visibile il programma completo del mese con date, orari, postazioni e nominativi assegnati. Tutti gli utenti autorizzati potranno consultarlo."
+      );
+
+    });
+
+  document
+    .getElementById("mieiTurni")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      mostraFunzioneInAggiornamento(
+        "👤 I miei turni",
+        "Qui ogni utente vedrà soltanto i propri incarichi e potrà accettare o rifiutare il turno. Le risposte saranno registrate e rese visibili agli amministratori."
       );
 
     });
@@ -3421,10 +3542,63 @@ document
         <div style="background:linear-gradient(135deg,#f5f1ff,#fbfaff);border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:18px;">
           <h2 style="font-size:25px;margin:0 0 6px 0;">👥 Area amministratori</h2>
           <div style="color:#6a6380;line-height:1.5;">
-            Consulta le disponibilità ricevute per il mese selezionato.
+            Gestisci utenti, programma, postazioni, conferme e disponibilità.
           </div>
         </div>
 
+
+
+        <div style="
+          display:grid;
+          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:10px;
+          margin-bottom:18px;
+        ">
+
+          <button id="adminGestioneProgramma" data-no-scroll="true"
+            style="border:1px solid #dcd5ff;background:#f8f6ff;color:#352b66;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            🗓️<br>Gestione programma
+          </button>
+
+          <button id="adminGestionePostazioni" data-no-scroll="true"
+            style="border:1px solid #cfe8dc;background:#f4fbf7;color:#256847;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📍<br>Gestione postazioni
+          </button>
+
+          <button id="adminGestioneUtenti" data-no-scroll="true"
+            style="border:1px solid #d8e5f7;background:#f5f9ff;color:#315b91;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            👥<br>Gestione utenti
+          </button>
+
+          <button id="adminConfermeTurni" data-no-scroll="true"
+            style="border:1px solid #f0ddba;background:#fffaf0;color:#8a5b13;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            ✅<br>Conferme / rifiuti
+          </button>
+
+          <button id="adminProgrammaPdf" data-no-scroll="true"
+            style="border:1px solid #efcfd2;background:#fff7f7;color:#9a3c46;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📄<br>Programma PDF
+          </button>
+
+          <button id="adminStoricoProgrammi" data-no-scroll="true"
+            style="border:1px solid #e0e4ea;background:#fafbfc;color:#596273;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            🗂️<br>Storico 6 mesi
+          </button>
+
+        </div>
+
+        <div style="
+          background:#eef7ff;
+          border:1px solid #cfe1f5;
+          border-radius:16px;
+          padding:14px;
+          margin-bottom:18px;
+          color:#41607f;
+          line-height:1.45;
+          font-size:14px;
+        ">
+          ℹ️ Le nuove sezioni sono già predisposte. Quelle non ancora operative mostrano il messaggio “Funzione in aggiornamento” finché non colleghiamo la relativa logica al database.
+        </div>
 
         <div style="
           background:#ffffff;
@@ -3500,7 +3674,55 @@ document
       const elenco = document.getElementById("elencoDisponibilitaAdmin");
       const stato = document.getElementById("statoAdmin");
       const richiesteBox = document.getElementById("richiesteAccessoAdmin");
-      const conteggioRichieste = document.getElementById("conteggioRichiesteAdmin");
+
+      const adminGestioneProgramma = document.getElementById("adminGestioneProgramma");
+      const adminGestionePostazioni = document.getElementById("adminGestionePostazioni");
+      const adminGestioneUtenti = document.getElementById("adminGestioneUtenti");
+      const adminConfermeTurni = document.getElementById("adminConfermeTurni");
+      const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
+      const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
+
+      adminGestioneProgramma.addEventListener("click", function() {
+        mostraFunzioneInAggiornamento(
+          "🗓️ Gestione programma",
+          "Gli amministratori potranno creare, modificare e disattivare turni scegliendo liberamente data, orario, postazione, numero di persone e assegnazioni."
+        );
+      });
+
+      adminGestionePostazioni.addEventListener("click", function() {
+        mostraFunzioneInAggiornamento(
+          "📍 Gestione postazioni",
+          "Da qui sarà possibile aggiungere nuove postazioni e attivarle o sospenderle senza modificare il codice della Mini App."
+        );
+      });
+
+      adminGestioneUtenti.addEventListener("click", function() {
+        mostraFunzioneInAggiornamento(
+          "👥 Gestione utenti",
+          "Gli amministratori potranno correggere nome e cognome, attivare o disattivare utenti e assegnare o revocare il ruolo amministratore."
+        );
+      });
+
+      adminConfermeTurni.addEventListener("click", function() {
+        mostraFunzioneInAggiornamento(
+          "✅ Conferme e rifiuti",
+          "Qui saranno raccolte le risposte ai turni assegnati: accettato, rifiutato o ancora in attesa. I rifiuti potranno essere evidenziati agli amministratori."
+        );
+      });
+
+      adminProgrammaPdf.addEventListener("click", function() {
+        mostraFunzioneInAggiornamento(
+          "📄 Programma mensile PDF",
+          "Da qui verrà generata una versione del programma del mese pronta da stampare e mettere in bacheca, usando gli stessi dati già presenti nella Mini App."
+        );
+      });
+
+      adminStoricoProgrammi.addEventListener("click", function() {
+        mostraFunzioneInAggiornamento(
+          "🗂️ Storico programmi",
+          "Qui gli amministratori potranno consultare gli ultimi 6 mesi e usare lo storico per dare precedenza a chi non svolge un turno da più tempo."
+        );
+      });
 
       function mostraStatoAdmin(msg, tipo) {
         stato.style.display = "block";
