@@ -3100,46 +3100,36 @@ document
     return `${anno}${mese}${giorno}T${ore}${minuti}00`;
   }
 
-  function scaricaTurnoCalendario(turno) {
-    const inizio = dataOraIcs(turno.data, turno.ora_inizio);
-    const fine = dataOraIcs(turno.data, turno.ora_fine);
+  function apriTurnoNelCalendario(turno) {
+    const [anno, mese, giorno] = String(turno.data).split("-");
+    const [oraInizio = "00", minInizio = "00"] = String(turno.ora_inizio || "00:00").split(":");
+    const [oraFine = "00", minFine = "00"] = String(turno.ora_fine || "00:00").split(":");
 
-    const descrizione = [
+    const inizio = `${anno}${mese}${giorno}T${oraInizio}${minInizio}00`;
+    const fine = `${anno}${mese}${giorno}T${oraFine}${minFine}00`;
+
+    const dettagli = [
       "Opera Pubblica",
       turno.postazione_nome ? `Postazione: ${turno.postazione_nome}` : "",
       turno.note ? `Note: ${turno.note}` : ""
-    ].filter(Boolean).join("\\n");
+    ].filter(Boolean).join("\n");
 
-    const uid = `opera-pubblica-${turno.id || turno.assegnazione?.id || Date.now()}@bordonaro`;
-
-    const ics = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Opera Pubblica Bordonaro//Mini App//IT",
-      "CALSCALE:GREGORIAN",
-      "METHOD:PUBLISH",
-      "BEGIN:VEVENT",
-      `UID:${uid}`,
-      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")}`,
-      `DTSTART;TZID=Europe/Rome:${inizio}`,
-      `DTEND;TZID=Europe/Rome:${fine}`,
-      "SUMMARY:Opera Pubblica",
-      `LOCATION:${escapeIcs(turno.postazione_nome || "")}`,
-      `DESCRIPTION:${escapeIcs(descrizione)}`,
-      "END:VEVENT",
-      "END:VCALENDAR"
-    ].join("\r\n");
-
-    const dataUrl = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+    const url =
+      "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      `&text=${encodeURIComponent("Opera Pubblica")}` +
+      `&dates=${encodeURIComponent(inizio + "/" + fine)}` +
+      `&ctz=${encodeURIComponent("Europe/Rome")}` +
+      `&location=${encodeURIComponent(turno.postazione_nome || "")}` +
+      `&details=${encodeURIComponent(dettagli)}`;
 
     try {
       if (window.Telegram?.WebApp?.openLink) {
-        window.Telegram.WebApp.openLink(dataUrl, { try_instant_view: false });
+        window.Telegram.WebApp.openLink(url);
         return;
       }
     } catch (_) {}
 
-    window.location.href = dataUrl;
+    window.open(url, "_blank", "noopener");
   }
 
   function inizioSettimana(dataIso) {
@@ -3428,12 +3418,23 @@ document
     }
 
     async function rispondi(id, risposta) {
+      const posizione = window.scrollY;
+
       try {
         await chiamaApi("rispondi_turno", {
           assegnazione_id: id,
           stato: risposta
         });
+
         await carica();
+
+        requestAnimationFrame(() => {
+          window.scrollTo({
+            top: posizione,
+            left: 0,
+            behavior: "auto"
+          });
+        });
       } catch (errore) {
         stato(errore.message || "Impossibile salvare la risposta.", true);
       }
@@ -3480,6 +3481,7 @@ document
             ${a.stato === "accettato" ? `
               <button
                 type="button"
+                data-no-scroll="true"
                 class="aggiungiCalendario"
                 data-turno="${turno.id}"
                 style="width:100%;border:none;background:#1768d7;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;margin-bottom:9px;">
@@ -3488,8 +3490,8 @@ document
             ` : ""}
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-              <button class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
-              <button class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
+              <button type="button" data-no-scroll="true" class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
+              <button type="button" data-no-scroll="true" class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
             </div>
           `;
 
@@ -3497,11 +3499,19 @@ document
         });
 
         elencoEl.querySelectorAll(".accettaTurno").forEach(btn => {
-          btn.addEventListener("click", () => rispondi(Number(btn.dataset.id), "accettato"));
+          btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            rispondi(Number(btn.dataset.id), "accettato");
+          });
         });
 
         elencoEl.querySelectorAll(".rifiutaTurno").forEach(btn => {
-          btn.addEventListener("click", () => rispondi(Number(btn.dataset.id), "rifiutato"));
+          btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            rispondi(Number(btn.dataset.id), "rifiutato");
+          });
         });
 
         elencoEl.querySelectorAll(".aggiungiCalendario").forEach(btn => {
@@ -3516,7 +3526,7 @@ document
               return;
             }
 
-            scaricaTurnoCalendario(turno);
+            apriTurnoNelCalendario(turno);
           });
         });
 
