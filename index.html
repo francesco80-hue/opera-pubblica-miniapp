@@ -4448,6 +4448,11 @@ document
             📢<br>Gestione aggiornamenti
           </button>
 
+          <button id="adminConfiguraWebhookBot" data-no-scroll="true"
+            style="display:none;border:1px solid #d8d2f5;background:#f8f6ff;color:#5b43a8;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            🔗<br>Collega nuovo bot
+          </button>
+
           <button id="adminStoricoProgrammi" data-no-scroll="true"
             style="border:1px solid #e0e4ea;background:#fafbfc;color:#596273;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
             🗂️<br>Storico 12 mesi
@@ -4556,6 +4561,7 @@ document
       const badgeRapportiAdmin = document.getElementById("badgeRapportiAdmin");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
       const adminGestioneAggiornamenti = document.getElementById("adminGestioneAggiornamenti");
+      const adminConfiguraWebhookBot = document.getElementById("adminConfiguraWebhookBot");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
       const adminGestioneAmministratori = document.getElementById("adminGestioneAmministratori");
       const badgeDaGestire = document.getElementById("badgeDaGestire");
@@ -5199,6 +5205,9 @@ document
       async function configuraSuperAdmin() {
         if (ruoloCorrente === "super_admin") {
           adminGestioneAmministratori.style.display = "block";
+          if (adminConfiguraWebhookBot) {
+            adminConfiguraWebhookBot.style.display = "block";
+          }
         }
         aggiornaBadgeDaGestire();
         aggiornaBadgeRapporti();
@@ -5631,6 +5640,32 @@ document
       }
 
       adminGestioneProgramma.addEventListener("click", apriGestioneProgrammaAdmin);
+
+      adminConfiguraWebhookBot?.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const testoOriginale = adminConfiguraWebhookBot.textContent;
+
+        try {
+          adminConfiguraWebhookBot.disabled = true;
+          adminConfiguraWebhookBot.textContent = "⏳ Collegamento…";
+
+          await chiamaApi("configura_webhook_bot_super_admin");
+
+          adminConfiguraWebhookBot.textContent = "✅ Bot collegato";
+
+          setTimeout(() => {
+            adminConfiguraWebhookBot.disabled = false;
+            adminConfiguraWebhookBot.textContent = testoOriginale;
+          }, 1800);
+        } catch (errore) {
+          adminConfiguraWebhookBot.disabled = false;
+          adminConfiguraWebhookBot.textContent = "⚠️ Riprova collegamento";
+          alert(errore.message || "Impossibile collegare il nuovo bot.");
+        }
+      });
+
       adminGestionePostazioni.addEventListener("click", apriGestionePostazioniAdmin);
       adminGestioneAggiornamenti.addEventListener("click", apriGestioneAggiornamentiAdmin);
       adminGestioneUtenti.addEventListener("click", apriGestioneUtentiAdmin);
