@@ -2991,65 +2991,54 @@ document
 
   document
     .getElementById("ultimoAggiornamento")
-    .addEventListener("click", function(event) {
-
+    .addEventListener("click", async function(event) {
       event.preventDefault();
 
       document.querySelector(".content").innerHTML = `
+        ${pulsanteIndietro("tornaHomeAggiornamenti")}
 
-        <div style="margin-bottom:18px;">
-          <button id="tornaHomeAggiornamenti" style="border:none;background:#fff5e8;color:#b96810;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
-            ← Torna alla Home
-          </button>
+        <div style="background:#eef7ff;border:1px solid #a7d7ff;border-radius:20px;padding:20px;margin-bottom:16px;">
+          <h2 style="font-size:25px;margin:0;">📢 Ultimi aggiornamenti</h2>
         </div>
 
-        <div style="background:linear-gradient(135deg,#fff8ee,#fffdf8);border:1px solid #f4d8b8;border-radius:20px;padding:20px;margin-bottom:18px;">
-          <h2 style="font-size:25px;margin:0 0 6px 0;">📢 Ultimi aggiornamenti</h2>
-          <div style="color:#80694e;">Comunicazioni utili per l'Opera Pubblica</div>
-          <div style="
-            display:inline-block;
-            margin-top:10px;
-            background:#ffffff;
-            border:1px solid #efd8bd;
-            color:#80694e;
-            padding:6px 10px;
-            border-radius:20px;
-            font-size:13px;
-            font-weight:700;
-          ">
-            📅 Aggiornato il 22 agosto 2026
-          </div>
-        </div>
+        <div id="aggiornamentiElenco"></div>
 
-        <div style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
-          <h3 style="font-size:19px;margin:0 0 9px 0;">🛒 Espositori mobili</h3>
-          <p>
-            Abbiamo a disposizione <strong>due espositori mobili</strong> per l'opera.
-            Uno si trova a <strong>Casa Vinci</strong>; l'altro, dai primi giorni di settembre,
-            si troverà al <strong>chiosco di Villaggio Ardisio</strong>.
-          </p>
-          <p style="margin-top:10px;">
-            Per il momento entrambi sono identici per quanto riguarda la disposizione delle pubblicazioni.
-          </p>
-        </div>
-
-        <div style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
-          <h3 style="font-size:19px;margin:0 0 9px 0;">📚 Disposizione delle pubblicazioni</h3>
-          <p>Nei settori inserire l'opuscolo <strong>“Puoi vivere felice per sempre”</strong>, come da immagine.</p>
-          <p style="margin-top:8px;">Il poster da esporre è <strong>“Corso biblico gratuito”</strong>.</p>
-        </div>
-
-        <img src="disposizione-pubblicazioni.png" loading="lazy" alt="Disposizione delle pubblicazioni"
-             style="width:100%;display:block;border-radius:18px;margin-bottom:18px;">
-
-        <button id="tornaHomeAggiornamentiBasso" style="width:100%;border:none;background:#fff5e8;color:#b96810;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
-          ← Torna alla Home
-        </button>
+        ${pulsanteIndietroFondo("tornaHomeAggiornamentiFondo")}
       `;
 
-      document.getElementById("tornaHomeAggiornamenti").addEventListener("click", function(){ location.reload(); });
-      document.getElementById("tornaHomeAggiornamentiBasso").addEventListener("click", function(){ location.reload(); });
+      collegaRitornoDoppio("tornaHomeAggiornamenti", "tornaHomeAggiornamentiFondo");
 
+      const elenco = document.getElementById("aggiornamentiElenco");
+
+      try {
+        const dati = await chiamaApi("leggi_aggiornamenti");
+        const aggiornamenti = dati.aggiornamenti || [];
+
+        if (!aggiornamenti.length) {
+          elenco.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;">Nessun aggiornamento disponibile.</div>`;
+          return;
+        }
+
+        aggiornamenti.forEach(a => {
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #dfe8f3;border-radius:18px;padding:16px;margin-bottom:12px;background:#fff;";
+
+          const immagini = (a.immagini || []).map(i =>
+            `<img src="${i.url}" alt="" style="width:100%;display:block;border-radius:14px;margin-top:10px;">`
+          ).join("");
+
+          card.innerHTML = `
+            <div style="font-size:13px;color:#667085;margin-bottom:4px;">${dataItaliana(a.data)}</div>
+            <div style="font-size:18px;font-weight:800;margin-bottom:7px;">${a.titolo}</div>
+            <div style="white-space:pre-wrap;line-height:1.5;">${a.testo || ""}</div>
+            ${immagini}
+          `;
+
+          elenco.appendChild(card);
+        });
+      } catch (errore) {
+        elenco.innerHTML = `<div style="padding:16px;border:1px solid #ffd0d0;border-radius:14px;color:#a33a3a;">${errore.message || "Errore nel caricamento."}</div>`;
+      }
     });
 
 
@@ -3634,6 +3623,11 @@ document
       <div id="rapportiStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
       <div id="rapportiElenco"></div>
 
+      <div style="margin-top:22px;">
+        <h3 style="font-size:20px;margin-bottom:10px;">✨ Esperienze condivise</h3>
+        <div id="esperienzePubblicheElenco"></div>
+      </div>
+
       ${pulsanteIndietroFondo("tornaHomeRapportoFondo")}
     `;
 
@@ -3733,7 +3727,38 @@ document
       carica();
     });
 
+    async function caricaEsperienzePubbliche() {
+      const box = document.getElementById("esperienzePubblicheElenco");
+      if (!box) return;
+
+      try {
+        const dati = await chiamaApi("leggi_esperienze_pubbliche");
+        const esperienze = dati.esperienze || [];
+
+        if (!esperienze.length) {
+          box.innerHTML = `<div style="padding:16px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;">Nessuna esperienza pubblicata al momento.</div>`;
+          return;
+        }
+
+        box.innerHTML = "";
+
+        esperienze.forEach(e => {
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #e7dcff;background:#fbf9ff;border-radius:17px;padding:15px;margin-bottom:10px;";
+          card.innerHTML = `
+            <div style="font-weight:800;text-transform:capitalize;">${dataItaliana(e.data)}</div>
+            <div style="font-size:13px;color:#667085;margin:4px 0 9px;">📍 ${e.postazione_nome}</div>
+            <div style="white-space:pre-wrap;line-height:1.5;">${e.esperienza}</div>
+          `;
+          box.appendChild(card);
+        });
+      } catch (errore) {
+        box.innerHTML = `<div style="padding:14px;border:1px solid #ffd0d0;border-radius:14px;color:#a33a3a;">${errore.message || "Errore nel caricamento delle esperienze."}</div>`;
+      }
+    }
+
     carica();
+    caricaEsperienzePubbliche();
   }
 
   document
@@ -4200,6 +4225,11 @@ document
             📄<br>Programma PDF
           </button>
 
+          <button id="adminGestioneAggiornamenti" data-no-scroll="true"
+            style="border:1px solid #cfe1f5;background:#f5f9ff;color:#315b91;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📢<br>Gestione aggiornamenti
+          </button>
+
           <button id="adminStoricoProgrammi" data-no-scroll="true"
             style="border:1px solid #e0e4ea;background:#fafbfc;color:#596273;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
             🗂️<br>Storico 12 mesi
@@ -4306,6 +4336,7 @@ document
       const adminConfermeTurni = document.getElementById("adminConfermeTurni");
       const adminRapportiEsperienze = document.getElementById("adminRapportiEsperienze");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
+      const adminGestioneAggiornamenti = document.getElementById("adminGestioneAggiornamenti");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
       const adminGestioneAmministratori = document.getElementById("adminGestioneAmministratori");
       const badgeDaGestire = document.getElementById("badgeDaGestire");
@@ -4880,6 +4911,26 @@ document
               `;
               elenco.appendChild(card);
             });
+
+            elenco.querySelectorAll(".approvaEsperienzaAdmin").forEach(btn => {
+              btn.addEventListener("click", async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                try {
+                  await chiamaApi("approva_esperienza_admin", {
+                    rapporto_id: Number(btn.dataset.id),
+                    approvata: btn.dataset.approvata !== "true"
+                  });
+                  await carica();
+                } catch (errore) {
+                  elenco.insertAdjacentHTML(
+                    "afterbegin",
+                    `<div style="padding:12px;border:1px solid #ffd0d0;border-radius:12px;color:#a33a3a;margin-bottom:10px;">${errore.message || "Errore."}</div>`
+                  );
+                }
+              });
+            });
           } catch (errore) {
             elenco.innerHTML = `<div style="padding:14px;background:#fff1f1;color:#a33a3a;border-radius:14px;">⚠️ ${errore.message}</div>`;
           }
@@ -5024,6 +5075,17 @@ document
                 <div style="color:#556078;margin:4px 0;">📍 ${r.postazione_nome} · 👤 ${r.nome_completo}</div>
                 <div style="font-size:16px;font-weight:800;margin-top:9px;">📚 Pubblicazioni: ${r.pubblicazioni}</div>
                 ${r.esperienza ? `<div style="margin-top:9px;padding-top:9px;border-top:1px solid #eef1f4;white-space:pre-wrap;">${r.esperienza}</div>` : ""}
+                ${r.esperienza ? `
+                  <button
+                    type="button"
+                    data-no-scroll="true"
+                    class="approvaEsperienzaAdmin"
+                    data-id="${r.id}"
+                    data-approvata="${r.approvata === true}"
+                    style="width:100%;border:none;background:${r.approvata ? "#eef9f1" : "#6942d4"};color:${r.approvata ? "#28733d" : "#fff"};padding:10px;border-radius:11px;font-weight:750;margin-top:10px;">
+                    ${r.approvata ? "✅ Pubblicata · premi per ritirare" : "👍 Approva esperienza"}
+                  </button>
+                ` : ""}
               `;
               elenco.appendChild(card);
             });
@@ -5047,19 +5109,358 @@ document
         carica();
       }
 
+
+      async function apriGestioneAggiornamentiAdmin() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminAggiornamenti", "← Torna all’Area amministratori")}
+
+          <div style="background:#eef7ff;border:1px solid #a7d7ff;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">📢 Gestione aggiornamenti</h2>
+          </div>
+
+          <button id="nuovoAggiornamentoBtn" type="button" data-no-scroll="true"
+            style="width:100%;border:none;background:#1768d7;color:#fff;padding:13px;border-radius:14px;font-weight:800;margin-bottom:14px;">
+            ➕ Nuovo aggiornamento
+          </button>
+
+          <div id="formAggiornamento" style="display:none;border:1px solid #dfe8f3;border-radius:16px;padding:14px;margin-bottom:14px;">
+            <input id="aggId" type="hidden">
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Data</label>
+            <input id="aggData" type="date"
+              style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;margin-bottom:8px;">
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Titolo</label>
+            <input id="aggTitolo" maxlength="120"
+              style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;margin-bottom:8px;">
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Testo</label>
+            <textarea id="aggTesto" maxlength="3000" rows="5"
+              style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;margin-bottom:8px;"></textarea>
+
+            <button id="salvaAggiornamentoBtn" type="button" data-no-scroll="true"
+              style="width:100%;border:none;background:#168a4a;color:#fff;padding:11px;border-radius:11px;font-weight:800;">
+              Salva aggiornamento
+            </button>
+          </div>
+
+          <div id="aggAdminStato" style="display:none;padding:12px;border-radius:12px;margin-bottom:10px;"></div>
+          <div id="aggAdminElenco"></div>
+
+          ${pulsanteIndietroFondo("tornaAreaAdminAggiornamentiFondo", "← Torna all’Area amministratori")}
+        `;
+
+        collegaRitornoDoppio(
+          "tornaAreaAdminAggiornamenti",
+          "tornaAreaAdminAggiornamentiFondo",
+          "admin"
+        );
+
+        const form = document.getElementById("formAggiornamento");
+        const stato = document.getElementById("aggAdminStato");
+        const elenco = document.getElementById("aggAdminElenco");
+
+        function mostra(msg, errore = false) {
+          stato.style.display = "block";
+          stato.style.background = errore ? "#fff1f1" : "#eef9f1";
+          stato.style.color = errore ? "#a33a3a" : "#28733d";
+          stato.textContent = msg;
+        }
+
+        function resetForm() {
+          document.getElementById("aggId").value = "";
+          document.getElementById("aggData").value =
+            new Date().toISOString().slice(0, 10);
+          document.getElementById("aggTitolo").value = "";
+          document.getElementById("aggTesto").value = "";
+        }
+
+        async function carica() {
+          try {
+            const dati = await chiamaApi("leggi_aggiornamenti_admin");
+            const aggiornamenti = dati.aggiornamenti || [];
+
+            elenco.innerHTML = "";
+
+            aggiornamenti.forEach(a => {
+              const card = document.createElement("div");
+              card.style.cssText =
+                "border:1px solid #dfe8f3;border-radius:16px;padding:14px;margin-bottom:10px;background:#fff;";
+
+              const immagini = (a.immagini || []).map(i => `
+                <div style="position:relative;margin-top:8px;">
+                  <img src="${i.url}" style="width:100%;display:block;border-radius:12px;">
+                  <button type="button" data-no-scroll="true"
+                    class="eliminaImgAgg" data-id="${i.id}"
+                    style="position:absolute;right:8px;top:8px;border:none;background:#c92c2c;color:#fff;border-radius:999px;width:34px;height:34px;font-weight:800;">
+                    ×
+                  </button>
+                </div>
+              `).join("");
+
+              card.innerHTML = `
+                <div style="font-size:13px;color:#667085;">${dataItaliana(a.data)}</div>
+                <div style="font-size:18px;font-weight:800;margin:4px 0;">${a.titolo}</div>
+                <div style="white-space:pre-wrap;">${a.testo || ""}</div>
+
+                ${immagini}
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+                  <button type="button" data-no-scroll="true"
+                    class="modificaAgg" data-id="${a.id}"
+                    style="border:none;background:#eef6ff;color:#1768d7;padding:10px;border-radius:11px;font-weight:750;">
+                    ✏️ Modifica
+                  </button>
+
+                  <button type="button" data-no-scroll="true"
+                    class="eliminaAgg" data-id="${a.id}"
+                    style="border:none;background:#fff1f1;color:#b42318;padding:10px;border-radius:11px;font-weight:750;">
+                    🗑️ Elimina
+                  </button>
+                </div>
+
+                <label style="display:block;margin-top:9px;">
+                  <span style="font-size:13px;color:#667085;">Aggiungi immagine</span>
+                  <input type="file" accept="image/*"
+                    class="imgAggInput" data-id="${a.id}"
+                    style="width:100%;margin-top:5px;">
+                </label>
+              `;
+
+              elenco.appendChild(card);
+            });
+
+            elenco.querySelectorAll(".modificaAgg").forEach(btn => {
+              btn.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const a = aggiornamenti.find(
+                  x => Number(x.id) === Number(btn.dataset.id)
+                );
+
+                if (!a) return;
+
+                document.getElementById("aggId").value = a.id;
+                document.getElementById("aggData").value = a.data;
+                document.getElementById("aggTitolo").value = a.titolo;
+                document.getElementById("aggTesto").value = a.testo || "";
+
+                form.style.display = "block";
+                form.scrollIntoView({ behavior: "smooth", block: "start" });
+              });
+            });
+
+            elenco.querySelectorAll(".eliminaAgg").forEach(btn => {
+              btn.addEventListener("click", async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!confirm("Eliminare questo aggiornamento?")) return;
+
+                await chiamaApi("elimina_aggiornamento_admin", {
+                  id: Number(btn.dataset.id)
+                });
+
+                await carica();
+              });
+            });
+
+            elenco.querySelectorAll(".imgAggInput").forEach(input => {
+              input.addEventListener("change", async () => {
+                const file = input.files?.[0];
+                if (!file) return;
+
+                if (file.size > 4_500_000) {
+                  mostra(
+                    "Immagine troppo grande. Usa un file sotto 4,5 MB.",
+                    true
+                  );
+                  return;
+                }
+
+                try {
+                  const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+
+                    reader.onload = () =>
+                      resolve(String(reader.result).split(",")[1] || "");
+
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                  });
+
+                  await chiamaApi(
+                    "aggiungi_immagine_aggiornamento_admin",
+                    {
+                      aggiornamento_id: Number(input.dataset.id),
+                      nome_file: file.name,
+                      mime_type: file.type || "image/jpeg",
+                      base64
+                    }
+                  );
+
+                  mostra("✅ Immagine aggiunta.");
+                  await carica();
+                } catch (errore) {
+                  mostra(errore.message || "Impossibile caricare l’immagine.", true);
+                }
+              });
+            });
+
+            elenco.querySelectorAll(".eliminaImgAgg").forEach(btn => {
+              btn.addEventListener("click", async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                await chiamaApi("elimina_immagine_aggiornamento_admin", {
+                  id: Number(btn.dataset.id)
+                });
+
+                await carica();
+              });
+            });
+          } catch (errore) {
+            mostra(errore.message || "Errore nel caricamento.", true);
+          }
+        }
+
+        document
+          .getElementById("nuovoAggiornamentoBtn")
+          .addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            resetForm();
+            form.style.display =
+              form.style.display === "none" ? "block" : "none";
+          });
+
+        document
+          .getElementById("salvaAggiornamentoBtn")
+          .addEventListener("click", async event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            try {
+              await chiamaApi("salva_aggiornamento_admin", {
+                id: Number(document.getElementById("aggId").value || 0),
+                data: document.getElementById("aggData").value,
+                titolo: document.getElementById("aggTitolo").value,
+                testo: document.getElementById("aggTesto").value,
+                attivo: true
+              });
+
+              mostra("✅ Aggiornamento salvato.");
+              form.style.display = "none";
+              resetForm();
+              await carica();
+            } catch (errore) {
+              mostra(errore.message || "Errore nel salvataggio.", true);
+            }
+          });
+
+        resetForm();
+        carica();
+      }
+
       adminGestioneProgramma.addEventListener("click", apriGestioneProgrammaAdmin);
       adminGestionePostazioni.addEventListener("click", apriGestionePostazioniAdmin);
+      adminGestioneAggiornamenti.addEventListener("click", apriGestioneAggiornamentiAdmin);
       adminGestioneUtenti.addEventListener("click", apriGestioneUtentiAdmin);
       adminConfermeTurni.addEventListener("click", apriConfermeAdmin);
       adminRapportiEsperienze.addEventListener("click", apriRapportiEsperienzeAdmin);
       adminGestioneAmministratori.addEventListener("click", apriGestioneAmministratori);
       configuraSuperAdmin();
 
-      adminProgrammaPdf.addEventListener("click", function() {
-        mostraFunzioneInAggiornamento(
-          "📄 Programma mensile PDF",
-          "La generazione del PDF verrà collegata ai dati reali del programma dopo aver completato il flusso di creazione e modifica dei turni."
-        );
+      adminProgrammaPdf.addEventListener("click", async function(event) {
+        event.preventDefault();
+
+        const mese = meseCorrenteKey();
+
+        try {
+          const dati = await chiamaApi("leggi_turni_admin", { mese });
+          const turni = dati.turni || [];
+
+          if (!turni.length) {
+            mostraFunzioneInAggiornamento(
+              "📄 Programma PDF",
+              "Non ci sono turni da stampare per questo mese."
+            );
+            return;
+          }
+
+          const righe = turni.map(t => {
+            const nomi = (t.assegnazioni || [])
+              .map(a => a.nome_completo)
+              .join(", ");
+
+            return `
+              <tr>
+                <td>${dataItaliana(t.data)}</td>
+                <td>${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)}</td>
+                <td>${t.postazione_nome}</td>
+                <td>${nomi}</td>
+              </tr>`;
+          }).join("");
+
+          const finestra = window.open("", "_blank");
+
+          if (!finestra) {
+            mostraFunzioneInAggiornamento(
+              "📄 Programma PDF",
+              "Il dispositivo ha bloccato la finestra di stampa. Prova dal browser o dal PC."
+            );
+            return;
+          }
+
+          finestra.document.write(`
+            <!DOCTYPE html>
+            <html lang="it">
+            <head>
+              <meta charset="UTF-8">
+              <title>Programma Opera Pubblica Bordonaro</title>
+              <style>
+                @page { size: A4 portrait; margin: 12mm; }
+                body { font-family: Arial, sans-serif; color:#111; margin:0; }
+                h1 { text-align:center; margin:0 0 4px; font-size:24px; }
+                h2 { text-align:center; font-weight:normal; margin:0 0 20px; text-transform:capitalize; font-size:18px; }
+                table { width:100%; border-collapse:collapse; font-size:13px; }
+                th, td { border:1px solid #888; padding:8px; vertical-align:top; }
+                th { background:#f0f0f0; }
+                tr { page-break-inside:avoid; }
+              </style>
+            </head>
+            <body>
+              <h1>Opera Pubblica Bordonaro</h1>
+              <h2>${titoloMese(mese)}</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Orario</th>
+                    <th>Postazione</th>
+                    <th>Assegnati</th>
+                  </tr>
+                </thead>
+                <tbody>${righe}</tbody>
+              </table>
+              <script>
+                window.onload = function() {
+                  setTimeout(function() { window.print(); }, 250);
+                };
+              <\/script>
+            </body>
+            </html>
+          `);
+
+          finestra.document.close();
+        } catch (errore) {
+          mostraFunzioneInAggiornamento(
+            "📄 Programma PDF",
+            errore.message || "Impossibile preparare il programma."
+          );
+        }
       });
 
       adminStoricoProgrammi.addEventListener("click", function() {
