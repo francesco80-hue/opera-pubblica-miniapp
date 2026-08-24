@@ -612,6 +612,7 @@
     "https://whsynkeehtswdxcqeqxn.supabase.co/functions/v1/telegram-disponibilita";
 
   let PROFILO_TELEGRAM = null;
+  let ruoloCorrente = "";
 
   async function verificaUtenteTelegram() {
     const stato = document.getElementById("telegramStatus");
@@ -658,12 +659,14 @@
       }
 
       PROFILO_TELEGRAM = dati.profilo || { registrato: false };
+      ruoloCorrente = PROFILO_TELEGRAM?.ruolo || "";
 
       const areaAdmin = document.getElementById("amministratori");
       if (areaAdmin) {
         areaAdmin.style.display =
           PROFILO_TELEGRAM?.registrato &&
-          PROFILO_TELEGRAM?.ruolo === "admin" &&
+          (PROFILO_TELEGRAM?.ruolo === "admin" ||
+           PROFILO_TELEGRAM?.ruolo === "super_admin") &&
           PROFILO_TELEGRAM?.attivo === true
             ? "flex"
             : "none";
