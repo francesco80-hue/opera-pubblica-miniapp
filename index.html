@@ -337,22 +337,27 @@
     <!-- NOTIFICHE PERSONALI -->
     <div
       id="boxPermessoNotifiche"
-      style="display:none;background:#eef6ff;border:1px solid #cfe1f5;border-radius:18px;padding:15px;margin:0 0 14px;"
+      style="display:none;margin:0 0 16px;"
     >
-      <div style="font-weight:800;font-size:16px;margin-bottom:5px;">
-        🔔 Attiva le notifiche personali
-      </div>
-      <div style="font-size:13px;line-height:1.45;color:#526174;margin-bottom:10px;">
-        Serve una sola volta per ricevere direttamente su Telegram nuovi turni o variazioni, senza dover usare la chat del bot.
-      </div>
       <button
-        id="attivaNotificheBtn"
+        id="attivaNotificheTelegram"
         type="button"
-        style="width:100%;border:none;background:#1768d7;color:#fff;padding:11px 14px;border-radius:12px;font-weight:800;cursor:pointer;"
+        data-no-scroll="true"
+        style="
+          width:100%;
+          border:none;
+          background:#1768d7;
+          color:#fff;
+          padding:16px 18px;
+          border-radius:16px;
+          font-size:18px;
+          font-weight:850;
+          cursor:pointer;
+          box-shadow:0 5px 14px rgba(23,104,215,.18);
+        "
       >
         🔔 Attiva notifiche
       </button>
-      <div id="statoPermessoNotifiche" style="display:none;margin-top:9px;font-size:13px;"></div>
     </div>
 
     <!-- SCRITTURA -->
@@ -606,21 +611,6 @@
 
 
     <!-- AREA AMMINISTRATORI -->
-      <div style="font-size:14px;color:#556078;line-height:1.45;margin-bottom:11px;">
-        Serve una sola volta per ricevere direttamente su Telegram
-        nuovi turni e variazioni, senza dover usare la chat del bot.
-      </div>
-
-      <button
-        id="attivaNotificheTelegram"
-        type="button"
-        data-no-scroll="true"
-        style="width:100%;border:none;background:#1768d7;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;"
-      >
-        🔔 Attiva notifiche
-      </button>
-    </div>
-
     <a
       class="admin"
       href="#"
@@ -3224,10 +3214,10 @@ document
 
   function iconaPersona(genere) {
     if (genere === "donna") {
-      return `<span title="Donna" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#f5e8ff;color:#9a4ec9;font-size:15px;font-weight:800;margin-right:6px;">♀</span>`;
+      return `<span title="Donna" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:#f7e8ff;color:#a13ac4;font-size:17px;font-weight:900;margin-right:5px;flex:0 0 auto;">♀</span>`;
     }
 
-    return `<span title="Uomo" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#e8f2ff;color:#2f6fb8;font-size:15px;font-weight:800;margin-right:6px;">♂</span>`;
+    return `<span title="Uomo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:#e6f1ff;color:#2468b3;font-size:17px;font-weight:900;margin-right:5px;flex:0 0 auto;">♂</span>`;
   }
 
 
@@ -3591,7 +3581,11 @@ document
                 const simbolo =
                   a.stato === "accettato" ? "✅" :
                   a.stato === "rifiutato" ? "❌" : "⏳";
-                return `<div style="padding:4px 0;"><strong>${simbolo} ${a.nome_completo}</strong></div>`;
+                return `
+                  <div style="padding:4px 0;display:flex;align-items:center;gap:2px;">
+                    ${iconaPersona(a.genere)}
+                    <strong>${simbolo} ${a.nome_completo}</strong>
+                  </div>`;
               })
               .join("");
 
