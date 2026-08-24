@@ -3101,6 +3101,30 @@ document
     `;
   }
 
+  function pulsanteIndietroFondo(id, testo = "← Torna alla Home") {
+    return `
+      <button id="${id}" style="
+        width:100%;
+        border:none;
+        background:#eef6ff;
+        color:#1768d7;
+        padding:13px 18px;
+        border-radius:14px;
+        font-size:16px;
+        font-weight:700;
+        cursor:pointer;
+        margin-top:18px;
+      ">${testo}</button>
+    `;
+  }
+
+  function collegaRitornoDoppio(idAlto, idBasso) {
+    const torna = () => location.reload();
+    document.getElementById(idAlto)?.addEventListener("click", torna);
+    document.getElementById(idBasso)?.addEventListener("click", torna);
+  }
+
+
   async function apriProgrammaGenerale() {
     let mese = meseCorrenteKey();
 
@@ -3118,9 +3142,10 @@ document
 
       <div id="programmaStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:14px;"></div>
       <div id="programmaElenco"></div>
+      ${pulsanteIndietroFondo("tornaHomeProgrammaFondo")}
     `;
 
-    document.getElementById("tornaHomeProgramma").addEventListener("click", () => location.reload());
+    collegaRitornoDoppio("tornaHomeProgramma", "tornaHomeProgrammaFondo");
 
     const meseEl = document.getElementById("programmaMese");
     const statoEl = document.getElementById("programmaStato");
@@ -3226,9 +3251,10 @@ document
 
       <div id="mieiStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:14px;"></div>
       <div id="mieiElenco"></div>
+      ${pulsanteIndietroFondo("tornaHomeMieiTurniFondo")}
     `;
 
-    document.getElementById("tornaHomeMieiTurni").addEventListener("click", () => location.reload());
+    collegaRitornoDoppio("tornaHomeMieiTurni", "tornaHomeMieiTurniFondo");
 
     const meseEl = document.getElementById("mieiMese");
     const statoEl = document.getElementById("mieiStato");
@@ -3827,7 +3853,8 @@ document
           </button>
 
           <button id="adminConfermeTurni" data-no-scroll="true"
-            style="border:1px solid #f0ddba;background:#fffaf0;color:#8a5b13;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            style="position:relative;border:1px solid #f0ddba;background:#fffaf0;color:#8a5b13;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            <span id="badgeDaGestire" style="display:none;position:absolute;right:8px;top:8px;background:#c92c2c;color:#fff;border-radius:999px;padding:3px 7px;font-size:11px;">0</span>
             ✅<br>Conferme / rifiuti
           </button>
 
@@ -3838,7 +3865,12 @@ document
 
           <button id="adminStoricoProgrammi" data-no-scroll="true"
             style="border:1px solid #e0e4ea;background:#fafbfc;color:#596273;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
-            🗂️<br>Storico 6 mesi
+            🗂️<br>Storico 12 mesi
+          </button>
+
+          <button id="adminGestioneAmministratori" data-no-scroll="true"
+            style="display:none;border:1px solid #d9d2f4;background:#f8f6ff;color:#4f3f8e;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            👑<br>Gestione amministratori
           </button>
 
         </div>
@@ -3937,10 +3969,14 @@ document
       const adminConfermeTurni = document.getElementById("adminConfermeTurni");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
+      const adminGestioneAmministratori = document.getElementById("adminGestioneAmministratori");
+      const badgeDaGestire = document.getElementById("badgeDaGestire");
 
 
       async function apriGestioneProgrammaAdmin() {
         let mese = meseCorrenteKey();
+        let utentiPriorita = [];
+        let postazioniAttive = [];
 
         document.querySelector(".content").innerHTML = `
           ${pulsanteIndietro("tornaAreaAdminProgramma", "← Torna all’Area amministratori")}
@@ -3956,14 +3992,8 @@ document
             <input id="nuovoTurnoData" type="date" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-              <div>
-                <label style="display:block;font-weight:700;margin-bottom:5px;">Inizio</label>
-                <input id="nuovoTurnoInizio" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
-              </div>
-              <div>
-                <label style="display:block;font-weight:700;margin-bottom:5px;">Fine</label>
-                <input id="nuovoTurnoFine" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
-              </div>
+              <div><label style="display:block;font-weight:700;margin-bottom:5px;">Inizio</label><input id="nuovoTurnoInizio" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></div>
+              <div><label style="display:block;font-weight:700;margin-bottom:5px;">Fine</label><input id="nuovoTurnoFine" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></div>
             </div>
 
             <label style="display:block;font-weight:700;margin:10px 0 5px;">Postazione</label>
@@ -3973,14 +4003,16 @@ document
             <input id="nuovoTurnoNumero" type="number" min="1" max="20" value="3" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
 
             <label style="display:block;font-weight:700;margin:10px 0 5px;">Persone da assegnare</label>
-            <div id="nuovoTurnoUtenti" style="max-height:260px;overflow:auto;border:1px solid #e1e7ef;border-radius:13px;padding:8px;"></div>
+            <div id="selettoriPersone"></div>
+
+            <div style="font-size:13px;color:#667085;line-height:1.4;margin-top:8px;">
+              I nomi sono proposti dando precedenza a chi non svolge un turno da più tempo negli ultimi 12 mesi.
+            </div>
 
             <label style="display:block;font-weight:700;margin:10px 0 5px;">Note</label>
             <textarea id="nuovoTurnoNote" maxlength="300" rows="2" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></textarea>
 
-            <button id="salvaNuovoTurno" style="width:100%;border:none;background:#6942d4;color:white;padding:14px;border-radius:14px;font-size:16px;font-weight:800;margin-top:12px;">
-              Salva turno
-            </button>
+            <button id="salvaNuovoTurno" style="width:100%;border:none;background:#6942d4;color:white;padding:14px;border-radius:14px;font-size:16px;font-weight:800;margin-top:12px;">Salva turno</button>
           </div>
 
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
@@ -3991,12 +4023,14 @@ document
 
           <div id="adminTurniStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
           <div id="adminTurniElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminProgrammaFondo", "← Torna all’Area amministratori")}
         `;
 
-        document.getElementById("tornaAreaAdminProgramma").addEventListener("click", () => location.reload());
+        collegaRitornoDoppio("tornaAreaAdminProgramma", "tornaAreaAdminProgrammaFondo");
 
         const postazioneSelect = document.getElementById("nuovoTurnoPostazione");
-        const utentiBox = document.getElementById("nuovoTurnoUtenti");
+        const selettoriPersone = document.getElementById("selettoriPersone");
+        const numeroInput = document.getElementById("nuovoTurnoNumero");
         const statoBox = document.getElementById("adminTurniStato");
         const elencoBox = document.getElementById("adminTurniElenco");
         const meseBox = document.getElementById("adminTurniMese");
@@ -4009,31 +4043,62 @@ document
           statoBox.textContent = msg;
         }
 
+        function opzioniUtenti(escludi = []) {
+          return utentiPriorita
+            .filter(u => !escludi.includes(Number(u.telegram_id)))
+            .map(u => `<option value="${u.telegram_id}">${u.nome_completo} — ${u.storico_testo}</option>`)
+            .join("");
+        }
+
+        function ridisegnaSelettori() {
+          const quanti = Math.max(1, Math.min(20, Number(numeroInput.value) || 3));
+          const precedenti = Array.from(selettoriPersone.querySelectorAll(".personaSelect")).map(s => s.value);
+          selettoriPersone.innerHTML = "";
+
+          for (let i = 0; i < quanti; i++) {
+            const wrap = document.createElement("div");
+            wrap.style.marginBottom = "8px";
+            wrap.innerHTML = `
+              <select class="personaSelect" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:14px;">
+                <option value="">Persona ${i + 1} — da scegliere</option>
+                ${opzioniUtenti()}
+              </select>`;
+            selettoriPersone.appendChild(wrap);
+            if (precedenti[i]) wrap.querySelector("select").value = precedenti[i];
+          }
+        }
+
         async function caricaScelte() {
           const [p, u] = await Promise.all([
             chiamaApi("leggi_postazioni_programma_admin"),
-            chiamaApi("leggi_utenti_admin")
+            chiamaApi("leggi_utenti_priorita_admin")
           ]);
 
-          const postazioni = (p.postazioni || []).filter(x => x.attiva === true);
-          postazioneSelect.innerHTML = postazioni
-            .map(x => `<option value="${x.id}">${x.nome}</option>`)
-            .join("");
+          postazioniAttive = (p.postazioni || []).filter(x => x.attiva === true);
+          utentiPriorita = u.utenti || [];
 
-          const utenti = (u.utenti || []).filter(x => x.attivo === true);
-          utentiBox.innerHTML = utenti.map(x => `
-            <label style="display:flex;align-items:center;gap:9px;padding:8px;border-bottom:1px solid #f0f2f5;">
-              <input type="checkbox" class="utenteTurnoCheck" value="${x.telegram_id}" style="width:20px;height:20px;">
-              <span>${x.nome_completo}${x.ruolo === "admin" ? " · admin" : ""}</span>
-            </label>
-          `).join("");
+          postazioneSelect.innerHTML = postazioniAttive.map(x => `<option value="${x.id}">${x.nome}</option>`).join("");
+          ridisegnaSelettori();
+        }
+
+        async function sostituisci(assegnazioneId, select) {
+          const nuovoId = Number(select.value);
+          if (!nuovoId) return;
+          try {
+            await chiamaApi("sostituisci_assegnazione_admin", {
+              assegnazione_id: assegnazioneId,
+              nuovo_telegram_id: nuovoId
+            });
+            stato("✅ Persona sostituita. Il nuovo assegnato è in attesa di risposta.");
+            await Promise.all([caricaScelte(), caricaTurni()]);
+          } catch (errore) {
+            stato(errore.message || "Impossibile sostituire la persona.", true);
+          }
         }
 
         async function caricaTurni() {
           meseBox.textContent = titoloMese(mese);
           elencoBox.innerHTML = "";
-          statoBox.style.display = "none";
-
           try {
             const dati = await chiamaApi("leggi_turni_admin", { mese });
             const turni = dati.turni || [];
@@ -4046,9 +4111,23 @@ document
             turni.forEach(t => {
               const card = document.createElement("div");
               card.style.cssText = "border:1px solid #e1e7ef;border-radius:17px;padding:15px;margin-bottom:10px;background:#fff;";
+
               const persone = (t.assegnazioni || []).map(a => {
-                const s = a.stato === "accettato" ? "✅" : a.stato === "rifiutato" ? "❌" : "⏳";
-                return `<div style="padding:3px 0;">${s} ${a.nome_completo}</div>`;
+                const statoLabel = a.stato === "accettato" ? "✅ Accettato" : a.stato === "rifiutato" ? "❌ Rifiutato" : "⏳ In attesa";
+                const sostituzione = a.stato === "rifiutato" ? `
+                  <div style="margin-top:7px;">
+                    <select class="sostituisciSelect" data-assegnazione="${a.id}" style="width:100%;padding:10px;border:1px solid #efcaca;border-radius:11px;font-size:13px;">
+                      <option value="">Sostituisci con…</option>
+                      ${opzioniUtenti((t.assegnazioni || []).map(x => Number(x.telegram_id)))}
+                    </select>
+                  </div>` : "";
+
+                return `
+                  <div style="padding:8px 0;border-top:1px solid #f0f2f5;">
+                    <strong>${a.nome_completo}</strong>
+                    <div style="font-size:14px;color:${a.stato === "rifiutato" ? "#b42318" : "#667085"};margin-top:2px;">${statoLabel}</div>
+                    ${sostituzione}
+                  </div>`;
               }).join("");
 
               card.innerHTML = `
@@ -4058,17 +4137,29 @@ document
               `;
               elencoBox.appendChild(card);
             });
+
+            elencoBox.querySelectorAll(".sostituisciSelect").forEach(select => {
+              select.addEventListener("change", () => sostituisci(Number(select.dataset.assegnazione), select));
+            });
           } catch (errore) {
             stato(errore.message || "Errore nel caricamento turni.", true);
           }
         }
 
+        numeroInput.addEventListener("change", ridisegnaSelettori);
+
         await caricaScelte();
         await caricaTurni();
 
         document.getElementById("salvaNuovoTurno").addEventListener("click", async function() {
-          const telegramIds = Array.from(document.querySelectorAll(".utenteTurnoCheck:checked"))
-            .map(x => Number(x.value));
+          const telegramIds = Array.from(document.querySelectorAll(".personaSelect"))
+            .map(x => Number(x.value))
+            .filter(Boolean);
+
+          if (new Set(telegramIds).size !== telegramIds.length) {
+            stato("La stessa persona non può essere scelta due volte nello stesso turno.", true);
+            return;
+          }
 
           try {
             await chiamaApi("crea_turno", {
@@ -4076,29 +4167,21 @@ document
               ora_inizio: document.getElementById("nuovoTurnoInizio").value,
               ora_fine: document.getElementById("nuovoTurnoFine").value,
               postazione_id: Number(postazioneSelect.value),
-              numero_persone: Number(document.getElementById("nuovoTurnoNumero").value),
+              numero_persone: Number(numeroInput.value),
               telegram_ids: telegramIds,
               note: document.getElementById("nuovoTurnoNote").value
             });
 
-            stato("✅ Turno salvato.");
+            stato("✅ Turno salvato e notifiche inviate agli assegnati.");
             document.getElementById("nuovoTurnoNote").value = "";
-            document.querySelectorAll(".utenteTurnoCheck").forEach(x => x.checked = false);
-            await caricaTurni();
+            await Promise.all([caricaScelte(), caricaTurni()]);
           } catch (errore) {
             stato(errore.message || "Impossibile salvare il turno.", true);
           }
         });
 
-        document.getElementById("adminTurniPrev").addEventListener("click", () => {
-          mese = spostaMese(mese, -1);
-          caricaTurni();
-        });
-
-        document.getElementById("adminTurniNext").addEventListener("click", () => {
-          mese = spostaMese(mese, 1);
-          caricaTurni();
-        });
+        document.getElementById("adminTurniPrev").addEventListener("click", () => { mese = spostaMese(mese, -1); caricaTurni(); });
+        document.getElementById("adminTurniNext").addEventListener("click", () => { mese = spostaMese(mese, 1); caricaTurni(); });
       }
 
       async function apriGestionePostazioniAdmin() {
@@ -4115,9 +4198,10 @@ document
 
           <div id="postazioniAdminStato" style="display:none;padding:12px;border-radius:13px;margin-bottom:12px;"></div>
           <div id="postazioniAdminElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminPostazioniFondo", "← Torna all’Area amministratori")}
         `;
 
-        document.getElementById("tornaAreaAdminPostazioni").addEventListener("click", () => location.reload());
+        collegaRitornoDoppio("tornaAreaAdminPostazioni", "tornaAreaAdminPostazioniFondo");
 
         const elenco = document.getElementById("postazioniAdminElenco");
         const stato = document.getElementById("postazioniAdminStato");
@@ -4191,9 +4275,10 @@ document
           </div>
           <div id="utentiAdminStato" style="display:none;padding:12px;border-radius:13px;margin-bottom:12px;"></div>
           <div id="utentiAdminElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminUtentiFondo", "← Torna all’Area amministratori")}
         `;
 
-        document.getElementById("tornaAreaAdminUtenti").addEventListener("click", () => location.reload());
+        collegaRitornoDoppio("tornaAreaAdminUtenti", "tornaAreaAdminUtentiFondo");
 
         const elenco = document.getElementById("utentiAdminElenco");
         const stato = document.getElementById("utentiAdminStato");
@@ -4219,6 +4304,7 @@ document
                   <select class="utenteRuoloAdmin" data-id="${u.telegram_id}" style="padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;">
                     <option value="utente" ${u.ruolo === "utente" ? "selected" : ""}>Utente</option>
                     <option value="admin" ${u.ruolo === "admin" ? "selected" : ""}>Admin</option>
+                    ${u.ruolo === "super_admin" ? '<option value="super_admin" selected>Super admin</option>' : ""}
                   </select>
                   <label style="display:flex;align-items:center;gap:6px;">
                     <input class="utenteAttivoAdmin" data-id="${u.telegram_id}" type="checkbox" ${u.attivo ? "checked" : ""} style="width:20px;height:20px;">
@@ -4273,9 +4359,10 @@ document
             <button id="confNext" style="border:none;background:#fff3dc;color:#8a5b13;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
           </div>
           <div id="confElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminConfermeFondo", "← Torna all’Area amministratori")}
         `;
 
-        document.getElementById("tornaAreaAdminConferme").addEventListener("click", () => location.reload());
+        collegaRitornoDoppio("tornaAreaAdminConferme", "tornaAreaAdminConfermeFondo");
 
         const meseEl = document.getElementById("confMese");
         const elenco = document.getElementById("confElenco");
@@ -4315,10 +4402,99 @@ document
         carica();
       }
 
+
+      async function aggiornaBadgeDaGestire() {
+        try {
+          const dati = await chiamaApi("contatore_da_gestire_admin");
+          const n = Number(dati.da_gestire || 0);
+          if (n > 0) {
+            badgeDaGestire.textContent = `${n} da gestire`;
+            badgeDaGestire.style.display = "block";
+          } else {
+            badgeDaGestire.style.display = "none";
+          }
+        } catch (_) {}
+      }
+
+      async function configuraSuperAdmin() {
+        if (ruoloCorrente === "super_admin") {
+          adminGestioneAmministratori.style.display = "block";
+        }
+        aggiornaBadgeDaGestire();
+      }
+
+      async function apriGestioneAmministratori() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminAdmins", "← Torna all’Area amministratori")}
+          <div style="background:#f8f6ff;border:1px solid #d9d2f4;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">👑 Gestione amministratori</h2>
+            <div style="color:#667085;margin-top:7px;">Funzione riservata all’amministratore principale.</div>
+          </div>
+          <div id="adminRuoliStato" style="display:none;padding:12px;border-radius:13px;margin-bottom:12px;"></div>
+          <div id="adminRuoliElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminAdminsFondo", "← Torna all’Area amministratori")}
+        `;
+        collegaRitornoDoppio("tornaAreaAdminAdmins", "tornaAreaAdminAdminsFondo");
+
+        const stato = document.getElementById("adminRuoliStato");
+        const elenco = document.getElementById("adminRuoliElenco");
+
+        function mostra(msg, errore=false) {
+          stato.style.display = "block";
+          stato.style.background = errore ? "#fff1f1" : "#eef9f1";
+          stato.style.color = errore ? "#a33a3a" : "#28733d";
+          stato.textContent = msg;
+        }
+
+        try {
+          const [tutti, admins] = await Promise.all([
+            chiamaApi("leggi_utenti_admin"),
+            chiamaApi("leggi_amministratori_super_admin")
+          ]);
+
+          const adminIds = new Set((admins.amministratori || []).map(x => Number(x.telegram_id)));
+          elenco.innerHTML = "";
+
+          (tutti.utenti || []).forEach(u => {
+            const isSuper = u.ruolo === "super_admin";
+            const card = document.createElement("div");
+            card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
+            card.innerHTML = `
+              <div style="font-weight:800;">${u.nome_completo}</div>
+              <div style="font-size:13px;color:#667085;margin:3px 0 9px;">${isSuper ? "👑 Amministratore principale" : u.ruolo === "admin" ? "🛡️ Amministratore" : "Utente"}</div>
+              ${isSuper ? '<div style="font-size:13px;color:#7a6a9a;">Account protetto</div>' : `
+                <button class="toggleAdmin" data-id="${u.telegram_id}" data-admin="${u.ruolo === "admin"}" style="width:100%;border:none;background:${u.ruolo === "admin" ? "#fff1f1" : "#eef6ff"};color:${u.ruolo === "admin" ? "#a33a3a" : "#1768d7"};padding:11px;border-radius:12px;font-weight:750;">
+                  ${u.ruolo === "admin" ? "Revoca ruolo admin" : "Rendi amministratore"}
+                </button>`}
+            `;
+            elenco.appendChild(card);
+          });
+
+          elenco.querySelectorAll(".toggleAdmin").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              try {
+                await chiamaApi("imposta_ruolo_admin_super_admin", {
+                  telegram_id: Number(btn.dataset.id),
+                  ruolo: btn.dataset.admin === "true" ? "utente" : "admin"
+                });
+                mostra("✅ Ruolo aggiornato.");
+                setTimeout(apriGestioneAmministratori, 400);
+              } catch (errore) {
+                mostra(errore.message || "Errore.", true);
+              }
+            });
+          });
+        } catch (errore) {
+          mostra(errore.message || "Impossibile caricare gli amministratori.", true);
+        }
+      }
+
       adminGestioneProgramma.addEventListener("click", apriGestioneProgrammaAdmin);
       adminGestionePostazioni.addEventListener("click", apriGestionePostazioniAdmin);
       adminGestioneUtenti.addEventListener("click", apriGestioneUtentiAdmin);
       adminConfermeTurni.addEventListener("click", apriConfermeAdmin);
+      adminGestioneAmministratori.addEventListener("click", apriGestioneAmministratori);
+      configuraSuperAdmin();
 
       adminProgrammaPdf.addEventListener("click", function() {
         mostraFunzioneInAggiornamento(
