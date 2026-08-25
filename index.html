@@ -414,7 +414,7 @@
 
 
     <!-- ULTIMO AGGIORNAMENTO -->
-    <a class="update" href="#" id="ultimoAggiornamento">
+    <a class="update" href="#" id="ultimoAggiornamento" onclick="event.preventDefault(); if (this.dataset.accessoBloccato !== 'true') apriUltimiAggiornamenti(); return false;">
 
       <div class="update-icon">
         📢
