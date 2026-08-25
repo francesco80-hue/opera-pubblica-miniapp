@@ -361,6 +361,31 @@
       </button>
     </div>
 
+    <!-- PRIMO ACCESSO: NOME E COGNOME -->
+    <div id="boxPrimoAccessoHome"
+      style="display:none;margin:0 0 16px;background:#fff8e8;border:1px solid #ffe0a3;border-radius:18px;padding:18px;">
+      <div style="font-size:18px;font-weight:850;color:#5f4613;margin-bottom:6px;">
+        👤 Completa il tuo accesso
+      </div>
+      <div style="font-size:14px;color:#725315;line-height:1.5;margin-bottom:11px;">
+        Inserisci nome e cognome. La richiesta verrà inviata agli amministratori.
+      </div>
+      <input id="nomeCompletoHome"
+        type="text"
+        autocomplete="name"
+        placeholder="Nome e cognome"
+        data-no-scroll="true"
+        style="width:100%;padding:12px;border:1px solid #e5c979;border-radius:13px;font-size:16px;background:#fff;margin-bottom:9px;pointer-events:auto;">
+      <button id="inviaRichiestaHome"
+        type="button"
+        data-no-scroll="true"
+        style="width:100%;border:none;background:#1768d7;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;">
+        Invia richiesta di accesso
+      </button>
+      <div id="statoRichiestaHome"
+        style="display:none;margin-top:10px;font-size:14px;line-height:1.45;"></div>
+    </div>
+
     <!-- SCRITTURA -->
     <div class="verse">
 
@@ -666,6 +691,97 @@
   let PROFILO_TELEGRAM = null;
   let ruoloCorrente = "";
 
+  document.addEventListener("click", function(event) {
+    const protetto = event.target?.closest?.('[data-accesso-bloccato="true"]');
+    if (!protetto) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+  }, true);
+
+  function aggiornaBloccoHomePerAccesso() {
+    const approvato =
+      PROFILO_TELEGRAM?.registrato === true &&
+      PROFILO_TELEGRAM?.attivo === true;
+
+    [
+      "#ultimoAggiornamento",
+      "#programma",
+      "#mieiTurni",
+      "#disponibilita",
+      "#postazioni",
+      "#istruzioni",
+      "#disposizionePubblicazioni",
+      "#rapportoEsperienze",
+      "#assistenza",
+      "#areaAdmin"
+    ].forEach(selettore => {
+      const elemento = document.querySelector(selettore);
+      if (!elemento) return;
+
+      elemento.dataset.accessoBloccato = approvato ? "false" : "true";
+      elemento.style.pointerEvents = approvato ? "" : "none";
+      elemento.style.filter = approvato ? "" : "grayscale(1)";
+      elemento.style.opacity = approvato ? "" : "0.48";
+      elemento.style.cursor = approvato ? "" : "not-allowed";
+      elemento.setAttribute("aria-disabled", approvato ? "false" : "true");
+    });
+  }
+
+  function aggiornaPrimoAccessoHome() {
+    const box = document.getElementById("boxPrimoAccessoHome");
+    if (!box) return;
+
+    const registrato =
+      PROFILO_TELEGRAM?.registrato === true &&
+      !!PROFILO_TELEGRAM?.nome_completo;
+
+    box.style.display = registrato ? "none" : "block";
+  }
+
+  async function aggiornaBadgeRichiesteAdmin() {
+    const badge = document.getElementById("badgeAdminHome");
+
+    if (
+      !badge ||
+      !PROFILO_TELEGRAM?.registrato ||
+      PROFILO_TELEGRAM?.attivo !== true ||
+      !["admin", "super_admin"].includes(PROFILO_TELEGRAM?.ruolo)
+    ) {
+      return;
+    }
+
+    try {
+      const [rapporti, richieste] = await Promise.all([
+        chiamaApi("contatore_rapporti_admin").catch(() => ({ nuovi_rapporti: 0 })),
+        fetch(TELEGRAM_VERIFY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            initData: window.Telegram?.WebApp?.initData || "",
+            azione: "leggi_richieste_accesso"
+          })
+        }).then(async risposta => {
+          const dati = await risposta.json();
+          if (!risposta.ok || !dati.ok) throw new Error(dati.error || "Errore richieste");
+          return dati;
+        }).catch(() => ({ richieste: [] }))
+      ]);
+
+      const nRapporti = Number(rapporti.nuovi_rapporti || 0);
+      const nRichieste = Array.isArray(richieste.richieste)
+        ? richieste.richieste.length
+        : 0;
+      const totale = nRapporti + nRichieste;
+
+      badge.textContent = String(totale);
+      badge.style.display = totale > 0 ? "block" : "none";
+      badge.title =
+        `${nRichieste} richieste di accesso · ${nRapporti} nuovi rapporti`;
+    } catch (_) {}
+  }
+
   async function verificaUtenteTelegram() {
     const stato = document.getElementById("telegramStatus");
 
@@ -730,17 +846,10 @@
          PROFILO_TELEGRAM?.ruolo === "super_admin") &&
         PROFILO_TELEGRAM?.attivo === true
       ) {
-        chiamaApi("contatore_rapporti_admin")
-          .then(d => {
-            const b = document.getElementById("badgeAdminHome");
-            const n = Number(d.nuovi_rapporti || 0);
-            if (b && n > 0) {
-              b.textContent = String(n);
-              b.style.display = "block";
-            }
-          })
-          .catch(() => {});
+        aggiornaBadgeRichiesteAdmin();
       }
+
+      aggiornaPrimoAccessoHome();
 
       const nomeTelegram = [
         dati.user?.first_name || "",
@@ -5269,6 +5378,85 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
       }
 
 
+      async function apriUltimiAggiornamenti() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaHomeAggiornamenti", "← Torna alla Home")}
+
+          <div style="background:#eef7ff;border:1px solid #a7d7ff;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0 0 6px;">📢 Ultimi aggiornamenti</h2>
+            <div style="color:#5f6f82;line-height:1.5;">
+              Comunicazioni e novità pubblicate dagli amministratori.
+            </div>
+          </div>
+
+          <div id="aggUtenteStato"
+            style="padding:13px;border-radius:14px;background:#f6f8fb;color:#667085;margin-bottom:12px;">
+            ⏳ Caricamento aggiornamenti…
+          </div>
+
+          <div id="aggUtenteElenco"></div>
+
+          ${pulsanteIndietroFondo("tornaHomeAggiornamentiFondo", "← Torna alla Home")}
+        `;
+
+        collegaRitornoDoppio(
+          "tornaHomeAggiornamenti",
+          "tornaHomeAggiornamentiFondo",
+          "home"
+        );
+
+        const stato = document.getElementById("aggUtenteStato");
+        const elenco = document.getElementById("aggUtenteElenco");
+
+        try {
+          const dati = await chiamaApi("leggi_aggiornamenti");
+          const aggiornamenti = dati.aggiornamenti || [];
+
+          if (!aggiornamenti.length) {
+            stato.textContent = "Nessun aggiornamento pubblicato al momento.";
+            return;
+          }
+
+          stato.style.display = "none";
+
+          aggiornamenti.forEach(a => {
+            const card = document.createElement("article");
+            card.style.cssText =
+              "border:1px solid #dfe8f3;border-radius:17px;padding:15px;margin-bottom:12px;background:#fff;";
+
+            const immagini = (a.immagini || []).map(i => `
+              <img
+                src="${i.url}"
+                alt=""
+                style="width:100%;display:block;border-radius:13px;margin-top:10px;"
+              >
+            `).join("");
+
+            card.innerHTML = `
+              <div style="font-size:13px;color:#667085;">
+                ${dataItaliana(a.data)}
+              </div>
+              <div style="font-size:19px;font-weight:800;margin:4px 0 7px;">
+                ${a.titolo || ""}
+              </div>
+              <div style="white-space:pre-wrap;line-height:1.55;color:#344054;">
+                ${a.testo || ""}
+              </div>
+              ${immagini}
+            `;
+
+            elenco.appendChild(card);
+          });
+
+        } catch (errore) {
+          stato.style.background = "#fff1f1";
+          stato.style.color = "#a33a3a";
+          stato.textContent =
+            "⚠️ " + (errore.message || "Impossibile caricare gli aggiornamenti.");
+        }
+      }
+
+
       async function apriGestioneAggiornamentiAdmin() {
         document.querySelector(".content").innerHTML = `
           ${pulsanteIndietro("tornaAreaAdminAggiornamenti", "← Torna all’Area amministratori")}
@@ -6016,6 +6204,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
                 );
 
                 await caricaRichiesteAccesso();
+                await aggiornaBadgeRichiesteAdmin();
               } catch (errore) {
                 mostraStatoAdmin(
                   "⚠️ " +
@@ -6136,6 +6325,86 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
 
   document
+    .getElementById("ultimoAggiornamento")
+    ?.addEventListener("click", function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      apriUltimiAggiornamenti();
+    });
+
+
+  document
+    .getElementById("inviaRichiestaHome")
+    ?.addEventListener("click", async function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const input = document.getElementById("nomeCompletoHome");
+      const btn = document.getElementById("inviaRichiestaHome");
+      const stato = document.getElementById("statoRichiestaHome");
+
+      const nomeCompleto = String(input?.value || "")
+        .trim()
+        .replace(/\s+/g, " ");
+
+      if (nomeCompleto.length < 3 || !nomeCompleto.includes(" ")) {
+        stato.style.display = "block";
+        stato.style.color = "#a33a3a";
+        stato.textContent = "⚠️ Inserisci nome e cognome completi.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "⏳ Invio…";
+
+      try {
+        const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            initData: window.Telegram?.WebApp?.initData || "",
+            azione: "salva_profilo",
+            nome_completo: nomeCompleto
+          })
+        });
+
+        const dati = await risposta.json();
+
+        if (!risposta.ok || !dati.ok) {
+          throw new Error(dati.error || "Impossibile inviare la richiesta");
+        }
+
+        PROFILO_TELEGRAM = {
+          ...(PROFILO_TELEGRAM || {}),
+          registrato: true,
+          nome_completo: nomeCompleto,
+          attivo: false,
+          ruolo: PROFILO_TELEGRAM?.ruolo || "utente"
+        };
+
+        stato.style.display = "block";
+        stato.style.color = "#28733d";
+        stato.textContent =
+          "✅ Richiesta inviata. Attendi l’approvazione di un amministratore.";
+
+        aggiornaBloccoHomePerAccesso();
+
+        setTimeout(() => {
+          aggiornaPrimoAccessoHome();
+        }, 1400);
+
+      } catch (errore) {
+        stato.style.display = "block";
+        stato.style.color = "#a33a3a";
+        stato.textContent =
+          "⚠️ " + (errore.message || "Impossibile inviare la richiesta.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Invia richiesta di accesso";
+      }
+    });
+
+  document
     .getElementById("attivaNotificheTelegram")
     ?.addEventListener("click", function(event) {
       event.preventDefault();
@@ -6145,6 +6414,9 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
   verificaPromise.then(function() {
     aggiornaBoxNotifiche();
+    aggiornaPrimoAccessoHome();
+    aggiornaBloccoHomePerAccesso();
+    aggiornaBadgeRichiesteAdmin();
   });
 
   /*
