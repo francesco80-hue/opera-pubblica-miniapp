@@ -414,7 +414,7 @@
 
 
     <!-- ULTIMO AGGIORNAMENTO -->
-    <a class="update" href="#" id="ultimoAggiornamento" onclick="event.preventDefault(); if (this.dataset.accessoBloccato !== 'true') apriUltimiAggiornamenti(); return false;">
+    <a class="update" href="#" id="ultimoAggiornamento" onclick="event.preventDefault(); if (this.dataset.accessoBloccato !== 'true') apriUltimiAggiornamentiHome(); return false;">
 
       <div class="update-icon">
         📢
@@ -894,6 +894,96 @@
   }
 
   const verificaPromise = verificaUtenteTelegram();
+
+
+  async function apriUltimiAggiornamentiHome() {
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeAggiornamenti", "← Torna alla Home")}
+
+      <div style="background:#eef7ff;border:1px solid #a7d7ff;border-radius:20px;padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:25px;margin:0 0 6px;">📢 Ultimi aggiornamenti</h2>
+        <div style="color:#5f6f82;line-height:1.5;">
+          Comunicazioni e novità pubblicate dagli amministratori.
+        </div>
+      </div>
+
+      <div id="aggUtenteStato"
+        style="padding:13px;border-radius:14px;background:#f6f8fb;color:#667085;margin-bottom:12px;">
+        ⏳ Caricamento aggiornamenti…
+      </div>
+
+      <div id="aggUtenteElenco"></div>
+
+      ${pulsanteIndietroFondo("tornaHomeAggiornamentiFondo", "← Torna alla Home")}
+    `;
+
+    collegaRitornoDoppio(
+      "tornaHomeAggiornamenti",
+      "tornaHomeAggiornamentiFondo",
+      "home"
+    );
+
+    const stato = document.getElementById("aggUtenteStato");
+    const elenco = document.getElementById("aggUtenteElenco");
+
+    try {
+      const dati = await chiamaApi("leggi_aggiornamenti");
+      const aggiornamenti = Array.isArray(dati.aggiornamenti)
+        ? dati.aggiornamenti
+        : [];
+
+      if (!aggiornamenti.length) {
+        stato.textContent = "Nessun aggiornamento pubblicato al momento.";
+        return;
+      }
+
+      stato.style.display = "none";
+
+      aggiornamenti.forEach(a => {
+        const card = document.createElement("article");
+        card.style.cssText =
+          "border:1px solid #dfe8f3;border-radius:17px;padding:15px;margin-bottom:12px;background:#fff;";
+
+        const immagini = (Array.isArray(a.immagini) ? a.immagini : [])
+          .map(i => `
+            <img
+              src="${i.url}"
+              alt=""
+              loading="lazy"
+              style="width:100%;display:block;border-radius:13px;margin-top:10px;"
+            >
+          `)
+          .join("");
+
+        card.innerHTML = `
+          <div style="font-size:13px;color:#667085;">
+            ${dataItaliana(a.data)}
+          </div>
+          <div style="font-size:19px;font-weight:800;margin:4px 0 7px;">
+            ${a.titolo || ""}
+          </div>
+          <div style="white-space:pre-wrap;line-height:1.55;color:#344054;">
+            ${a.testo || ""}
+          </div>
+          ${immagini}
+        `;
+
+        elenco.appendChild(card);
+      });
+
+    } catch (errore) {
+      stato.style.background = "#fff1f1";
+      stato.style.color = "#a33a3a";
+      stato.textContent =
+        "⚠️ " + (errore.message || "Impossibile caricare gli aggiornamenti.");
+    }
+  }
+
+
+  // Cache in memoria: evita di rifare le stesse chiamate quando si torna
+  // su un mese già aperto durante la stessa sessione.
+  const cacheProgrammaUtente = new Map();
+  const cacheProgrammaAdmin = new Map();
 
 
   /*
@@ -3045,15 +3135,33 @@ document
       statoEl.textContent = msg;
     }
 
+    function preCaricaMeseUtente(meseDaCaricare) {
+      if (cacheProgrammaUtente.has(meseDaCaricare)) return;
+
+      chiamaApi("leggi_programma", { mese: meseDaCaricare })
+        .then(dati => {
+          cacheProgrammaUtente.set(meseDaCaricare, dati);
+        })
+        .catch(() => {});
+    }
+
     async function carica() {
       meseEl.textContent = titoloMese(mese);
       elencoEl.innerHTML = "";
       stato("⏳ Caricamento programma…");
 
       try {
-        const dati = await chiamaApi("leggi_programma", { mese });
+        let dati = cacheProgrammaUtente.get(mese);
+
+        if (!dati) {
+          dati = await chiamaApi("leggi_programma", { mese });
+          cacheProgrammaUtente.set(mese, dati);
+        }
+
         const turni = (dati.programma || [])
           .filter(turno => !turnoConcluso(turno));
+
+        preCaricaMeseUtente(spostaMese(mese, 1));
 
         if (!turni.length) {
           statoEl.style.display = "none";
@@ -4707,6 +4815,8 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
               telegram_ids: telegramIds
             });
 
+            cacheProgrammaAdmin.delete(mese);
+
             stato("✅ Nomi salvati. I nuovi assegnati hanno ricevuto la notifica.");
             await caricaTurni();
           } catch (errore) {
@@ -4809,44 +4919,83 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           return card;
         }
 
+        async function caricaDatiMeseAdmin(meseDaCaricare) {
+          if (cacheProgrammaAdmin.has(meseDaCaricare)) {
+            return cacheProgrammaAdmin.get(meseDaCaricare);
+          }
+
+          await chiamaApi(
+            "sincronizza_turni_attivi_programma_admin",
+            { mese: meseDaCaricare }
+          );
+
+          const dati = await chiamaApi(
+            "leggi_turni_admin",
+            { mese: meseDaCaricare }
+          );
+
+          const turni = (dati.turni || [])
+            .filter(turno =>
+              turno.turno_attivo_id &&
+              String(turno.data || "").slice(0, 7) === meseDaCaricare &&
+              !turnoConcluso(turno)
+            )
+            .sort((a, b) => {
+              const ka = `${a.data || ""} ${a.ora_inizio || ""}`;
+              const kb = `${b.data || ""} ${b.ora_inizio || ""}`;
+              return ka.localeCompare(kb);
+            });
+
+          let priorita = { utenti: [], disponibilita: {} };
+
+          if (turni.length) {
+            priorita = await chiamaApi(
+              "leggi_utenti_priorita_mese_admin",
+              {
+                turno_attivo_ids: turni.map(
+                  turno => Number(turno.turno_attivo_id)
+                )
+              }
+            );
+          }
+
+          const risultato = {
+            turni,
+            utenti: priorita.utenti || [],
+            disponibilita: priorita.disponibilita || {}
+          };
+
+          cacheProgrammaAdmin.set(meseDaCaricare, risultato);
+          return risultato;
+        }
+
+        function preCaricaMeseAdmin(meseDaCaricare) {
+          if (cacheProgrammaAdmin.has(meseDaCaricare)) return;
+          caricaDatiMeseAdmin(meseDaCaricare).catch(() => {});
+        }
+
         async function caricaTurni() {
           meseBox.textContent = titoloMese(mese);
           elencoBox.innerHTML = "";
           statoBox.style.display = "none";
 
           try {
-            await chiamaApi(
-              "sincronizza_turni_attivi_programma_admin",
-              { mese }
-            );
-
-            const dati = await chiamaApi("leggi_turni_admin", { mese });
-
-            const turni = (dati.turni || [])
-              .filter(turno =>
-                turno.turno_attivo_id &&
-                String(turno.data || "").slice(0, 7) === mese &&
-                !turnoConcluso(turno)
-              )
-              .sort((a, b) => {
-                const ka = `${a.data || ""} ${a.ora_inizio || ""}`;
-                const kb = `${b.data || ""} ${b.ora_inizio || ""}`;
-                return ka.localeCompare(kb);
-              });
+            const datiMese = await caricaDatiMeseAdmin(mese);
+            const turni = datiMese.turni;
+            utentiMese = datiMese.utenti;
+            disponibilitaMese = datiMese.disponibilita;
 
             if (!turni.length) {
               elencoBox.innerHTML = `
                 <div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">
                   Nessun turno attivo nel mese.
                 </div>`;
+
+              preCaricaMeseAdmin(spostaMese(mese, 1));
               return;
             }
 
-            const priorita = await chiamaApi("leggi_utenti_priorita_mese_admin", {
-              turno_attivo_ids: turni.map(turno => Number(turno.turno_attivo_id))
-            });
-            utentiMese = priorita.utenti || [];
-            disponibilitaMese = priorita.disponibilita || {};
+            preCaricaMeseAdmin(spostaMese(mese, 1));
 
             const settimane = raggruppaTurniPerSettimana(turni);
 
@@ -6355,7 +6504,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
     ?.addEventListener("click", function(event) {
       event.preventDefault();
       event.stopPropagation();
-      apriUltimiAggiornamenti();
+      apriUltimiAggiornamentiHome();
     });
 
 
