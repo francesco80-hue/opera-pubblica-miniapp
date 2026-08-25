@@ -3712,6 +3712,36 @@ document
       statoEl.textContent = msg;
     }
 
+    function chiaveAccettazioneTurno(id) {
+      return `opera_pubblica_accettato_${id}`;
+    }
+
+    function registraMomentoAccettazione(id) {
+      try {
+        localStorage.setItem(chiaveAccettazioneTurno(id), String(Date.now()));
+      } catch (errore) {
+        console.warn("Impossibile registrare il momento dell'accettazione:", errore);
+      }
+    }
+
+    function cancellaMomentoAccettazione(id) {
+      try {
+        localStorage.removeItem(chiaveAccettazioneTurno(id));
+      } catch (errore) {
+        console.warn("Impossibile cancellare il momento dell'accettazione:", errore);
+      }
+    }
+
+    function secondiDaAccettazione(id) {
+      try {
+        const valore = Number(localStorage.getItem(chiaveAccettazioneTurno(id)) || 0);
+        if (!valore) return null;
+        return Math.max(0, Math.floor((Date.now() - valore) / 1000));
+      } catch (errore) {
+        return null;
+      }
+    }
+
     async function rispondi(id, risposta) {
       const posizione = window.scrollY;
 
@@ -3720,6 +3750,12 @@ document
           assegnazione_id: id,
           stato: risposta
         });
+
+        if (risposta === "accettato") {
+          registraMomentoAccettazione(id);
+        } else if (risposta === "rifiutato") {
+          cancellaMomentoAccettazione(id);
+        }
 
         await carica();
 
@@ -3782,12 +3818,24 @@ document
                 style="width:100%;border:none;background:#1768d7;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;margin-bottom:9px;">
                 📅 Aggiungi al calendario
               </button>
-            ` : ""}
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-              <button type="button" data-no-scroll="true" class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
-              <button type="button" data-no-scroll="true" class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
-            </div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button
+                  type="button"
+                  data-no-scroll="true"
+                  class="rifiutaTurno"
+                  data-id="${a.id}"
+                  data-dopo-accettazione="true"
+                  style="border:none;background:#c92c2c;color:white;padding:9px 14px;border-radius:12px;font-size:13px;font-weight:750;">
+                  ❌ Rifiuta
+                </button>
+              </div>
+            ` : `
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+                <button type="button" data-no-scroll="true" class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
+                <button type="button" data-no-scroll="true" class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
+              </div>
+            `}
           `;
 
           elencoEl.appendChild(card);
@@ -3802,10 +3850,28 @@ document
         });
 
         elencoEl.querySelectorAll(".rifiutaTurno").forEach(btn => {
-          btn.addEventListener("click", (event) => {
+          btn.addEventListener("click", async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            rispondi(Number(btn.dataset.id), "rifiutato");
+
+            const assegnazioneId = Number(btn.dataset.id);
+            const dopoAccettazione = btn.dataset.dopoAccettazione === "true";
+
+            if (dopoAccettazione) {
+              const secondi = secondiDaAccettazione(assegnazioneId);
+
+              // Nei primi 60 secondi dall'accettazione consentiamo di correggere
+              // subito un eventuale errore. Dopo, chiediamo una conferma.
+              if (secondi === null || secondi >= 60) {
+                const conferma = window.confirm(
+                  "Questo turno era già stato accettato. Prima di rifiutarlo, avvisa il fratello responsabile che non potrai più svolgerlo.\n\nPremi OK per confermare il rifiuto."
+                );
+
+                if (!conferma) return;
+              }
+            }
+
+            await rispondi(assegnazioneId, "rifiutato");
           });
         });
 
