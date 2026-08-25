@@ -4581,8 +4581,14 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             const turni = (dati.turni || [])
               .filter(turno =>
                 turno.turno_attivo_id &&
+                String(turno.data || "").slice(0, 7) === mese &&
                 !turnoConcluso(turno)
-              );
+              )
+              .sort((a, b) => {
+                const ka = `${a.data || ""} ${a.ora_inizio || ""}`;
+                const kb = `${b.data || ""} ${b.ora_inizio || ""}`;
+                return ka.localeCompare(kb);
+              });
 
             if (!turni.length) {
               elencoBox.innerHTML = `
@@ -4600,7 +4606,26 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
               const titoloSet = document.createElement("div");
               titoloSet.className = "program-week-title";
-              titoloSet.textContent = settimana.titolo;
+
+              const dateSettimanaNelMese = settimana.turni
+                .map(t => String(t.data))
+                .filter(data => data.slice(0, 7) === mese)
+                .sort();
+
+              if (dateSettimanaNelMese.length) {
+                const prima = dataItaliana(dateSettimanaNelMese[0])
+                  .replace(/^[^ ]+\s+/, "");
+                const ultima = dataItaliana(
+                  dateSettimanaNelMese[dateSettimanaNelMese.length - 1]
+                ).replace(/^[^ ]+\s+/, "");
+
+                titoloSet.textContent =
+                  prima === ultima
+                    ? `Turno del ${prima}`
+                    : `Turni ${prima} – ${ultima}`;
+              } else {
+                titoloSet.textContent = settimana.titolo;
+              }
 
               const griglia = document.createElement("div");
               griglia.className = "program-week-grid";
