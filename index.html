@@ -5376,7 +5376,7 @@ document
               card.style.cssText = "border:1px solid #dce8e7;border-radius:17px;padding:15px;margin-bottom:10px;background:#fff;";
               card.innerHTML = `
                 <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(r.data)}</div>
-                <div style="color:#556078;margin:4px 0;">📍 ${r.postazione_nome} · 👤 ${r.nome_completo}</div>
+                <div style="color:#556078;margin:4px 0;">📍 ${r.postazione_nome} · 👤 ${r.nome_completo?.nome_completo || r.nome_completo || "Utente"}</div>
                 <div style="font-size:16px;font-weight:800;margin-top:9px;">📚 Pubblicazioni: ${r.pubblicazioni}</div>
                 ${r.esperienza ? `<div style="margin-top:9px;padding-top:9px;border-top:1px solid #eef1f4;white-space:pre-wrap;">${r.esperienza}</div>` : ""}
                 ${r.esperienza ? `
