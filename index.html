@@ -4077,12 +4077,71 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           });
 
         async function caricaPostazioni() {
-          const dati = await chiamaApi("leggi_postazioni_programma_admin");
-          const postazioni = (dati.postazioni || []).filter(p => p.attiva === true);
+          try {
+            const dati = await chiamaApi("leggi_postazioni_programma_admin");
 
-          postazioneSelect.innerHTML = postazioni.length
-            ? postazioni.map(p => `<option value="${p.id}">${p.nome}</option>`).join("")
-            : `<option value="">Nessuna postazione attiva</option>`;
+            const postazioni = (dati.postazioni || [])
+              .filter(p => p.attiva === true)
+              .sort((a, b) =>
+                String(a.nome || "").localeCompare(
+                  String(b.nome || ""),
+                  "it",
+                  { sensitivity: "base" }
+                )
+              );
+
+            if (!postazioni.length) {
+              postazioneSelect.innerHTML =
+                `<option value="">Nessuna postazione attiva</option>`;
+              postazioneSelect.disabled = true;
+
+              const creaBtn =
+                document.getElementById("aggiungiDataDisponibilita");
+
+              if (creaBtn) {
+                creaBtn.disabled = true;
+                creaBtn.style.opacity = "0.55";
+              }
+
+              mostra(
+                "⚠️ Non ci sono postazioni attive. Attivane almeno una in Gestione postazioni.",
+                true
+              );
+
+              return;
+            }
+
+            postazioneSelect.disabled = false;
+            postazioneSelect.innerHTML = postazioni
+              .map(p => `<option value="${p.id}">${p.nome}</option>`)
+              .join("");
+
+            const creaBtn =
+              document.getElementById("aggiungiDataDisponibilita");
+
+            if (creaBtn) {
+              creaBtn.disabled = false;
+              creaBtn.style.opacity = "1";
+            }
+
+          } catch (errore) {
+            postazioneSelect.innerHTML =
+              `<option value="">Errore caricamento postazioni</option>`;
+            postazioneSelect.disabled = true;
+
+            const creaBtn =
+              document.getElementById("aggiungiDataDisponibilita");
+
+            if (creaBtn) {
+              creaBtn.disabled = true;
+              creaBtn.style.opacity = "0.55";
+            }
+
+            mostra(
+              errore.message || "Impossibile caricare le postazioni attive.",
+              true
+            );
+          }
         }
 
         async function carica() {
