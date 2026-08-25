@@ -2287,7 +2287,7 @@ document
         if (!date.length) {
           elenco.innerHTML = `
             <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;background:#fff;">
-              Nessuna data prevista per questo mese.
+              Nessun turno previsto per questo mese.
             </div>`;
           return;
         }
@@ -2305,6 +2305,14 @@ document
           card.innerHTML = `
             <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:5px;">
               ${dataItaliana(item.data)}
+            </div>
+
+            <div style="color:#556078;margin-bottom:3px;">
+              🕒 ${oraBreve(item.ora_inizio)}–${oraBreve(item.ora_fine)}
+            </div>
+
+            <div style="color:#556078;margin-bottom:10px;">
+              📍 ${item.postazione_nome || "Postazione"}
             </div>
 
             <div style="font-size:14px;color:#667085;margin-bottom:12px;">
@@ -3974,28 +3982,50 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           <div style="background:#f4fbf7;border:1px solid #cfe8dc;border-radius:20px;padding:20px;margin-bottom:16px;">
             <h2 style="font-size:25px;margin:0 0 6px;">📆 Turni attivi</h2>
             <div style="color:#557064;line-height:1.5;">
-              Inserisci le date per cui gli utenti devono indicare la disponibilità.
+              Crea una volta i turni abituali: saranno usati sia per le disponibilità sia per preparare il programma.
             </div>
           </div>
 
           <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:16px;margin-bottom:16px;">
-            <label style="display:block;font-weight:750;margin-bottom:7px;">
-              Nuova data
-            </label>
+            <label style="display:block;font-weight:750;margin-bottom:7px;">Prima data</label>
+            <input id="nuovaDataDisponibilita" type="date"
+              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
 
-            <div style="display:grid;grid-template-columns:1fr auto;gap:9px;">
-              <input
-                id="nuovaDataDisponibilita"
-                type="date"
-                style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
-
-              <button
-                id="aggiungiDataDisponibilita"
-                data-no-scroll="true"
-                style="border:none;background:#168a4a;color:#fff;padding:12px 16px;border-radius:13px;font-size:15px;font-weight:800;">
-                ➕ Aggiungi
-              </button>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;">
+              <div>
+                <label style="display:block;font-weight:750;margin-bottom:7px;">Ora inizio</label>
+                <input id="nuovaOraInizioDisponibilita" type="time"
+                  style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+              </div>
+              <div>
+                <label style="display:block;font-weight:750;margin-bottom:7px;">Ora fine</label>
+                <input id="nuovaOraFineDisponibilita" type="time"
+                  style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+              </div>
             </div>
+
+            <label style="display:block;font-weight:750;margin-bottom:7px;">Postazione</label>
+            <select id="nuovaPostazioneDisponibilita"
+              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+            </select>
+
+            <label style="display:block;font-weight:750;margin-bottom:7px;">Ripetizione</label>
+            <select id="nuovaRicorrenzaDisponibilita"
+              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+              <option value="singolo">Solo questa data</option>
+              <option value="settimanale">Ripeti ogni settimana</option>
+            </select>
+
+            <div id="fineSerieDisponibilitaBox" style="display:none;">
+              <label style="display:block;font-weight:750;margin-bottom:7px;">Ripeti fino al</label>
+              <input id="nuovaFineSerieDisponibilita" type="date"
+                style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+            </div>
+
+            <button id="aggiungiDataDisponibilita" data-no-scroll="true"
+              style="width:100%;border:none;background:#168a4a;color:#fff;padding:13px 16px;border-radius:13px;font-size:15px;font-weight:800;">
+              ➕ Crea turno attivo
+            </button>
           </div>
 
           <div id="turniAttiviStato"
@@ -4015,6 +4045,12 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
         const statoBox = document.getElementById("turniAttiviStato");
         const elencoBox = document.getElementById("turniAttiviElenco");
         const inputData = document.getElementById("nuovaDataDisponibilita");
+        const inputOraInizio = document.getElementById("nuovaOraInizioDisponibilita");
+        const inputOraFine = document.getElementById("nuovaOraFineDisponibilita");
+        const postazioneSelect = document.getElementById("nuovaPostazioneDisponibilita");
+        const ricorrenzaSelect = document.getElementById("nuovaRicorrenzaDisponibilita");
+        const fineSerieBox = document.getElementById("fineSerieDisponibilitaBox");
+        const fineSerieInput = document.getElementById("nuovaFineSerieDisponibilita");
 
         function mostra(msg, errore = false) {
           statoBox.style.display = "block";
@@ -4023,6 +4059,20 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
           statoBox.style.color = errore ? "#a33a3a" : "#28733d";
           statoBox.textContent = msg;
+        }
+
+        ricorrenzaSelect.addEventListener("change", () => {
+          const settimanale = ricorrenzaSelect.value === "settimanale";
+          fineSerieBox.style.display = settimanale ? "block" : "none";
+        });
+
+        async function caricaPostazioni() {
+          const dati = await chiamaApi("leggi_postazioni_programma_admin");
+          const postazioni = (dati.postazioni || []).filter(p => p.attiva === true);
+
+          postazioneSelect.innerHTML = postazioni.length
+            ? postazioni.map(p => `<option value="${p.id}">${p.nome}</option>`).join("")
+            : `<option value="">Nessuna postazione attiva</option>`;
         }
 
         async function carica() {
@@ -4038,38 +4088,88 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             if (!righe.length) {
               elencoBox.innerHTML = `
                 <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;">
-                  Nessuna data impostata.
+                  Nessun turno attivo impostato.
                 </div>`;
               return;
             }
 
+            const gruppi = new Map();
+
             righe.forEach(riga => {
-              const card = document.createElement("div");
+              const mese = String(riga.data).slice(0, 7);
+              if (!gruppi.has(mese)) gruppi.set(mese, []);
+              gruppi.get(mese).push(riga);
+            });
 
-              card.style.cssText =
-                "display:flex;align-items:center;gap:10px;border:1px solid #e1e7ef;border-radius:16px;padding:14px;background:#fff;margin-bottom:9px;";
+            gruppi.forEach((turniMese, mese) => {
+              const sezione = document.createElement("section");
+              sezione.style.marginBottom = "22px";
 
-              card.innerHTML = `
-                <div style="flex:1;min-width:0;">
+              const titolo = document.createElement("div");
+              titolo.className = "program-week-title";
+              titolo.textContent = titoloMese(mese);
+
+              const griglia = document.createElement("div");
+              griglia.className = "program-week-grid";
+
+              turniMese.forEach(riga => {
+                const card = document.createElement("div");
+                card.style.cssText =
+                  "border:1px solid #e1e7ef;border-radius:16px;padding:14px;background:#fff;";
+
+                const tipo =
+                  riga.ricorrenza === "settimanale"
+                    ? "🔁 Serie settimanale"
+                    : "📌 Turno singolo";
+
+                card.innerHTML = `
                   <div style="font-size:17px;font-weight:800;text-transform:capitalize;">
                     ${dataItaliana(riga.data)}
                   </div>
 
-                  <div style="font-size:13px;color:${riga.attivo ? "#168a4a" : "#8b95a5"};margin-top:3px;">
-                    ${riga.attivo ? "● Attiva" : "○ Disattivata"}
+                  <div style="color:#556078;margin-top:4px;">
+                    🕒 ${oraBreve(riga.ora_inizio)}–${oraBreve(riga.ora_fine)}
                   </div>
-                </div>
 
-                <button
-                  class="toggleDataDisponibilita"
-                  data-id="${riga.id}"
-                  data-attiva="${riga.attivo}"
-                  style="border:none;background:${riga.attivo ? "#fff0f0" : "#eef9f1"};color:${riga.attivo ? "#c92c2c" : "#168a4a"};padding:9px 11px;border-radius:11px;font-size:13px;font-weight:750;">
-                  ${riga.attivo ? "Disattiva" : "Riattiva"}
-                </button>
-              `;
+                  <div style="color:#556078;margin-top:3px;">
+                    📍 ${riga.postazione_nome || "Postazione"}
+                  </div>
 
-              elencoBox.appendChild(card);
+                  <div style="font-size:13px;color:#667085;margin-top:7px;">
+                    ${tipo}
+                    ${riga.ricorrenza === "settimanale" && riga.data_fine_serie
+                      ? ` · fino al ${dataItaliana(riga.data_fine_serie)}`
+                      : ""}
+                  </div>
+
+                  <div style="font-size:13px;color:${riga.attivo ? "#168a4a" : "#8b95a5"};margin-top:5px;">
+                    ${riga.attivo ? "● Attivo" : "○ Sospeso"}
+                  </div>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+                    <button
+                      class="toggleDataDisponibilita"
+                      data-id="${riga.id}"
+                      data-attiva="${riga.attivo}"
+                      style="border:none;background:${riga.attivo ? "#fff4e5" : "#eef9f1"};color:${riga.attivo ? "#9a6700" : "#168a4a"};padding:10px;border-radius:11px;font-size:13px;font-weight:750;">
+                      ${riga.attivo ? "⏸️ Sospendi" : "▶️ Riattiva"}
+                    </button>
+
+                    <button
+                      class="eliminaDataDisponibilita"
+                      data-id="${riga.id}"
+                      style="border:none;background:#fff0f0;color:#c92c2c;padding:10px;border-radius:11px;font-size:13px;font-weight:750;">
+                      🗑️ Elimina
+                    </button>
+                  </div>
+                `;
+
+                griglia.appendChild(card);
+              });
+
+              sezione.appendChild(titolo);
+              sezione.appendChild(griglia);
+              elencoBox.appendChild(sezione);
             });
 
             elencoBox
@@ -4091,7 +4191,37 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
                     await carica();
                   } catch (errore) {
                     mostra(
-                      errore.message || "Impossibile aggiornare la data.",
+                      errore.message || "Impossibile aggiornare il turno.",
+                      true
+                    );
+                  }
+                });
+              });
+
+            elencoBox
+              .querySelectorAll(".eliminaDataDisponibilita")
+              .forEach(btn => {
+                btn.addEventListener("click", async event => {
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  const conferma = window.confirm(
+                    "Eliminare definitivamente questo singolo turno attivo? Le altre date della serie resteranno invariate."
+                  );
+
+                  if (!conferma) return;
+
+                  try {
+                    await chiamaApi(
+                      "elimina_turno_attivo_disponibilita_admin",
+                      { id: Number(btn.dataset.id) }
+                    );
+
+                    mostra("✅ Turno eliminato.");
+                    await carica();
+                  } catch (errore) {
+                    mostra(
+                      errore.message || "Impossibile eliminare il turno.",
                       true
                     );
                   }
@@ -4100,7 +4230,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
           } catch (errore) {
             mostra(
-              errore.message || "Impossibile caricare le date.",
+              errore.message || "Impossibile caricare i turni attivi.",
               true
             );
           }
@@ -4112,30 +4242,60 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             event.preventDefault();
             event.stopPropagation();
 
-            if (!inputData.value) {
-              mostra("⚠️ Seleziona prima una data.", true);
+            const data = inputData.value;
+            const oraInizio = inputOraInizio.value;
+            const oraFine = inputOraFine.value;
+            const postazioneId = Number(postazioneSelect.value);
+            const settimanale = ricorrenzaSelect.value === "settimanale";
+            const dataFineSerie = fineSerieInput.value;
+
+            if (!data || !oraInizio || !oraFine || !postazioneId) {
+              mostra("⚠️ Inserisci data, orario e postazione.", true);
+              return;
+            }
+
+            if (settimanale && !dataFineSerie) {
+              mostra("⚠️ Indica fino a quando ripetere il turno.", true);
               return;
             }
 
             try {
               await chiamaApi(
                 "crea_turno_attivo_disponibilita_admin",
-                { data: inputData.value }
+                {
+                  data,
+                  ora_inizio: oraInizio,
+                  ora_fine: oraFine,
+                  postazione_id: postazioneId,
+                  ripeti_settimanale: settimanale,
+                  data_fine_serie: settimanale ? dataFineSerie : null
+                }
               );
 
-              mostra("✅ Data aggiunta.");
+              mostra(
+                settimanale
+                  ? "✅ Serie settimanale creata."
+                  : "✅ Turno attivo creato."
+              );
+
               inputData.value = "";
+              inputOraInizio.value = "";
+              inputOraFine.value = "";
+              fineSerieInput.value = "";
+              ricorrenzaSelect.value = "singolo";
+              fineSerieBox.style.display = "none";
+
               await carica();
 
             } catch (errore) {
               mostra(
-                errore.message || "Impossibile aggiungere la data.",
+                errore.message || "Impossibile creare il turno attivo.",
                 true
               );
             }
           });
 
-        await carica();
+        await Promise.all([caricaPostazioni(), carica()]);
       }
 
       async function apriGestioneProgrammaAdmin(turnoDaEvidenziare = null) {
