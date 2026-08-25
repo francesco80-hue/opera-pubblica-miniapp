@@ -2244,6 +2244,35 @@ document
           </div>
         </div>
 
+        <div id="profiloDisponibilitaNuovo"
+          style="display:none;background:#fff8e8;border:1px solid #ffe0a3;border-radius:18px;padding:18px;margin-bottom:16px;">
+          <div style="font-size:18px;font-weight:800;margin-bottom:6px;">
+            👤 Nome e cognome
+          </div>
+          <div style="color:#725315;font-size:14px;line-height:1.5;margin-bottom:11px;">
+            Inseriscili solo la prima volta. Dopo l’invio, un amministratore dovrà approvare il tuo accesso.
+          </div>
+          <input id="nomeCompletoNuovoUtente"
+            type="text"
+            autocomplete="name"
+            placeholder="Nome e cognome"
+            data-no-scroll="true"
+            style="width:100%;padding:12px;border:1px solid #e5c979;border-radius:13px;font-size:16px;background:#fff;margin-bottom:9px;">
+          <button id="inviaRichiestaAccesso"
+            type="button"
+            data-no-scroll="true"
+            style="width:100%;border:none;background:#1768d7;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;">
+            Invia richiesta di accesso
+          </button>
+        </div>
+
+        <div id="profiloInAttesaNuovo"
+          style="display:none;background:#fff8e8;border:1px solid #ffe0a3;border-radius:18px;padding:15px;margin-bottom:16px;color:#725315;line-height:1.5;">
+          ⏳ La tua richiesta è stata inviata. Attendi l’approvazione di un amministratore.
+        </div>
+
+        <div id="disponibilitaContenutoAutorizzato">
+
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <button id="dispMesePrev" data-no-scroll="true"
             style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
@@ -2260,6 +2289,8 @@ document
 
         <div id="dispDate"></div>
 
+        </div>
+
         ${pulsanteIndietroFondo("tornaHomeDisponibilitaFondo", "← Torna alla Home")}
       `;
 
@@ -2272,6 +2303,11 @@ document
       const titolo = document.getElementById("dispTitoloMese");
       const stato = document.getElementById("dispStato");
       const elenco = document.getElementById("dispDate");
+      const profiloBox = document.getElementById("profiloDisponibilitaNuovo");
+      const attesaBox = document.getElementById("profiloInAttesaNuovo");
+      const contenutoAutorizzato = document.getElementById("disponibilitaContenutoAutorizzato");
+      const nomeInput = document.getElementById("nomeCompletoNuovoUtente");
+      const inviaRichiestaBtn = document.getElementById("inviaRichiestaAccesso");
 
       function mostra(msg, errore = false) {
         stato.style.display = "block";
@@ -2280,6 +2316,87 @@ document
         stato.style.color = errore ? "#a33a3a" : "#526174";
         stato.textContent = msg;
       }
+
+      async function aggiornaProfiloPerDisponibilita() {
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ initData })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Verifica profilo non riuscita");
+          }
+
+          PROFILO_TELEGRAM = dati.profilo || { registrato: false };
+
+          const registrato =
+            PROFILO_TELEGRAM?.registrato === true &&
+            !!PROFILO_TELEGRAM?.nome_completo;
+
+          const attivo = PROFILO_TELEGRAM?.attivo === true;
+
+          profiloBox.style.display = registrato ? "none" : "block";
+          attesaBox.style.display = registrato && !attivo ? "block" : "none";
+          contenutoAutorizzato.style.display = attivo ? "block" : "none";
+
+          return { registrato, attivo };
+        } catch (errore) {
+          mostra(errore.message || "Impossibile verificare il profilo.", true);
+          contenutoAutorizzato.style.display = "none";
+          return { registrato: false, attivo: false };
+        }
+      }
+
+      inviaRichiestaBtn.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const nomeCompleto = String(nomeInput.value || "")
+          .trim()
+          .replace(/\s+/g, " ");
+
+        if (nomeCompleto.length < 3 || !nomeCompleto.includes(" ")) {
+          mostra("⚠️ Inserisci nome e cognome completi.", true);
+          return;
+        }
+
+        inviaRichiestaBtn.disabled = true;
+        inviaRichiestaBtn.textContent = "⏳ Invio…";
+
+        try {
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              initData,
+              azione: "salva_profilo",
+              nome_completo: nomeCompleto
+            })
+          });
+
+          const dati = await risposta.json();
+
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Impossibile inviare la richiesta");
+          }
+
+          mostra("✅ Richiesta inviata all’amministratore.");
+          await aggiornaProfiloPerDisponibilita();
+
+        } catch (errore) {
+          mostra(
+            errore.message || "Impossibile inviare la richiesta di accesso.",
+            true
+          );
+        } finally {
+          inviaRichiestaBtn.disabled = false;
+          inviaRichiestaBtn.textContent = "Invia richiesta di accesso";
+        }
+      });
 
       function renderDate(date) {
         elenco.innerHTML = "";
@@ -2369,15 +2486,24 @@ document
       async function carica() {
         titolo.textContent = titoloMese(mese);
         elenco.innerHTML = "";
-        mostra("⏳ Caricamento disponibilità…");
 
         if (!initData) {
           mostra(
             "⚠️ Apri la Mini App direttamente da Telegram per usare le disponibilità.",
             true
           );
+          contenutoAutorizzato.style.display = "none";
           return;
         }
+
+        const profilo = await aggiornaProfiloPerDisponibilita();
+
+        if (!profilo.attivo) {
+          stato.style.display = "none";
+          return;
+        }
+
+        mostra("⏳ Caricamento disponibilità…");
 
         try {
           const dati = await chiamaApi(
