@@ -3988,42 +3988,42 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
           <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:16px;margin-bottom:16px;">
             <label style="display:block;font-weight:750;margin-bottom:7px;">Prima data</label>
-            <input id="nuovaDataDisponibilita" type="date"
-              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+            <input id="nuovaDataDisponibilita" type="date" data-no-scroll="true"
+              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;background:#fff;">
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;">
               <div>
                 <label style="display:block;font-weight:750;margin-bottom:7px;">Ora inizio</label>
-                <input id="nuovaOraInizioDisponibilita" type="time"
-                  style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+                <input id="nuovaOraInizioDisponibilita" type="time" data-no-scroll="true"
+                  style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;background:#fff;">
               </div>
               <div>
                 <label style="display:block;font-weight:750;margin-bottom:7px;">Ora fine</label>
-                <input id="nuovaOraFineDisponibilita" type="time"
-                  style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
+                <input id="nuovaOraFineDisponibilita" type="time" data-no-scroll="true"
+                  style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;background:#fff;">
               </div>
             </div>
 
             <label style="display:block;font-weight:750;margin-bottom:7px;">Postazione</label>
-            <select id="nuovaPostazioneDisponibilita"
-              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+            <select id="nuovaPostazioneDisponibilita" data-no-scroll="true"
+              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;background:#fff;">
             </select>
 
             <label style="display:block;font-weight:750;margin-bottom:7px;">Ripetizione</label>
-            <select id="nuovaRicorrenzaDisponibilita"
-              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+            <select id="nuovaRicorrenzaDisponibilita" data-no-scroll="true"
+              style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;background:#fff;">
               <option value="singolo">Solo questa data</option>
               <option value="settimanale">Ripeti ogni settimana</option>
             </select>
 
             <div id="fineSerieDisponibilitaBox" style="display:none;">
               <label style="display:block;font-weight:750;margin-bottom:7px;">Ripeti fino al</label>
-              <input id="nuovaFineSerieDisponibilita" type="date"
-                style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
+              <input id="nuovaFineSerieDisponibilita" type="date" data-no-scroll="true"
+                style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;background:#fff;">
             </div>
 
             <button id="aggiungiDataDisponibilita" data-no-scroll="true"
-              style="width:100%;border:none;background:#168a4a;color:#fff;padding:13px 16px;border-radius:13px;font-size:15px;font-weight:800;">
+              style="width:100%;border:none;background:#168a4a;color:#fff;padding:13px 16px;border-radius:13px;font-size:15px;font-weight:800;position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;cursor:pointer;">
               ➕ Crea turno attivo
             </button>
           </div>
@@ -4061,10 +4061,20 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           statoBox.textContent = msg;
         }
 
-        ricorrenzaSelect.addEventListener("change", () => {
+        ricorrenzaSelect.addEventListener("change", event => {
+          event.stopPropagation();
           const settimanale = ricorrenzaSelect.value === "settimanale";
           fineSerieBox.style.display = settimanale ? "block" : "none";
         });
+
+        [inputData, inputOraInizio, inputOraFine, postazioneSelect, ricorrenzaSelect, fineSerieInput]
+          .forEach(controllo => {
+            ["click", "pointerdown", "touchstart"].forEach(tipo => {
+              controllo?.addEventListener(tipo, event => {
+                event.stopPropagation();
+              }, { passive: true });
+            });
+          });
 
         async function caricaPostazioni() {
           const dati = await chiamaApi("leggi_postazioni_programma_admin");
