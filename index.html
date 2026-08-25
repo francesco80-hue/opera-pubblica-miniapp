@@ -3926,36 +3926,12 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           </div>
         </div>
 
-        <h3 style="font-size:20px;margin:0 0 12px 0;">
-          📋 Disponibilità ricevute
-        </h3>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;">
-          <button id="meseAdminPrecedente" data-no-scroll="true"
-            style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:700;cursor:pointer;">‹</button>
-
-          <div id="titoloMeseAdmin"
-            style="flex:1;text-align:center;font-size:20px;font-weight:750;text-transform:capitalize;"></div>
-
-          <button id="meseAdminSuccessivo" data-no-scroll="true"
-            style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:700;cursor:pointer;">›</button>
-        </div>
-
-        <div id="statoAdmin"
-          style="display:none;padding:13px 14px;border-radius:14px;margin-bottom:14px;line-height:1.45;font-size:14px;"
-          aria-live="polite"></div>
-
-        <div id="elencoDisponibilitaAdmin"></div>
-
         <button id="tornaHomeAdminBasso"
           style="width:100%;border:none;background:#f3f1ff;color:#6942d4;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:18px;">
           ← Torna alla Home
         </button>
       `;
 
-      const titolo = document.getElementById("titoloMeseAdmin");
-      const elenco = document.getElementById("elencoDisponibilitaAdmin");
-      const stato = document.getElementById("statoAdmin");
       const richiesteBox = document.getElementById("richiesteAccessoAdmin");
 
       const adminGestioneProgramma = document.getElementById("adminGestioneProgramma");
@@ -4369,158 +4345,256 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
       async function apriGestioneProgrammaAdmin(turnoDaEvidenziare = null) {
         let mese = meseCorrenteKey();
-        let utentiPriorita = [];
-        let postazioniAttive = [];
+        let utentiBase = [];
 
         document.querySelector(".content").innerHTML = `
           ${pulsanteIndietro("tornaAreaAdminProgramma", "← Torna all’Area amministratori")}
 
           <div style="background:#f5f1ff;border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:16px;">
-            <h2 style="font-size:25px;margin:0;">🗓️ Gestione programma</h2>
-          </div>
-
-          <button id="toggleNuovoTurno" style="width:100%;border:none;background:#6942d4;color:#fff;padding:14px 16px;border-radius:15px;font-size:16px;font-weight:800;margin-bottom:14px;cursor:pointer;">
-            ➕ Nuovo turno
-          </button>
-
-          <div id="nuovoTurnoPanel" style="display:none;">
-          <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:16px;">
-            <h3 style="font-size:19px;margin-bottom:12px;">➕ Crea nuovo turno</h3>
-
-            <label style="display:block;font-weight:700;margin-bottom:5px;">Data</label>
-            <input id="nuovoTurnoData" type="date" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;margin-bottom:10px;">
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-              <div><label style="display:block;font-weight:700;margin-bottom:5px;">Inizio</label><input id="nuovoTurnoInizio" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></div>
-              <div><label style="display:block;font-weight:700;margin-bottom:5px;">Fine</label><input id="nuovoTurnoFine" type="time" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></div>
+            <h2 style="font-size:25px;margin:0 0 6px;">🗓️ Gestione programma</h2>
+            <div style="color:#6a6380;line-height:1.5;">
+              I turni arrivano automaticamente da Turni attivi. Qui devi solo scegliere le persone.
             </div>
-
-            <label style="display:block;font-weight:700;margin:10px 0 5px;">Postazione</label>
-            <select id="nuovoTurnoPostazione" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></select>
-
-            <label style="display:block;font-weight:700;margin:10px 0 5px;">Numero persone</label>
-            <input id="nuovoTurnoNumero" type="number" min="1" max="20" value="3" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
-
-            <label style="display:block;font-weight:700;margin:10px 0 5px;">Persone da assegnare</label>
-            <div id="selettoriPersone"></div>
-
-            <div style="font-size:13px;color:#667085;line-height:1.4;margin-top:8px;">
-              I nomi sono proposti dando precedenza a chi non svolge un turno da più tempo negli ultimi 12 mesi.
-            </div>
-
-            <label style="display:block;font-weight:700;margin:10px 0 5px;">Note</label>
-            <textarea id="nuovoTurnoNote" maxlength="300" rows="2" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;"></textarea>
-
-            <button id="salvaNuovoTurno" style="width:100%;border:none;background:#6942d4;color:white;padding:14px;border-radius:14px;font-size:16px;font-weight:800;margin-top:12px;">Salva turno</button>
-          </div>
           </div>
 
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <button id="adminTurniPrev" style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
-            <div id="adminTurniMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
-            <button id="adminTurniNext" style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+            <button id="adminTurniPrev" data-no-scroll="true"
+              style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+
+            <div id="adminTurniMese"
+              style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+
+            <button id="adminTurniNext" data-no-scroll="true"
+              style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
           </div>
 
-          <div id="adminTurniStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+          <div id="adminTurniStato"
+            style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+
           <div id="adminTurniElenco"></div>
+
           ${pulsanteIndietroFondo("tornaAreaAdminProgrammaFondo", "← Torna all’Area amministratori")}
         `;
 
-        collegaRitornoDoppio("tornaAreaAdminProgramma", "tornaAreaAdminProgrammaFondo", "admin");
+        collegaRitornoDoppio(
+          "tornaAreaAdminProgramma",
+          "tornaAreaAdminProgrammaFondo",
+          "admin"
+        );
 
-        const postazioneSelect = document.getElementById("nuovoTurnoPostazione");
-        const selettoriPersone = document.getElementById("selettoriPersone");
-        const numeroInput = document.getElementById("nuovoTurnoNumero");
         const statoBox = document.getElementById("adminTurniStato");
         const elencoBox = document.getElementById("adminTurniElenco");
         const meseBox = document.getElementById("adminTurniMese");
-        const toggleNuovoTurno = document.getElementById("toggleNuovoTurno");
-        const nuovoTurnoPanel = document.getElementById("nuovoTurnoPanel");
-
-        toggleNuovoTurno.addEventListener("click", function() {
-          const aperto = nuovoTurnoPanel.style.display !== "none";
-          nuovoTurnoPanel.style.display = aperto ? "none" : "block";
-          toggleNuovoTurno.textContent = aperto ? "➕ Nuovo turno" : "✖ Chiudi nuovo turno";
-        });
 
         function stato(msg, errore = false) {
           statoBox.style.display = "block";
           statoBox.style.background = errore ? "#fff1f1" : "#eef9f1";
-          statoBox.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+          statoBox.style.border =
+            errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
           statoBox.style.color = errore ? "#a33a3a" : "#28733d";
           statoBox.textContent = msg;
         }
 
-        function opzioniUtenti(escludi = []) {
-          return utentiPriorita
-            .filter(u => !escludi.includes(Number(u.telegram_id)))
-            .map(u => `<option value="${u.telegram_id}">${u.nome_completo} — ${u.suggerimento_testo || u.storico_testo}</option>`)
+        function simboloDisponibilita(valore) {
+          if (valore === true) return "🟢";
+          if (valore === false) return "🔴";
+          return "⚪";
+        }
+
+        function testoStoricoBreve(utente) {
+          if (utente.prossimo_turno?.data) {
+            const data = new Date(`${utente.prossimo_turno.data}T12:00:00`);
+            const breve = new Intl.DateTimeFormat("it-IT", {
+              day: "numeric",
+              month: "short"
+            }).format(data).replace(".", "");
+            return `${breve} →`;
+          }
+
+          if (utente.ultimo_turno?.data) {
+            const data = new Date(`${utente.ultimo_turno.data}T12:00:00`);
+            const breve = new Intl.DateTimeFormat("it-IT", {
+              day: "numeric",
+              month: "short"
+            }).format(data).replace(".", "");
+            return `← ${breve}`;
+          }
+
+          return "nessun turno";
+        }
+
+        function opzioniUtenti(utenti, selezionato = null, escludi = []) {
+          return utenti
+            .filter(u =>
+              Number(u.telegram_id) === Number(selezionato) ||
+              !escludi.includes(Number(u.telegram_id))
+            )
+            .map(u => `
+              <option
+                value="${u.telegram_id}"
+                ${Number(u.telegram_id) === Number(selezionato) ? "selected" : ""}>
+                ${simboloDisponibilita(u.disponibilita)} ${u.nome_completo} · ${testoStoricoBreve(u)}
+              </option>
+            `)
             .join("");
         }
 
-        function ridisegnaSelettori() {
-          const quanti = Math.max(1, Math.min(20, Number(numeroInput.value) || 3));
-          const precedenti = Array.from(selettoriPersone.querySelectorAll(".personaSelect")).map(s => s.value);
-          selettoriPersone.innerHTML = "";
+        async function caricaUtentiPerTurno(turnoAttivoId) {
+          const dati = await chiamaApi("leggi_utenti_priorita_admin", {
+            turno_attivo_id: turnoAttivoId
+          });
+          return dati.utenti || [];
+        }
 
-          for (let i = 0; i < quanti; i++) {
-            const wrap = document.createElement("div");
-            wrap.style.marginBottom = "8px";
-            wrap.innerHTML = `
-              <select class="personaSelect" style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:14px;">
-                <option value="">Persona ${i + 1} — da scegliere</option>
-                ${opzioniUtenti()}
-              </select>`;
-            selettoriPersone.appendChild(wrap);
-            if (precedenti[i]) wrap.querySelector("select").value = precedenti[i];
+        async function salvaNomi(turno, card) {
+          const select = Array.from(card.querySelectorAll(".personaProgrammaSelect"));
+          const telegramIds = select
+            .map(s => Number(s.value))
+            .filter(Boolean);
+
+          if (new Set(telegramIds).size !== telegramIds.length) {
+            stato("La stessa persona non può essere scelta due volte nello stesso turno.", true);
+            return;
           }
-        }
 
-        async function caricaScelte() {
-          const [p, u] = await Promise.all([
-            chiamaApi("leggi_postazioni_programma_admin"),
-            chiamaApi("leggi_utenti_priorita_admin")
-          ]);
-
-          postazioniAttive = (p.postazioni || []).filter(x => x.attiva === true);
-          utentiPriorita = u.utenti || [];
-
-          postazioneSelect.innerHTML = postazioniAttive.map(x => `<option value="${x.id}">${x.nome}</option>`).join("");
-          ridisegnaSelettori();
-        }
-
-        async function sostituisci(assegnazioneId, select) {
-          const nuovoId = Number(select.value);
-          if (!nuovoId) return;
           try {
-            await chiamaApi("sostituisci_assegnazione_admin", {
-              assegnazione_id: assegnazioneId,
-              nuovo_telegram_id: nuovoId
+            await chiamaApi("salva_assegnazioni_turno_admin", {
+              turno_id: Number(turno.id),
+              telegram_ids: telegramIds
             });
-            stato("✅ Persona sostituita. Il nuovo assegnato è in attesa di risposta.");
-            await Promise.all([caricaScelte(), caricaTurni()]);
+
+            stato("✅ Nomi salvati. I nuovi assegnati hanno ricevuto la notifica.");
+            await caricaTurni();
           } catch (errore) {
-            stato(errore.message || "Impossibile sostituire la persona.", true);
+            stato(errore.message || "Impossibile salvare i nomi.", true);
           }
+        }
+
+        async function costruisciCard(turno) {
+          const card = document.createElement("div");
+          card.style.cssText =
+            "border:1px solid #e1e7ef;border-radius:17px;padding:15px;background:#fff;min-width:0;";
+          card.dataset.turnoCard = String(turno.id);
+
+          const utenti = await caricaUtentiPerTurno(turno.turno_attivo_id);
+          const assegnati = (turno.assegnazioni || []).filter(a => a.attiva !== false);
+          const numero = Math.max(
+            Number(turno.numero_persone || 3),
+            assegnati.length,
+            1
+          );
+
+          let selettori = "";
+
+          for (let i = 0; i < numero; i++) {
+            const assegnato = assegnati[i] || null;
+            const idsAltri = assegnati
+              .filter((_, idx) => idx !== i)
+              .map(a => Number(a.telegram_id));
+
+            selettori += `
+              <div style="margin-bottom:8px;">
+                <select
+                  class="personaProgrammaSelect"
+                  data-no-scroll="true"
+                  style="width:100%;padding:11px;border:1px solid #dfe5ec;border-radius:12px;font-size:14px;background:#fff;">
+                  <option value="">Persona ${i + 1} — da scegliere</option>
+                  ${opzioniUtenti(
+                    utenti,
+                    assegnato?.telegram_id ?? null,
+                    idsAltri
+                  )}
+                </select>
+                ${
+                  assegnato
+                    ? `<div style="font-size:12px;color:#667085;margin:4px 2px 0;">
+                        ${
+                          assegnato.stato === "accettato" ? "✅ Accettato" :
+                          assegnato.stato === "rifiutato" ? "❌ Rifiutato" :
+                          "⏳ In attesa"
+                        }
+                       </div>`
+                    : ""
+                }
+              </div>
+            `;
+          }
+
+          card.innerHTML = `
+            <div style="font-size:17px;font-weight:800;text-transform:capitalize;">
+              ${dataItaliana(turno.data)}
+            </div>
+
+            <div style="color:#556078;margin-top:4px;">
+              🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}
+            </div>
+
+            <div style="color:#556078;margin-top:3px;">
+              📍 ${turno.postazione_nome}
+            </div>
+
+            <div style="font-size:12px;color:#667085;line-height:1.45;margin:10px 0 8px;">
+              🟢 disponibile · 🔴 non disponibile · ⚪ non ha indicato la disponibilità
+            </div>
+
+            ${selettori}
+
+            <button
+              class="salvaNomiProgramma"
+              data-no-scroll="true"
+              style="width:100%;border:none;background:#6942d4;color:#fff;padding:11px;border-radius:12px;font-size:14px;font-weight:800;margin-top:4px;">
+              💾 Salva nomi
+            </button>
+          `;
+
+          card.querySelectorAll(".personaProgrammaSelect").forEach(select => {
+            ["click", "pointerdown", "touchstart"].forEach(tipo => {
+              select.addEventListener(tipo, event => {
+                event.stopPropagation();
+              }, { passive: true });
+            });
+          });
+
+          card.querySelector(".salvaNomiProgramma")
+            .addEventListener("click", event => {
+              event.preventDefault();
+              event.stopPropagation();
+              salvaNomi(turno, card);
+            });
+
+          return card;
         }
 
         async function caricaTurni() {
           meseBox.textContent = titoloMese(mese);
           elencoBox.innerHTML = "";
+          statoBox.style.display = "none";
 
           try {
+            await chiamaApi(
+              "sincronizza_turni_attivi_programma_admin",
+              { mese }
+            );
+
             const dati = await chiamaApi("leggi_turni_admin", { mese });
+
             const turni = (dati.turni || [])
-              .filter(turno => !turnoConcluso(turno));
+              .filter(turno =>
+                turno.turno_attivo_id &&
+                !turnoConcluso(turno)
+              );
 
             if (!turni.length) {
-              elencoBox.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">Nessun turno nel mese.</div>`;
+              elencoBox.innerHTML = `
+                <div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">
+                  Nessun turno attivo nel mese.
+                </div>`;
               return;
             }
 
             const settimane = raggruppaTurniPerSettimana(turni);
 
-            settimane.forEach(settimana => {
+            for (const settimana of settimane) {
               const sezione = document.createElement("section");
               sezione.className = "program-week";
 
@@ -4531,80 +4605,25 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
               const griglia = document.createElement("div");
               griglia.className = "program-week-grid";
 
-              settimana.turni.forEach(t => {
-                const card = document.createElement("div");
-                card.style.cssText = "border:1px solid #e1e7ef;border-radius:17px;padding:15px;background:#fff;min-width:0;";
-                card.dataset.turnoCard = String(t.id);
-
-                const assegnatiIds = (t.assegnazioni || []).map(x => Number(x.telegram_id));
-
-                const persone = (t.assegnazioni || []).map(a => {
-                  const statoLabel =
-                    a.stato === "accettato" ? "✅ Accettato" :
-                    a.stato === "rifiutato" ? "❌ Rifiutato" :
-                    "⏳ In attesa";
-
-                  const sostituzione = a.stato === "rifiutato" ? `
-                    <div style="margin-top:7px;">
-                      <select class="sostituisciSelect" data-assegnazione="${a.id}" style="width:100%;padding:10px;border:1px solid #efcaca;border-radius:11px;font-size:12px;">
-                        <option value="">Sostituisci con…</option>
-                        ${opzioniUtenti(assegnatiIds)}
-                      </select>
-                    </div>` : "";
-
-                  return `
-                    <div style="padding:8px 0;border-top:1px solid #f0f2f5;">
-                      <strong>${a.nome_completo}</strong>${iconaPersona(a.genere)}
-                      <div style="font-size:13px;color:${a.stato === "rifiutato" ? "#b42318" : "#667085"};margin-top:2px;">${statoLabel}</div>
-                      ${sostituzione}
-                    </div>`;
-                }).join("");
-
-                const opzioniPostazione = postazioniAttive.map(p =>
-                  `<option value="${p.id}" ${Number(p.id) === Number(t.postazione_id) ? "selected" : ""}>${p.nome}</option>`
-                ).join("");
-
-                card.innerHTML = `
-                  <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
-                  <div style="color:#556078;margin-top:4px;">🕒 ${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)}</div>
-                  <div style="color:#556078;margin-top:3px;">📍 ${t.postazione_nome}</div>
-
-                  <div style="margin-top:8px;">${persone || "<span style='color:#667085'>Nessuna assegnazione</span>"}</div>
-
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px;">
-                    <button class="modificaTurnoBtn" data-turno="${t.id}" style="border:none;background:#eef6ff;color:#1768d7;padding:10px;border-radius:11px;font-weight:750;">✏️ Modifica</button>
-                    <button class="eliminaTurnoBtn" data-turno="${t.id}" style="border:none;background:#fff1f1;color:#b42318;padding:10px;border-radius:11px;font-weight:750;">🗑️ Elimina</button>
-                  </div>
-
-                  <div class="modificaTurnoPanel" data-turno="${t.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #edf0f3;">
-                    <input class="editData" type="date" value="${t.data}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;">
-                      <input class="editInizio" type="time" value="${oraBreve(t.ora_inizio)}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;">
-                      <input class="editFine" type="time" value="${oraBreve(t.ora_fine)}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;">
-                    </div>
-                    <select class="editPostazione" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">
-                      ${opzioniPostazione}
-                    </select>
-                    <input class="editNumero" type="number" min="1" max="20" value="${Number(t.numero_persone || 3)}" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">
-                    <textarea class="editNote" rows="2" maxlength="300" style="width:100%;padding:9px;border:1px solid #dfe5ec;border-radius:10px;margin-bottom:7px;">${t.note || ""}</textarea>
-                    <button class="salvaModificaTurnoBtn" data-turno="${t.id}" style="width:100%;border:none;background:#168a4a;color:#fff;padding:10px;border-radius:11px;font-weight:750;">Salva modifiche</button>
-                  </div>
-                `;
-
-                griglia.appendChild(card);
-              });
+              for (const turno of settimana.turni) {
+                griglia.appendChild(await costruisciCard(turno));
+              }
 
               sezione.appendChild(titoloSet);
               sezione.appendChild(griglia);
-
               elencoBox.appendChild(sezione);
-            });
+            }
 
             if (turnoDaEvidenziare) {
-              const targetCard = elencoBox.querySelector(`[data-turno-card="${turnoDaEvidenziare}"]`);
+              const targetCard =
+                elencoBox.querySelector(
+                  `[data-turno-card="${turnoDaEvidenziare}"]`
+                );
+
               if (targetCard) {
                 targetCard.style.border = "2px solid #c92c2c";
-                targetCard.style.boxShadow = "0 0 0 4px rgba(201,44,44,.10)";
+                targetCard.style.boxShadow =
+                  "0 0 0 4px rgba(201,44,44,.10)";
                 setTimeout(() => {
                   targetCard.scrollIntoView({
                     behavior: "smooth",
@@ -4614,106 +4633,27 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
               }
             }
 
-            elencoBox.querySelectorAll(".sostituisciSelect").forEach(select => {
-              select.addEventListener("change", () =>
-                sostituisci(Number(select.dataset.assegnazione), select)
-              );
-            });
-
-            elencoBox.querySelectorAll(".modificaTurnoBtn").forEach(btn => {
-              btn.addEventListener("click", function() {
-                const id = btn.dataset.turno;
-                const panel = elencoBox.querySelector(`.modificaTurnoPanel[data-turno="${id}"]`);
-                panel.style.display = panel.style.display === "none" ? "block" : "none";
-              });
-            });
-
-            elencoBox.querySelectorAll(".salvaModificaTurnoBtn").forEach(btn => {
-              btn.addEventListener("click", async function() {
-                const id = Number(btn.dataset.turno);
-                const panel = elencoBox.querySelector(`.modificaTurnoPanel[data-turno="${id}"]`);
-
-                try {
-                  await chiamaApi("aggiorna_turno", {
-                    turno_id: id,
-                    data: panel.querySelector(".editData").value,
-                    ora_inizio: panel.querySelector(".editInizio").value,
-                    ora_fine: panel.querySelector(".editFine").value,
-                    postazione_id: Number(panel.querySelector(".editPostazione").value),
-                    numero_persone: Number(panel.querySelector(".editNumero").value),
-                    note: panel.querySelector(".editNote").value,
-                    attivo: true
-                  });
-
-                  stato("✅ Turno modificato.");
-                  await Promise.all([caricaScelte(), caricaTurni()]);
-                } catch (errore) {
-                  stato(errore.message || "Impossibile modificare il turno.", true);
-                }
-              });
-            });
-
-            elencoBox.querySelectorAll(".eliminaTurnoBtn").forEach(btn => {
-              btn.addEventListener("click", async function() {
-                const id = Number(btn.dataset.turno);
-
-                if (!confirm("Vuoi eliminare questo turno dal programma?")) {
-                  return;
-                }
-
-                try {
-                  await chiamaApi("elimina_turno_admin", { turno_id: id });
-                  stato("✅ Turno eliminato dal programma.");
-                  await Promise.all([caricaScelte(), caricaTurni()]);
-                } catch (errore) {
-                  stato(errore.message || "Impossibile eliminare il turno.", true);
-                }
-              });
-            });
-
           } catch (errore) {
-            stato(errore.message || "Errore nel caricamento turni.", true);
+            stato(
+              errore.message || "Errore nel caricamento del programma.",
+              true
+            );
           }
         }
 
-        numeroInput.addEventListener("change", ridisegnaSelettori);
+        document.getElementById("adminTurniPrev")
+          .addEventListener("click", () => {
+            mese = spostaMese(mese, -1);
+            caricaTurni();
+          });
 
-        await caricaScelte();
+        document.getElementById("adminTurniNext")
+          .addEventListener("click", () => {
+            mese = spostaMese(mese, 1);
+            caricaTurni();
+          });
+
         await caricaTurni();
-
-        document.getElementById("salvaNuovoTurno").addEventListener("click", async function() {
-          const telegramIds = Array.from(document.querySelectorAll(".personaSelect"))
-            .map(x => Number(x.value))
-            .filter(Boolean);
-
-          if (new Set(telegramIds).size !== telegramIds.length) {
-            stato("La stessa persona non può essere scelta due volte nello stesso turno.", true);
-            return;
-          }
-
-          try {
-            await chiamaApi("crea_turno", {
-              data: document.getElementById("nuovoTurnoData").value,
-              ora_inizio: document.getElementById("nuovoTurnoInizio").value,
-              ora_fine: document.getElementById("nuovoTurnoFine").value,
-              postazione_id: Number(postazioneSelect.value),
-              numero_persone: Number(numeroInput.value),
-              telegram_ids: telegramIds,
-              note: document.getElementById("nuovoTurnoNote").value
-            });
-
-            stato("✅ Turno salvato e notifiche inviate agli assegnati.");
-            document.getElementById("nuovoTurnoNote").value = "";
-            nuovoTurnoPanel.style.display = "none";
-            toggleNuovoTurno.textContent = "➕ Nuovo turno";
-            await Promise.all([caricaScelte(), caricaTurni()]);
-          } catch (errore) {
-            stato(errore.message || "Impossibile salvare il turno.", true);
-          }
-        });
-
-        document.getElementById("adminTurniPrev").addEventListener("click", () => { mese = spostaMese(mese, -1); caricaTurni(); });
-        document.getElementById("adminTurniNext").addEventListener("click", () => { mese = spostaMese(mese, 1); caricaTurni(); });
       }
 
       async function apriGestionePostazioniAdmin() {
@@ -5964,60 +5904,6 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
         }
       }
 
-      async function caricaAdmin() {
-        titolo.textContent = nomeMeseAdmin();
-        elenco.innerHTML = "";
-        mostraStatoAdmin("⏳ Caricamento disponibilità…", "info");
-
-        try {
-          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              initData,
-              azione: "leggi_disponibilita_admin",
-              mese: meseKeyAdmin()
-            })
-          });
-
-          const dati = await risposta.json();
-
-          if (!risposta.ok || !dati.ok) {
-            throw new Error(dati.error || "Errore nel caricamento");
-          }
-
-          const righe = dati.disponibilita || [];
-          renderAdmin(righe);
-          mostraStatoAdmin(`✅ Disponibilità ricevute: ${righe.length}.`, "ok");
-        } catch (errore) {
-          elenco.innerHTML = "";
-          mostraStatoAdmin(
-            "⚠️ " + (errore instanceof Error ? errore.message : "Errore nel caricamento."),
-            "errore"
-          );
-        }
-      }
-
-      document.getElementById("meseAdminPrecedente")
-        .addEventListener("click", function() {
-          meseAdmin--;
-          if (meseAdmin === 0) {
-            meseAdmin = 12;
-            annoAdmin--;
-          }
-          caricaAdmin();
-        });
-
-      document.getElementById("meseAdminSuccessivo")
-        .addEventListener("click", function() {
-          meseAdmin++;
-          if (meseAdmin === 13) {
-            meseAdmin = 1;
-            annoAdmin++;
-          }
-          caricaAdmin();
-        });
-
       document.getElementById("tornaHomeAdmin")
         .addEventListener("click", function() {
           location.reload();
@@ -6029,7 +5915,6 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
         });
 
       caricaRichiesteAccesso();
-      caricaAdmin();
 
     }
 
