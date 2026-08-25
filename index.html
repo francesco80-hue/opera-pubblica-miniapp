@@ -3841,6 +3841,82 @@ document
           elencoEl.appendChild(card);
         });
 
+
+        function confermaRifiutoPersonalizzata() {
+          return new Promise(resolve => {
+            const esistente = document.getElementById("popupConfermaRifiuto");
+            if (esistente) esistente.remove();
+
+            const overlay = document.createElement("div");
+            overlay.id = "popupConfermaRifiuto";
+            overlay.style.cssText = `
+              position:fixed;
+              inset:0;
+              z-index:10050;
+              background:rgba(21,33,60,.52);
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              padding:20px;
+            `;
+
+            const box = document.createElement("div");
+            box.style.cssText = `
+              width:min(100%,420px);
+              background:#ffffff;
+              border-radius:22px;
+              padding:22px;
+              box-shadow:0 20px 60px rgba(0,0,0,.24);
+              text-align:left;
+            `;
+
+            box.innerHTML = `
+              <div style="font-size:34px;margin-bottom:8px;">⚠️</div>
+              <div style="font-size:21px;font-weight:850;color:#15213c;margin-bottom:10px;">
+                Conferma rifiuto
+              </div>
+              <div style="font-size:15px;line-height:1.55;color:#526174;margin-bottom:20px;">
+                Questo turno era già stato accettato.<br><br>
+                Prima di rifiutarlo, avvisa il fratello responsabile che non potrai più svolgerlo.
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <button
+                  id="annullaRifiutoPopup"
+                  type="button"
+                  data-no-scroll="true"
+                  style="border:none;background:#eef2f6;color:#41516a;padding:12px;border-radius:13px;font-size:15px;font-weight:750;cursor:pointer;">
+                  Annulla
+                </button>
+                <button
+                  id="confermaRifiutoPopup"
+                  type="button"
+                  data-no-scroll="true"
+                  style="border:none;background:#c92c2c;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;">
+                  OK
+                </button>
+              </div>
+            `;
+
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+
+            const chiudi = valore => {
+              overlay.remove();
+              resolve(valore);
+            };
+
+            document.getElementById("annullaRifiutoPopup")
+              ?.addEventListener("click", () => chiudi(false));
+
+            document.getElementById("confermaRifiutoPopup")
+              ?.addEventListener("click", () => chiudi(true));
+
+            overlay.addEventListener("click", event => {
+              if (event.target === overlay) chiudi(false);
+            });
+          });
+        }
+
         elencoEl.querySelectorAll(".accettaTurno").forEach(btn => {
           btn.addEventListener("click", (event) => {
             event.preventDefault();
@@ -3863,10 +3939,7 @@ document
               // Nei primi 60 secondi dall'accettazione consentiamo di correggere
               // subito un eventuale errore. Dopo, chiediamo una conferma.
               if (secondi === null || secondi >= 60) {
-                const conferma = window.confirm(
-                  "Questo turno era già stato accettato. Prima di rifiutarlo, avvisa il fratello responsabile che non potrai più svolgerlo.\n\nPremi OK per confermare il rifiuto."
-                );
-
+                const conferma = await confermaRifiutoPersonalizzata();
                 if (!conferma) return;
               }
             }
