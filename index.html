@@ -3437,6 +3437,19 @@ document
     return fineGiorno < new Date();
   }
 
+  function turnoConcluso(turno, riferimento = new Date()) {
+    if (!turno?.data) return false;
+
+    const [anno, mese, giorno] = String(turno.data).split("-").map(Number);
+    const partiOra = String(turno.ora_fine || "23:59:59").split(":").map(Number);
+    const ore = Number.isFinite(partiOra[0]) ? partiOra[0] : 23;
+    const minuti = Number.isFinite(partiOra[1]) ? partiOra[1] : 59;
+    const secondi = Number.isFinite(partiOra[2]) ? partiOra[2] : 59;
+
+    const fineTurno = new Date(anno, mese - 1, giorno, ore, minuti, secondi, 0);
+    return fineTurno.getTime() < riferimento.getTime();
+  }
+
   function creaContenitoreSettimanePassate() {
     const details = document.createElement("details");
     details.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;background:#fafbfc;margin-bottom:18px;overflow:hidden;";
@@ -3574,7 +3587,8 @@ document
 
       try {
         const dati = await chiamaApi("leggi_programma", { mese });
-        const turni = dati.programma || [];
+        const turni = (dati.programma || [])
+          .filter(turno => !turnoConcluso(turno));
 
         if (!turni.length) {
           statoEl.style.display = "none";
@@ -3588,8 +3602,6 @@ document
         statoEl.style.display = "none";
 
         const settimane = raggruppaTurniPerSettimana(turni);
-        const passate = creaContenitoreSettimanePassate();
-        let numeroSettimanePassate = 0;
 
         settimane.forEach(settimana => {
           const sezione = document.createElement("section");
@@ -3646,19 +3658,8 @@ document
           sezione.appendChild(titolo);
           sezione.appendChild(griglia);
 
-          if (settimanaConclusa(settimana)) {
-            passate.corpo.appendChild(sezione);
-            numeroSettimanePassate++;
-          } else {
-            elencoEl.appendChild(sezione);
-          }
+          elencoEl.appendChild(sezione);
         });
-
-        if (numeroSettimanePassate > 0) {
-          passate.details.querySelector("summary").textContent =
-            `🗂️ Turni passati (${numeroSettimanePassate} ${numeroSettimanePassate === 1 ? "settimana" : "settimane"})`;
-          elencoEl.appendChild(passate.details);
-        }
       } catch (errore) {
         stato(errore.message || "Errore nel caricamento.", true);
       }
@@ -4500,7 +4501,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
           <button id="adminStoricoProgrammi" data-no-scroll="true"
             style="border:1px solid #e0e4ea;background:#fafbfc;color:#596273;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
-            🗂️<br>Storico 12 mesi
+            🗂️<br>Storico
           </button>
 
           <button id="adminGestioneAmministratori" data-no-scroll="true"
@@ -4755,7 +4756,8 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
           try {
             const dati = await chiamaApi("leggi_turni_admin", { mese });
-            const turni = dati.turni || [];
+            const turni = (dati.turni || [])
+              .filter(turno => !turnoConcluso(turno));
 
             if (!turni.length) {
               elencoBox.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">Nessun turno nel mese.</div>`;
@@ -4763,8 +4765,6 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             }
 
             const settimane = raggruppaTurniPerSettimana(turni);
-            const passate = creaContenitoreSettimanePassate();
-            let numeroSettimanePassate = 0;
 
             settimane.forEach(settimana => {
               const sezione = document.createElement("section");
@@ -4843,19 +4843,8 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
               sezione.appendChild(titoloSet);
               sezione.appendChild(griglia);
 
-              if (settimanaConclusa(settimana)) {
-                passate.corpo.appendChild(sezione);
-                numeroSettimanePassate++;
-              } else {
-                elencoBox.appendChild(sezione);
-              }
+              elencoBox.appendChild(sezione);
             });
-
-            if (numeroSettimanePassate > 0) {
-              passate.details.querySelector("summary").textContent =
-                `🗂️ Turni passati (${numeroSettimanePassate} ${numeroSettimanePassate === 1 ? "settimana" : "settimane"})`;
-              elencoBox.appendChild(passate.details);
-            }
 
             if (turnoDaEvidenziare) {
               const targetCard = elencoBox.querySelector(`[data-turno-card="${turnoDaEvidenziare}"]`);
@@ -5877,11 +5866,148 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
         caricaAnteprima();
       });
 
-      adminStoricoProgrammi.addEventListener("click", function() {
-        mostraFunzioneInAggiornamento(
-          "🗂️ Storico programmi",
-          "Qui gli amministratori potranno consultare gli ultimi 6 mesi e usare lo storico per dare precedenza a chi non svolge un turno da più tempo."
+      adminStoricoProgrammi.addEventListener("click", async function(event) {
+        event?.preventDefault();
+        event?.stopPropagation();
+
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminStorico", "← Torna all’Area amministratori")}
+
+          <div style="background:#fafbfc;border:1px solid #e0e4ea;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0;">🗂️ Storico</h2>
+            <div style="color:#667085;font-size:14px;line-height:1.45;margin-top:7px;">
+              Turni conclusi degli ultimi 12 mesi.
+            </div>
+          </div>
+
+          <div id="storicoStato"
+            style="padding:14px;border-radius:14px;background:#f3f7fb;color:#526174;margin-bottom:14px;">
+            ⏳ Caricamento storico…
+          </div>
+
+          <div id="storicoElenco"></div>
+
+          ${pulsanteIndietroFondo("tornaAreaAdminStoricoFondo", "← Torna all’Area amministratori")}
+        `;
+
+        collegaRitornoDoppio(
+          "tornaAreaAdminStorico",
+          "tornaAreaAdminStoricoFondo",
+          "admin"
         );
+
+        const statoStorico = document.getElementById("storicoStato");
+        const elencoStorico = document.getElementById("storicoElenco");
+
+        try {
+          // Mostriamo soltanto 12 mesi alla volta.
+          // Entrando nel tredicesimo mese, il più vecchio esce automaticamente
+          // dalla visualizzazione, ma NON viene cancellato dal database.
+          const mesi = Array.from(
+            { length: 12 },
+            (_, indice) => spostaMese(meseCorrenteKey(), -indice)
+          );
+
+          const risultati = await Promise.all(
+            mesi.map(async meseStorico => {
+              try {
+                const dati = await chiamaApi("leggi_turni_admin", {
+                  mese: meseStorico
+                });
+
+                return (dati.turni || [])
+                  .filter(turno => turnoConcluso(turno));
+              } catch (errore) {
+                console.error("Errore storico", meseStorico, errore);
+                return [];
+              }
+            })
+          );
+
+          const turniStorico = risultati.flat().sort((a, b) => {
+            const aKey = `${a.data}T${oraBreve(a.ora_fine) || "23:59"}`;
+            const bKey = `${b.data}T${oraBreve(b.ora_fine) || "23:59"}`;
+            return bKey.localeCompare(aKey);
+          });
+
+          statoStorico.style.display = "none";
+
+          if (!turniStorico.length) {
+            elencoStorico.innerHTML = `
+              <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;">
+                Nessun turno concluso nello Storico.
+              </div>`;
+            return;
+          }
+
+          const gruppiMese = new Map();
+
+          turniStorico.forEach(turno => {
+            const meseTurno = String(turno.data).slice(0, 7);
+            if (!gruppiMese.has(meseTurno)) {
+              gruppiMese.set(meseTurno, []);
+            }
+            gruppiMese.get(meseTurno).push(turno);
+          });
+
+          gruppiMese.forEach((turniMese, meseTurno) => {
+            const sezione = document.createElement("section");
+            sezione.style.marginBottom = "22px";
+
+            const titolo = document.createElement("div");
+            titolo.className = "program-week-title";
+            titolo.textContent = titoloMese(meseTurno);
+
+            const griglia = document.createElement("div");
+            griglia.className = "program-week-grid";
+
+            turniMese.forEach(turno => {
+              const card = document.createElement("div");
+              card.style.cssText =
+                "border:1px solid #e1e7ef;border-radius:18px;padding:16px;background:#fff;min-width:0;";
+
+              const persone = (turno.assegnazioni || []).map(a => {
+                const simbolo =
+                  a.stato === "accettato" ? "✅" :
+                  a.stato === "rifiutato" ? "❌" : "⏳";
+
+                return `
+                  <div style="padding:4px 0;display:flex;align-items:center;">
+                    <strong>${simbolo} ${a.nome_completo}</strong>
+                    ${iconaPersona(a.genere)}
+                  </div>`;
+              }).join("");
+
+              card.innerHTML = `
+                <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
+                  ${dataItaliana(turno.data)}
+                </div>
+                <div style="color:#44506a;margin-bottom:4px;">
+                  🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}
+                </div>
+                <div style="color:#44506a;margin-bottom:10px;">
+                  📍 ${turno.postazione_nome}
+                </div>
+                <div style="border-top:1px solid #eef1f4;padding-top:8px;">
+                  ${persone || '<div style="color:#667085;">Nessuna persona assegnata.</div>'}
+                </div>
+                ${turno.note ? `<div style="margin-top:9px;color:#667085;font-size:14px;">📝 ${turno.note}</div>` : ""}
+              `;
+
+              griglia.appendChild(card);
+            });
+
+            sezione.appendChild(titolo);
+            sezione.appendChild(griglia);
+            elencoStorico.appendChild(sezione);
+          });
+
+        } catch (errore) {
+          statoStorico.style.background = "#fff1f1";
+          statoStorico.style.color = "#a33a3a";
+          statoStorico.textContent =
+            "⚠️ " + (errore.message || "Impossibile caricare lo Storico.");
+        }
       });
 
       function mostraStatoAdmin(msg, tipo) {
