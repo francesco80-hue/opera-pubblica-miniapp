@@ -794,6 +794,86 @@
 
   const contenutoOriginale = document.querySelector(".content").innerHTML;
 
+  function mostraFunzioneInAggiornamento(titolo, descrizione) {
+    const overlayEsistente = document.getElementById("popupAggiornamento");
+    if (overlayEsistente) {
+      overlayEsistente.remove();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "popupAggiornamento";
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      background:rgba(21,33,60,.45);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    `;
+
+    const box = document.createElement("div");
+    box.style.cssText = `
+      width:min(100%,420px);
+      background:#ffffff;
+      border-radius:22px;
+      padding:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.20);
+      text-align:center;
+    `;
+
+    const icona = document.createElement("div");
+    icona.textContent = "🛠️";
+    icona.style.cssText = "font-size:42px;margin-bottom:10px;";
+
+    const titoloEl = document.createElement("div");
+    titoloEl.textContent = titolo || "Funzione in aggiornamento";
+    titoloEl.style.cssText =
+      "font-size:21px;font-weight:800;color:#15213c;margin-bottom:8px;";
+
+    const testo = document.createElement("div");
+    testo.textContent =
+      descrizione ||
+      "Questa funzione è già prevista nella Mini App e sarà attivata nei prossimi aggiornamenti.";
+    testo.style.cssText =
+      "font-size:15px;line-height:1.5;color:#667085;margin-bottom:18px;";
+
+    const chiudi = document.createElement("button");
+    chiudi.type = "button";
+    chiudi.dataset.noScroll = "true";
+    chiudi.textContent = "OK";
+    chiudi.style.cssText = `
+      width:100%;
+      border:none;
+      background:#1768d7;
+      color:white;
+      padding:13px 16px;
+      border-radius:14px;
+      font-size:16px;
+      font-weight:750;
+      cursor:pointer;
+    `;
+
+    chiudi.addEventListener("click", function() {
+      overlay.remove();
+    });
+
+    overlay.addEventListener("click", function(event) {
+      if (event.target === overlay) {
+        overlay.remove();
+      }
+    });
+
+    box.appendChild(icona);
+    box.appendChild(titoloEl);
+    box.appendChild(testo);
+    box.appendChild(chiudi);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  }
+
+
   async function apriPostazioni(event) {
 
     if (event) {
@@ -1706,6 +1786,2094 @@ document
           </a>
         </div>
 
+        <div style="
+          background:#eef7ff;
+          border:1px solid #a7d7ff;
+          border-radius:18px;
+          padding:17px;
+          margin-bottom:18px;
+          line-height:1.55;
+          color:#33435f;
+        ">
+          <div style="
+            font-size:18px;
+            font-weight:750;
+            margin-bottom:7px;
+            color:#1768d7;
+          ">
+            🔄 Un'opera che può cambiare
+          </div>
+
+          <p>
+            Visto che si tratta di un'opera interattiva, può subire modifiche
+            nelle postazioni, nell'esposizione delle pubblicazioni,
+            nei cambi turno e in altre indicazioni.
+          </p>
+
+          <p style="margin-top:10px;">
+            Per questo motivo è stato creato un gruppo specifico su Telegram,
+            dove troviamo tutte le informazioni e i cambiamenti in tempo reale.
+          </p>
+
+          <p style="margin-top:10px; font-weight:700;">
+            Siamo invitati a collegarci di tanto in tanto per mantenerci aggiornati.
+          </p>
+        </div>
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr;
+          gap:11px;
+        ">
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>⏰ Turni</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Avvisare in tempo se non possiamo svolgere un turno a noi assegnato.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>🧼 Pulizia e ordine</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Mantenere l'espositore pulito e ordinato. Nel retro dell'espositore
+              trovate l'occorrente per la pulizia. Al ritiro e alla consegna
+              è responsabilità di tutti controllare la condizione degli espositori.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>📚 Fine turno e rapporto</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              A fine turno riponete le pubblicazioni esposte nell'apposito
+              raccoglitore che trovate nel retro dell'espositore.
+              Mettetevi inoltre d'accordo con il vostro compagno su chi compilerà
+              il Rapporto usando l'apposito pulsante.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>✍️ Esperienze</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Se volete, potete condividere le vostre belle esperienze
+              usando il pulsante dedicato.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>📦 Pubblicazioni mancanti</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Se dovessero mancare le pubblicazioni, avvisate
+              i fratelli responsabili indicati nel gruppo.
+            </p>
+          </div>
+
+          <div style="
+            border:1px solid #e1e7ef;
+            border-radius:16px;
+            padding:16px;
+            line-height:1.5;
+          ">
+            <strong>🗂️ Materiale nel retro dell'espositore</strong>
+            <p style="margin-top:6px; color:#4d586d;">
+              Il retro degli espositori contiene due porta documenti con
+              inviti per le adunanze e biglietti da visita JW.ORG.
+              Inoltre, da non esporre, sono disponibili l'opuscolo
+              “Ritorna a Geova” e una Bibbia.
+            </p>
+          </div>
+
+        </div>
+
+        <div style="
+          margin-top:18px;
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:14px;
+        ">
+          <h3 style="font-size:19px; margin-bottom:10px;">
+            📷 Retro dell'espositore
+          </h3>
+          <img
+            src="istruzioni-locali-retro-espositore.png"
+            loading="lazy"
+            alt="Retro dell'espositore con materiale e raccoglitore"
+            style="
+              width:100%;
+              display:block;
+              border-radius:14px;
+            ">
+        </div>
+
+        <div style="
+          margin-top:18px;
+          background:#fff8e8;
+          border:1px solid #ffe0a3;
+          border-radius:18px;
+          padding:16px;
+          color:#725315;
+          line-height:1.5;
+        ">
+          📌 Prima di svolgere il turno, controllate sempre
+          eventuali nuove comunicazioni o aggiornamenti.
+        </div>
+
+        <button
+          id="apriIstruzioniGenerali"
+          style="
+            width:100%;
+            border:none;
+            background:#6942d4;
+            color:white;
+            padding:16px;
+            margin-top:18px;
+            border-radius:16px;
+            font-size:17px;
+            font-weight:750;
+            cursor:pointer;
+          ">
+          📘 ISTRUZIONI GENERALI
+        </button>
+
+        <div style="margin-top:18px; margin-bottom:10px;">
+          <button
+            id="tornaHomeIstruzioniBasso"
+            style="
+              width:100%;
+              border:none;
+              background:#f3f1ff;
+              color:#6942d4;
+              padding:14px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+      `;
+
+
+      document
+        .getElementById("apriIstruzioniGenerali")
+        .addEventListener("click", function() {
+
+          document.querySelector(".content").innerHTML = `
+
+            <div style="margin-bottom:18px;">
+              <button
+                id="tornaIstruzioniLocali"
+                style="
+                  border:none;
+                  background:#f3f1ff;
+                  color:#6942d4;
+                  padding:12px 18px;
+                  border-radius:14px;
+                  font-size:16px;
+                  font-weight:700;
+                  cursor:pointer;
+                ">
+                ← Torna alle Istruzioni locali
+              </button>
+            </div>
+
+            <div style="
+              background:linear-gradient(135deg,#f5f1ff,#fbfaff);
+              border:1px solid #ded6ff;
+              border-radius:20px;
+              padding:20px;
+              margin-bottom:18px;
+            ">
+              <h2 style="font-size:25px; margin-bottom:6px;">
+                📘 Istruzioni generali
+              </h2>
+              <div style="color:#6a6380;">
+                S-148-I 11/23 — Istruzioni per la testimonianza pubblica
+              </div>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">🤝 Atteggiamento e obiettivo</h3>
+              <p>
+                La testimonianza pubblica favorisce il contatto con persone che forse altrimenti
+                non avrebbero l'opportunità di ascoltare la buona notizia. Si dà risalto
+                all'iniziare studi biblici, indirizzare le persone a jw.org, coltivare subito
+                l'interesse e non limitarsi a distribuire pubblicazioni.
+              </p>
+              <p style="margin-top:10px;">
+                È importante essere calorosi e amichevoli, mantenere una distanza appropriata
+                dall'espositore, sorridere e stabilire un buon contatto visivo.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">📚 Pubblicazioni esposte</h3>
+              <p>
+                L'esposizione deve essere ordinata e dignitosa, evitando troppe pubblicazioni diverse.
+                La Bibbia non va esposta, ma si possono tenere copie a portata di mano per chi
+                ne faccia richiesta o manifesti sincero interesse.
+              </p>
+              <p style="margin-top:10px;">
+                Va inoltre tenuta a portata di mano una piccola scorta dell'opuscolo
+                “Ritorna a Geova”, senza esporlo.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">🛡️ Sicurezza</h3>
+              <p>
+                Di solito per ogni espositore mobile vengono incaricati due proclamatori.
+                È necessario rimanere in allerta perché le condizioni della zona possono cambiare.
+              </p>
+              <p style="margin-top:10px;">
+                Quando possibile, è meglio disporre gli espositori in modo che non ci si possa
+                avvicinare ai proclamatori da dietro. Se le forze dell'ordine chiedono di lasciare
+                la zona, occorre farlo e informare successivamente un anziano.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">⚠️ Disturbatori</h3>
+              <p>
+                Evitare discussioni. Rimanere calmi e amichevoli e cercare di concludere
+                la conversazione in modo gentile. Se la situazione peggiora, può essere meglio
+                allontanarsi; in casi estremi si può chiedere aiuto alle autorità.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:14px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">👤 Disassociati</h3>
+              <p>
+                Se una persona disassociata desidera riavvicinarsi alla congregazione,
+                può essere indirizzata alla pagina “Vieni a una delle nostre adunanze”
+                su jw.org per individuare la congregazione più vicina.
+              </p>
+            </div>
+
+            <div style="
+              background:#ffffff;
+              border:1px solid #e1e7ef;
+              border-radius:18px;
+              padding:18px;
+              margin-bottom:18px;
+              line-height:1.6;
+              color:#3f4a5f;
+            ">
+              <h3 style="font-size:19px; margin-bottom:8px;">📰 Media</h3>
+              <p>
+                In genere non si rilasciano interviste. I rappresentanti dei media possono
+                essere invitati a consultare le sezioni “Notizie” o “Chi siamo” di jw.org.
+                Se insistono, informare prontamente un anziano.
+              </p>
+            </div>
+
+            <a
+              href="S-148-I-11-23.pdf"
+              target="_blank"
+              style="
+                display:block;
+                text-align:center;
+                background:#1768d7;
+                color:white;
+                padding:15px;
+                border-radius:15px;
+                text-decoration:none;
+                font-size:16px;
+                font-weight:750;
+                margin-bottom:12px;
+              ">
+              📄 APRI / SCARICA PDF
+            </a>
+
+            <a
+              href="https://drive.google.com/file/d/1RWVpiSkRgKVOZpQjhpmFqZq9OT0QuriD/view?usp=drivesdk"
+              target="_blank"
+              style="
+                display:block;
+                text-align:center;
+                background:#168a4a;
+                color:white;
+                padding:15px;
+                border-radius:15px;
+                text-decoration:none;
+                font-size:16px;
+                font-weight:750;
+                margin-bottom:18px;
+              ">
+              📘 APRI IN JWPUB
+            </a>
+
+            <div style="margin-bottom:10px;">
+              <button
+                id="tornaIstruzioniLocaliBasso"
+                style="
+                  width:100%;
+                  border:none;
+                  background:#f3f1ff;
+                  color:#6942d4;
+                  padding:14px 18px;
+                  border-radius:14px;
+                  font-size:16px;
+                  font-weight:700;
+                  cursor:pointer;
+                ">
+                ← Torna alle Istruzioni locali
+              </button>
+            </div>
+
+          `;
+
+          document
+            .getElementById("tornaIstruzioniLocali")
+            .addEventListener("click", function() {
+              apriIstruzioniLocali();
+            });
+
+          document
+            .getElementById("tornaIstruzioniLocaliBasso")
+            .addEventListener("click", function() {
+              apriIstruzioniLocali();
+            });
+
+        });
+
+
+      document
+        .getElementById("tornaHomeIstruzioni")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeIstruzioniBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+    }
+
+  document
+    .getElementById("istruzioni")
+    .addEventListener("click", apriIstruzioniLocali);
+
+
+
+  document
+    .getElementById("disponibilita")
+    .addEventListener("click", async function(event) {
+      event.preventDefault();
+
+      const initData = window.Telegram?.WebApp?.initData || "";
+      let mese = meseCorrenteKey();
+
+      document.querySelector(".content").innerHTML = `
+        ${pulsanteIndietro("tornaHomeDisponibilita", "← Torna alla Home")}
+
+        <div style="background:linear-gradient(135deg,#eef6ff,#fbfdff);border:1px solid #cfe1f5;border-radius:20px;padding:20px;margin-bottom:18px;">
+          <h2 style="font-size:25px;margin:0 0 6px;">📆 Disponibilità</h2>
+          <div style="color:#5f6f82;line-height:1.5;">
+            Indica semplicemente se sei disponibile nelle date previste.
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <button id="dispMesePrev" data-no-scroll="true"
+            style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+
+          <div id="dispTitoloMese"
+            style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+
+          <button id="dispMeseNext" data-no-scroll="true"
+            style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+        </div>
+
+        <div id="dispStato"
+          style="display:none;padding:13px 14px;border-radius:14px;margin-bottom:14px;line-height:1.45;font-size:14px;"></div>
+
+        <div id="dispDate"></div>
+
+        ${pulsanteIndietroFondo("tornaHomeDisponibilitaFondo", "← Torna alla Home")}
+      `;
+
+      document.getElementById("tornaHomeDisponibilita")
+        ?.addEventListener("click", () => location.reload());
+
+      document.getElementById("tornaHomeDisponibilitaFondo")
+        ?.addEventListener("click", () => location.reload());
+
+      const titolo = document.getElementById("dispTitoloMese");
+      const stato = document.getElementById("dispStato");
+      const elenco = document.getElementById("dispDate");
+
+      function mostra(msg, errore = false) {
+        stato.style.display = "block";
+        stato.style.background = errore ? "#fff1f1" : "#f3f7fb";
+        stato.style.border = errore ? "1px solid #ffd0d0" : "1px solid #dce6f2";
+        stato.style.color = errore ? "#a33a3a" : "#526174";
+        stato.textContent = msg;
+      }
+
+      function renderDate(date) {
+        elenco.innerHTML = "";
+
+        if (!date.length) {
+          elenco.innerHTML = `
+            <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;background:#fff;">
+              Nessuna data prevista per questo mese.
+            </div>`;
+          return;
+        }
+
+        date.forEach(item => {
+          const card = document.createElement("div");
+          card.style.cssText =
+            "border:1px solid #e1e7ef;border-radius:18px;padding:16px;background:#fff;margin-bottom:10px;";
+
+          const statoTesto =
+            item.disponibile === true ? "✅ Disponibile" :
+            item.disponibile === false ? "❌ Non disponibile" :
+            "⚪ Non indicato";
+
+          card.innerHTML = `
+            <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:5px;">
+              ${dataItaliana(item.data)}
+            </div>
+
+            <div style="font-size:14px;color:#667085;margin-bottom:12px;">
+              ${statoTesto}
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+              <button
+                type="button"
+                class="dispSi"
+                data-id="${item.id}"
+                style="border:${item.disponibile === true ? "2px" : "1px"} solid #168a4a;background:${item.disponibile === true ? "#eaf8ef" : "#fff"};color:#168a4a;padding:12px 8px;border-radius:13px;font-size:14px;font-weight:800;">
+                ✅ Disponibile
+              </button>
+
+              <button
+                type="button"
+                class="dispNo"
+                data-id="${item.id}"
+                style="border:${item.disponibile === false ? "2px" : "1px"} solid #c92c2c;background:${item.disponibile === false ? "#fff0f0" : "#fff"};color:#c92c2c;padding:12px 8px;border-radius:13px;font-size:14px;font-weight:800;">
+                ❌ Non disponibile
+              </button>
+            </div>
+          `;
+
+          elenco.appendChild(card);
+        });
+
+        elenco.querySelectorAll(".dispSi,.dispNo").forEach(btn => {
+          btn.addEventListener("click", async event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            btn.disabled = true;
+
+            try {
+              await chiamaApi("salva_disponibilita_turno_attivo", {
+                turno_attivo_id: Number(btn.dataset.id),
+                disponibile: btn.classList.contains("dispSi")
+              });
+
+              await carica();
+            } catch (errore) {
+              btn.disabled = false;
+              mostra(
+                errore.message || "Impossibile salvare la disponibilità.",
+                true
+              );
+            }
+          });
+        });
+      }
+
+      async function carica() {
+        titolo.textContent = titoloMese(mese);
+        elenco.innerHTML = "";
+        mostra("⏳ Caricamento disponibilità…");
+
+        if (!initData) {
+          mostra(
+            "⚠️ Apri la Mini App direttamente da Telegram per usare le disponibilità.",
+            true
+          );
+          return;
+        }
+
+        try {
+          const dati = await chiamaApi(
+            "leggi_disponibilita_turni_attivi",
+            { mese }
+          );
+
+          renderDate(dati.date || []);
+          stato.style.display = "none";
+        } catch (errore) {
+          mostra(
+            errore.message || "Impossibile caricare le disponibilità.",
+            true
+          );
+        }
+      }
+
+      document.getElementById("dispMesePrev")
+        .addEventListener("click", () => {
+          mese = spostaMese(mese, -1);
+          carica();
+        });
+
+      document.getElementById("dispMeseNext")
+        .addEventListener("click", () => {
+          mese = spostaMese(mese, 1);
+          carica();
+        });
+
+      await carica();
+    });
+
+
+  function meseCorrenteKey() {
+    const oggi = new Date();
+    return `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function spostaMese(meseKey, delta) {
+    const [anno, mese] = meseKey.split("-").map(Number);
+    const d = new Date(anno, mese - 1 + delta, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function titoloMese(meseKey) {
+    const [anno, mese] = meseKey.split("-").map(Number);
+    return new Intl.DateTimeFormat("it-IT", {
+      month: "long",
+      year: "numeric"
+    }).format(new Date(anno, mese - 1, 1));
+  }
+
+  function dataItaliana(dataIso) {
+    const [a, m, g] = dataIso.split("-").map(Number);
+    return new Intl.DateTimeFormat("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    }).format(new Date(a, m - 1, g));
+  }
+
+  function oraBreve(ora) {
+    return String(ora || "").slice(0, 5);
+  }
+
+  function iconaPersona(genere) {
+    const donna = genere === "donna";
+    const colore = donna ? "#d42f6a" : "#285784";
+    const sfondo = donna ? "#fde8f0" : "#e9f2fb";
+    const titolo = donna ? "Donna" : "Uomo";
+
+    const figura = donna
+      ? `
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <circle cx="12" cy="4.4" r="3" fill="${colore}"></circle>
+          <path d="M9.2 8h5.6l2.2 6.2h-2.5V21h-2v-5.4h-1V21h-2v-6.8H7L9.2 8z" fill="${colore}"></path>
+        </svg>`
+      : `
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <circle cx="12" cy="4.4" r="3" fill="${colore}"></circle>
+          <path d="M9 8h6c1.2 0 2 .9 2 2v5h-2v-4h-1V21h-2v-6h-1v6H9v-10H8v4H6v-5c0-1.1.8-2 2-2h1z" fill="${colore}"></path>
+        </svg>`;
+
+    return `
+      <span
+        title="${titolo}"
+        aria-label="${titolo}"
+        style="
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          width:24px;
+          height:24px;
+          border-radius:999px;
+          background:${sfondo};
+          margin-left:7px;
+          vertical-align:middle;
+          flex:0 0 auto;
+        "
+      >${figura}</span>`;
+  }
+
+
+  function notificheTelegramGiaConsentite() {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    return user?.allows_write_to_pm === true ||
+      localStorage.getItem("opera_pubblica_notifiche_ok") === "1";
+  }
+
+  function aggiornaBoxNotifiche() {
+    const box = document.getElementById("boxPermessoNotifiche");
+    if (!box) return;
+
+    if (!window.Telegram?.WebApp?.initData) {
+      box.style.display = "none";
+      return;
+    }
+
+    if (notificheTelegramGiaConsentite()) {
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "block";
+  }
+
+  async function richiediPermessoNotificheTelegram() {
+    const tg = window.Telegram?.WebApp;
+
+    if (!tg?.requestWriteAccess) {
+      alert(
+        "Per attivare le notifiche aggiorna Telegram all’ultima versione disponibile."
+      );
+      return;
+    }
+
+    const btn = document.getElementById("attivaNotificheTelegram");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "⏳ Attivazione…";
+    }
+
+    try {
+      tg.requestWriteAccess((consentito) => {
+        if (consentito === true) {
+          localStorage.setItem("opera_pubblica_notifiche_ok", "1");
+
+          const box = document.getElementById("boxPermessoNotifiche");
+          if (box) {
+            box.innerHTML = `
+              <div style="font-weight:800;color:#28733d;">✅ Notifiche attivate</div>
+              <div style="font-size:14px;color:#4f6656;margin-top:4px;">
+                Da ora puoi ricevere direttamente gli avvisi personali dei turni.
+              </div>
+            `;
+
+            setTimeout(() => {
+              box.style.display = "none";
+            }, 1800);
+          }
+        } else {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🔔 Attiva notifiche";
+          }
+        }
+      });
+    } catch (errore) {
+      console.error("Errore richiesta notifiche Telegram:", errore);
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "🔔 Attiva notifiche";
+      }
+    }
+  }
+
+  function escapeIcs(value) {
+    return String(value ?? "")
+      .replace(/\\/g, "\\\\")
+      .replace(/\r?\n/g, "\\n")
+      .replace(/,/g, "\\,")
+      .replace(/;/g, "\\;");
+  }
+
+  function dataOraIcs(dataIso, ora) {
+    const [anno, mese, giorno] = String(dataIso).split("-");
+    const [ore = "00", minuti = "00"] = String(ora || "00:00").split(":");
+    return `${anno}${mese}${giorno}T${ore}${minuti}00`;
+  }
+
+  function apriTurnoNelCalendario(turno) {
+    const [anno, mese, giorno] = String(turno.data).split("-");
+    const [oraInizio = "00", minInizio = "00"] = String(turno.ora_inizio || "00:00").split(":");
+    const [oraFine = "00", minFine = "00"] = String(turno.ora_fine || "00:00").split(":");
+
+    const inizio = `${anno}${mese}${giorno}T${oraInizio}${minInizio}00`;
+    const fine = `${anno}${mese}${giorno}T${oraFine}${minFine}00`;
+
+    const dettagli = [
+      "Opera Pubblica Bordonaro",
+      turno.postazione_nome ? `Postazione: ${turno.postazione_nome}` : "",
+      turno.note ? `Note: ${turno.note}` : ""
+    ].filter(Boolean).join("\n");
+
+    const url =
+      "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      `&text=${encodeURIComponent("Opera Pubblica Bordonaro")}` +
+      `&dates=${encodeURIComponent(inizio + "/" + fine)}` +
+      `&ctz=${encodeURIComponent("Europe/Rome")}` +
+      `&location=${encodeURIComponent(turno.postazione_nome || "")}` +
+      `&details=${encodeURIComponent(dettagli)}`;
+
+    try {
+      if (window.Telegram?.WebApp?.openLink) {
+        window.Telegram.WebApp.openLink(url);
+        return;
+      }
+    } catch (_) {}
+
+    window.open(url, "_blank", "noopener");
+  }
+
+  function inizioSettimana(dataIso) {
+    const [a, m, g] = String(dataIso).split("-").map(Number);
+    const d = new Date(a, m - 1, g);
+    const giorno = d.getDay();
+    const delta = giorno === 0 ? -6 : 1 - giorno;
+    d.setDate(d.getDate() + delta);
+    return d;
+  }
+
+  function chiaveSettimana(dataIso) {
+    const d = inizioSettimana(dataIso);
+    const a = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const g = String(d.getDate()).padStart(2, "0");
+    return `${a}-${m}-${g}`;
+  }
+
+  function titoloSettimana(dataIso) {
+    const lunedi = inizioSettimana(dataIso);
+    const domenica = new Date(lunedi);
+    domenica.setDate(domenica.getDate() + 6);
+
+    const f1 = new Intl.DateTimeFormat("it-IT", {
+      day: "numeric",
+      month: "short"
+    }).format(lunedi);
+
+    const f2 = new Intl.DateTimeFormat("it-IT", {
+      day: "numeric",
+      month: "short"
+    }).format(domenica);
+
+    return `Settimana ${f1} – ${f2}`;
+  }
+
+  function raggruppaTurniPerSettimana(turni) {
+    const gruppi = new Map();
+
+    (turni || []).forEach(turno => {
+      const key = chiaveSettimana(turno.data);
+      if (!gruppi.has(key)) {
+        gruppi.set(key, {
+          titolo: titoloSettimana(turno.data),
+          turni: []
+        });
+      }
+      gruppi.get(key).turni.push(turno);
+    });
+
+    return Array.from(gruppi.values());
+  }
+
+  function settimanaConclusa(settimana) {
+    if (!settimana?.turni?.length) return false;
+
+    const ultimaData = settimana.turni
+      .map(t => String(t.data))
+      .sort()
+      .at(-1);
+
+    const [a, m, g] = ultimaData.split("-").map(Number);
+    const fineGiorno = new Date(a, m - 1, g, 23, 59, 59, 999);
+
+    return fineGiorno < new Date();
+  }
+
+  function turnoConcluso(turno, riferimento = new Date()) {
+    if (!turno?.data) return false;
+
+    const [anno, mese, giorno] = String(turno.data).split("-").map(Number);
+    const partiOra = String(turno.ora_fine || "23:59:59").split(":").map(Number);
+    const ore = Number.isFinite(partiOra[0]) ? partiOra[0] : 23;
+    const minuti = Number.isFinite(partiOra[1]) ? partiOra[1] : 59;
+    const secondi = Number.isFinite(partiOra[2]) ? partiOra[2] : 59;
+
+    const fineTurno = new Date(anno, mese - 1, giorno, ore, minuti, secondi, 0);
+    return fineTurno.getTime() < riferimento.getTime();
+  }
+
+  function creaContenitoreSettimanePassate() {
+    const details = document.createElement("details");
+    details.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;background:#fafbfc;margin-bottom:18px;overflow:hidden;";
+
+    const summary = document.createElement("summary");
+    summary.style.cssText = "cursor:pointer;padding:14px 16px;font-weight:800;color:#596273;";
+    summary.textContent = "🗂️ Turni passati";
+
+    const corpo = document.createElement("div");
+    corpo.style.cssText = "padding:0 12px 12px;";
+
+    details.appendChild(summary);
+    details.appendChild(corpo);
+
+    return { details, corpo };
+  }
+
+  async function chiamaApi(azione, extra = {}) {
+    const initData = window.Telegram?.WebApp?.initData || "";
+
+    if (!initData) {
+      throw new Error("Apri la Mini App direttamente da Telegram.");
+    }
+
+    const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+      method: "POST",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        initData,
+        azione,
+        ...extra
+      })
+    });
+
+    const dati = await risposta.json();
+
+    if (!risposta.ok || !dati.ok) {
+      throw new Error(dati.error || "Operazione non riuscita");
+    }
+
+    return dati;
+  }
+
+  function pulsanteIndietro(id, testo = "← Torna alla Home") {
+    return `
+      <button id="${id}" style="
+        border:none;
+        background:#eef6ff;
+        color:#1768d7;
+        padding:12px 18px;
+        border-radius:14px;
+        font-size:16px;
+        font-weight:700;
+        cursor:pointer;
+        margin-bottom:18px;
+      ">${testo}</button>
+    `;
+  }
+
+  function pulsanteIndietroFondo(id, testo = "← Torna alla Home") {
+    return `
+      <button id="${id}" style="
+        width:100%;
+        border:none;
+        background:#eef6ff;
+        color:#1768d7;
+        padding:13px 18px;
+        border-radius:14px;
+        font-size:16px;
+        font-weight:700;
+        cursor:pointer;
+        margin-top:18px;
+      ">${testo}</button>
+    `;
+  }
+
+  function collegaRitornoDoppio(idAlto, idBasso, destinazione = "home") {
+    const torna = (event) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (destinazione === "admin") {
+        apriAreaAmministratori();
+      } else {
+        location.reload();
+      }
+    };
+
+    document.getElementById(idAlto)?.addEventListener("click", torna);
+    document.getElementById(idBasso)?.addEventListener("click", torna);
+  }
+
+
+  async function apriProgrammaGenerale() {
+    let mese = meseCorrenteKey();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeProgramma")}
+      <div style="background:#eef6ff;border:1px solid #cfe1f5;border-radius:20px;padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:25px;margin:0;">📅 Programma</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <button id="programmaPrev" style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+        <div id="programmaMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+        <button id="programmaNext" style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+      </div>
+
+      <div id="programmaStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:14px;"></div>
+      <div id="programmaElenco"></div>
+      ${pulsanteIndietroFondo("tornaHomeProgrammaFondo")}
+    `;
+
+    collegaRitornoDoppio("tornaHomeProgramma", "tornaHomeProgrammaFondo");
+
+    const meseEl = document.getElementById("programmaMese");
+    const statoEl = document.getElementById("programmaStato");
+    const elencoEl = document.getElementById("programmaElenco");
+
+    function stato(msg, errore = false) {
+      statoEl.style.display = "block";
+      statoEl.style.background = errore ? "#fff1f1" : "#f3f7fb";
+      statoEl.style.border = errore ? "1px solid #ffd0d0" : "1px solid #dfe7ef";
+      statoEl.style.color = errore ? "#a33a3a" : "#526174";
+      statoEl.textContent = msg;
+    }
+
+    async function carica() {
+      meseEl.textContent = titoloMese(mese);
+      elencoEl.innerHTML = "";
+      stato("⏳ Caricamento programma…");
+
+      try {
+        const dati = await chiamaApi("leggi_programma", { mese });
+        const turni = (dati.programma || [])
+          .filter(turno => !turnoConcluso(turno));
+
+        if (!turni.length) {
+          statoEl.style.display = "none";
+          elencoEl.innerHTML = `
+            <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;">
+              Nessun turno programmato per questo mese.
+            </div>`;
+          return;
+        }
+
+        statoEl.style.display = "none";
+
+        const settimane = raggruppaTurniPerSettimana(turni);
+
+        settimane.forEach(settimana => {
+          const sezione = document.createElement("section");
+          sezione.className = "program-week";
+
+          const titolo = document.createElement("div");
+          titolo.className = "program-week-title";
+          titolo.textContent = settimana.titolo;
+
+          const griglia = document.createElement("div");
+          griglia.className = "program-week-grid";
+
+          settimana.turni.forEach(turno => {
+            const card = document.createElement("div");
+            card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:17px;background:#fff;min-width:0;";
+
+            const nomi = (turno.assegnazioni || [])
+              .map(a => {
+                const simbolo =
+                  a.stato === "accettato" ? "✅" :
+                  a.stato === "rifiutato" ? "❌" : "⏳";
+                return `
+                  <div style="padding:4px 0;display:flex;align-items:center;">
+                    <strong>${simbolo} ${a.nome_completo}</strong>
+                    ${iconaPersona(a.genere)}
+                  </div>`;
+              })
+              .join("");
+
+            const postiLiberi = Math.max(
+              0,
+              Number(turno.numero_persone || 0) - (turno.assegnazioni || []).length
+            );
+
+            card.innerHTML = `
+              <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
+                ${dataItaliana(turno.data)}
+              </div>
+              <div style="color:#44506a;margin-bottom:4px;">
+                🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}
+              </div>
+              <div style="color:#44506a;margin-bottom:10px;">
+                📍 ${turno.postazione_nome}
+              </div>
+              <div style="border-top:1px solid #eef1f4;padding-top:8px;">
+                ${nomi || '<div style="color:#667085;">Nessuna persona ancora assegnata.</div>'}
+              </div>
+              ${turno.note ? `<div style="margin-top:9px;color:#667085;font-size:14px;">📝 ${turno.note}</div>` : ""}
+            `;
+
+            griglia.appendChild(card);
+          });
+
+          sezione.appendChild(titolo);
+          sezione.appendChild(griglia);
+
+          elencoEl.appendChild(sezione);
+        });
+      } catch (errore) {
+        stato(errore.message || "Errore nel caricamento.", true);
+      }
+    }
+
+    document.getElementById("programmaPrev").addEventListener("click", () => {
+      mese = spostaMese(mese, -1);
+      carica();
+    });
+
+    document.getElementById("programmaNext").addEventListener("click", () => {
+      mese = spostaMese(mese, 1);
+      carica();
+    });
+
+    carica();
+  }
+
+  async function apriMieiTurni() {
+    let mese = meseCorrenteKey();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeMieiTurni")}
+      <div style="background:#eefaf9;border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:25px;margin:0;">👤 I miei turni</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <button id="mieiPrev" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+        <div id="mieiMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+        <button id="mieiNext" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+      </div>
+
+      <div id="mieiStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:14px;"></div>
+      <div id="mieiElenco"></div>
+      ${pulsanteIndietroFondo("tornaHomeMieiTurniFondo")}
+    `;
+
+    collegaRitornoDoppio("tornaHomeMieiTurni", "tornaHomeMieiTurniFondo");
+
+    const meseEl = document.getElementById("mieiMese");
+    const statoEl = document.getElementById("mieiStato");
+    const elencoEl = document.getElementById("mieiElenco");
+
+    function stato(msg, errore = false) {
+      statoEl.style.display = "block";
+      statoEl.style.background = errore ? "#fff1f1" : "#f3f7fb";
+      statoEl.style.border = errore ? "1px solid #ffd0d0" : "1px solid #dfe7ef";
+      statoEl.style.color = errore ? "#a33a3a" : "#526174";
+      statoEl.textContent = msg;
+    }
+
+    function chiaveAccettazioneTurno(id) {
+      return `opera_pubblica_accettato_${id}`;
+    }
+
+    function registraMomentoAccettazione(id) {
+      try {
+        localStorage.setItem(chiaveAccettazioneTurno(id), String(Date.now()));
+      } catch (errore) {
+        console.warn("Impossibile registrare il momento dell'accettazione:", errore);
+      }
+    }
+
+    function cancellaMomentoAccettazione(id) {
+      try {
+        localStorage.removeItem(chiaveAccettazioneTurno(id));
+      } catch (errore) {
+        console.warn("Impossibile cancellare il momento dell'accettazione:", errore);
+      }
+    }
+
+    function secondiDaAccettazione(id) {
+      try {
+        const valore = Number(localStorage.getItem(chiaveAccettazioneTurno(id)) || 0);
+        if (!valore) return null;
+        return Math.max(0, Math.floor((Date.now() - valore) / 1000));
+      } catch (errore) {
+        return null;
+      }
+    }
+
+    async function rispondi(id, risposta) {
+      const posizione = window.scrollY;
+
+      try {
+        await chiamaApi("rispondi_turno", {
+          assegnazione_id: id,
+          stato: risposta
+        });
+
+        if (risposta === "accettato") {
+          registraMomentoAccettazione(id);
+        } else if (risposta === "rifiutato") {
+          cancellaMomentoAccettazione(id);
+        }
+
+        await carica();
+
+        requestAnimationFrame(() => {
+          window.scrollTo({
+            top: posizione,
+            left: 0,
+            behavior: "auto"
+          });
+        });
+      } catch (errore) {
+        stato(errore.message || "Impossibile salvare la risposta.", true);
+      }
+    }
+
+    async function carica() {
+      meseEl.textContent = titoloMese(mese);
+      elencoEl.innerHTML = "";
+      stato("⏳ Caricamento turni…");
+
+      try {
+        const dati = await chiamaApi("leggi_miei_turni", { mese });
+        const turni = dati.turni || [];
+
+        if (!turni.length) {
+          statoEl.style.display = "none";
+          elencoEl.innerHTML = `
+            <div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;">
+              Nessun turno assegnato per questo mese.
+            </div>`;
+          return;
+        }
+
+        statoEl.style.display = "none";
+
+        turni.forEach(turno => {
+          const a = turno.assegnazione || {};
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:17px;margin-bottom:12px;background:#fff;";
+
+          const statoTesto =
+            a.stato === "accettato" ? "✅ Accettato" :
+            a.stato === "rifiutato" ? "❌ Rifiutato" :
+            "⏳ In attesa";
+
+          card.innerHTML = `
+            <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:7px;">
+              ${dataItaliana(turno.data)}
+            </div>
+            <div style="color:#44506a;margin-bottom:4px;">🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)}</div>
+            <div style="color:#44506a;margin-bottom:10px;">📍 ${turno.postazione_nome}</div>
+            <div style="font-weight:750;margin-bottom:12px;">${statoTesto}</div>
+
+            ${a.stato === "accettato" ? `
+              <button
+                type="button"
+                data-no-scroll="true"
+                class="aggiungiCalendario"
+                data-turno="${turno.id}"
+                style="width:100%;border:none;background:#1768d7;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;margin-bottom:9px;">
+                📅 Aggiungi al calendario
+              </button>
+
+              <div style="display:flex;justify-content:flex-end;">
+                <button
+                  type="button"
+                  data-no-scroll="true"
+                  class="rifiutaTurno"
+                  data-id="${a.id}"
+                  data-dopo-accettazione="true"
+                  style="border:none;background:#c92c2c;color:white;padding:9px 14px;border-radius:12px;font-size:13px;font-weight:750;">
+                  ❌ Rifiuta
+                </button>
+              </div>
+            ` : `
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+                <button type="button" data-no-scroll="true" class="accettaTurno" data-id="${a.id}" style="border:none;background:#168a4a;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">✅ Accetta</button>
+                <button type="button" data-no-scroll="true" class="rifiutaTurno" data-id="${a.id}" style="border:none;background:#c92c2c;color:white;padding:12px;border-radius:13px;font-size:15px;font-weight:750;">❌ Rifiuta</button>
+              </div>
+            `}
+          `;
+
+          elencoEl.appendChild(card);
+        });
+
+
+        function confermaRifiutoPersonalizzata() {
+          return new Promise(resolve => {
+            const esistente = document.getElementById("popupConfermaRifiuto");
+            if (esistente) esistente.remove();
+
+            const overlay = document.createElement("div");
+            overlay.id = "popupConfermaRifiuto";
+            overlay.style.cssText = `
+              position:fixed;
+              inset:0;
+              z-index:10050;
+              background:rgba(21,33,60,.52);
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              padding:20px;
+            `;
+
+            const box = document.createElement("div");
+            box.style.cssText = `
+              width:min(100%,420px);
+              background:#ffffff;
+              border-radius:22px;
+              padding:22px;
+              box-shadow:0 20px 60px rgba(0,0,0,.24);
+              text-align:left;
+            `;
+
+            box.innerHTML = `
+              <div style="font-size:34px;margin-bottom:8px;">⚠️</div>
+              <div style="font-size:21px;font-weight:850;color:#15213c;margin-bottom:10px;">
+                Conferma rifiuto
+              </div>
+              <div style="font-size:15px;line-height:1.55;color:#526174;margin-bottom:20px;">
+                Questo turno era già stato accettato.<br><br>
+                Prima di rifiutarlo, avvisa il fratello responsabile che non potrai più svolgerlo.
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <button
+                  id="annullaRifiutoPopup"
+                  type="button"
+                  data-no-scroll="true"
+                  style="border:none;background:#eef2f6;color:#41516a;padding:12px;border-radius:13px;font-size:15px;font-weight:750;cursor:pointer;">
+                  Annulla
+                </button>
+                <button
+                  id="confermaRifiutoPopup"
+                  type="button"
+                  data-no-scroll="true"
+                  style="border:none;background:#c92c2c;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;">
+                  OK
+                </button>
+              </div>
+            `;
+
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+
+            const chiudi = valore => {
+              overlay.remove();
+              resolve(valore);
+            };
+
+            document.getElementById("annullaRifiutoPopup")
+              ?.addEventListener("click", () => chiudi(false));
+
+            document.getElementById("confermaRifiutoPopup")
+              ?.addEventListener("click", () => chiudi(true));
+
+            overlay.addEventListener("click", event => {
+              if (event.target === overlay) chiudi(false);
+            });
+          });
+        }
+
+        elencoEl.querySelectorAll(".accettaTurno").forEach(btn => {
+          btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            rispondi(Number(btn.dataset.id), "accettato");
+          });
+        });
+
+        elencoEl.querySelectorAll(".rifiutaTurno").forEach(btn => {
+          btn.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const assegnazioneId = Number(btn.dataset.id);
+            const dopoAccettazione = btn.dataset.dopoAccettazione === "true";
+
+            if (dopoAccettazione) {
+              const secondi = secondiDaAccettazione(assegnazioneId);
+
+              // Nei primi 60 secondi dall'accettazione consentiamo di correggere
+              // subito un eventuale errore. Dopo, chiediamo una conferma.
+              if (secondi === null || secondi >= 60) {
+                const conferma = await confermaRifiutoPersonalizzata();
+                if (!conferma) return;
+              }
+            }
+
+            await rispondi(assegnazioneId, "rifiutato");
+          });
+        });
+
+        elencoEl.querySelectorAll(".aggiungiCalendario").forEach(btn => {
+          btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const turnoId = Number(btn.dataset.turno);
+            const turno = turni.find(t => Number(t.id) === turnoId);
+
+            if (!turno) {
+              stato("Turno non trovato.", true);
+              return;
+            }
+
+            apriTurnoNelCalendario(turno);
+          });
+        });
+
+      } catch (errore) {
+        stato(errore.message || "Errore nel caricamento.", true);
+      }
+    }
+
+    document.getElementById("mieiPrev").addEventListener("click", () => {
+      mese = spostaMese(mese, -1);
+      carica();
+    });
+
+    document.getElementById("mieiNext").addEventListener("click", () => {
+      mese = spostaMese(mese, 1);
+      carica();
+    });
+
+    carica();
+  }
+
+  document
+    .getElementById("programma")
+    .addEventListener("click", function(event) {
+      event.preventDefault();
+      apriProgrammaGenerale();
+    });
+
+  document
+    .getElementById("mieiTurni")
+    .addEventListener("click", function(event) {
+      event.preventDefault();
+      apriMieiTurni();
+    });
+
+
+
+
+  async function apriRapportiEsperienze() {
+    let mese = meseCorrenteKey();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeRapporto")}
+
+      <div style="background:linear-gradient(135deg,#eefaf9,#fbffff);border:1px solid #cce9e7;border-radius:20px;padding:20px;margin-bottom:18px;">
+        <h2 style="font-size:25px;margin:0;">📝 Rapporti ed esperienze</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <button id="rapportiPrev" type="button" data-no-scroll="true" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
+        <div id="rapportiMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
+        <button id="rapportiNext" type="button" data-no-scroll="true" style="border:none;background:#eaf8f7;color:#147c78;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
+      </div>
+
+      <div id="rapportiStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+      <div id="rapportiElenco"></div>
+
+      <div style="margin-top:22px;">
+        <h3 style="font-size:20px;margin-bottom:10px;">✨ Esperienze condivise</h3>
+        <div id="esperienzePubblicheElenco"></div>
+      </div>
+
+      ${pulsanteIndietroFondo("tornaHomeRapportoFondo")}
+    `;
+
+    collegaRitornoDoppio("tornaHomeRapporto", "tornaHomeRapportoFondo");
+
+    const meseEl = document.getElementById("rapportiMese");
+    const statoEl = document.getElementById("rapportiStato");
+    const elencoEl = document.getElementById("rapportiElenco");
+
+    function stato(msg, errore = false) {
+      statoEl.style.display = "block";
+      statoEl.style.background = errore ? "#fff1f1" : "#eef9f1";
+      statoEl.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+      statoEl.style.color = errore ? "#a33a3a" : "#28733d";
+      statoEl.textContent = msg;
+    }
+
+    async function carica() {
+      meseEl.textContent = titoloMese(mese);
+      elencoEl.innerHTML = "";
+
+      try {
+        const dati = await chiamaApi("leggi_turni_rapporto", { mese });
+        const turni = dati.turni || [];
+
+        if (!turni.length) {
+          elencoEl.innerHTML = `
+            <div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">
+              Nessun turno concluso da compilare in questo mese.
+            </div>`;
+          return;
+        }
+
+        turni.forEach(turno => {
+          const rapporto = turno.rapporto || {};
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #dce8e7;border-radius:18px;padding:16px;margin-bottom:12px;background:#fff;";
+
+          const options = Array.from({ length: 11 }, (_, n) =>
+            `<option value="${n}" ${Number(rapporto.pubblicazioni ?? 0) === n ? "selected" : ""}>${n}</option>`
+          ).join("");
+
+          card.innerHTML = `
+            <div style="font-size:18px;font-weight:800;text-transform:capitalize;">${dataItaliana(turno.data)}</div>
+            <div style="color:#556078;margin:4px 0 12px;">🕒 ${oraBreve(turno.ora_inizio)}–${oraBreve(turno.ora_fine)} · 📍 ${turno.postazione_nome}</div>
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Pubblicazioni distribuite</label>
+            <select class="rapportoPubblicazioni" style="width:100%;padding:11px;border:1px solid #dce8e7;border-radius:12px;font-size:16px;margin-bottom:11px;">
+              ${options}
+            </select>
+
+            <label style="display:block;font-weight:800;margin-bottom:5px;">Esperienza <span style="font-weight:500;color:#667085;">(facoltativa)</span></label>
+            <textarea class="rapportoEsperienza" maxlength="1500" rows="4" placeholder="Se vuoi, racconta una bella esperienza…" style="width:100%;padding:11px;border:1px solid #dce8e7;border-radius:12px;font-size:15px;">${rapporto.esperienza || ""}</textarea>
+
+            <button type="button" data-no-scroll="true" class="salvaRapporto" data-turno="${turno.id}" style="width:100%;border:none;background:#147c78;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;margin-top:10px;">
+              💾 ${rapporto.id ? "Aggiorna rapporto" : "Salva rapporto"}
+            </button>
+          `;
+
+          elencoEl.appendChild(card);
+        });
+
+        elencoEl.querySelectorAll(".salvaRapporto").forEach(btn => {
+          btn.addEventListener("click", async event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const card = btn.parentElement;
+            const pubblicazioniEl = card?.querySelector(".rapportoPubblicazioni");
+            const esperienzaEl = card?.querySelector(".rapportoEsperienza");
+
+            if (!card || !pubblicazioniEl || !esperienzaEl) {
+              stato("Non riesco a leggere i dati del rapporto. Riprova.", true);
+              return;
+            }
+
+            try {
+              await chiamaApi("salva_rapporto", {
+                turno_id: Number(btn.dataset.turno),
+                pubblicazioni: Number(pubblicazioniEl.value),
+                esperienza: esperienzaEl.value.trim()
+              });
+              stato("✅ Rapporto salvato.");
+              await carica();
+            } catch (errore) {
+              stato(errore.message || "Impossibile salvare il rapporto.", true);
+            }
+          });
+        });
+
+      } catch (errore) {
+        stato(errore.message || "Errore nel caricamento.", true);
+      }
+    }
+
+    document.getElementById("rapportiPrev").addEventListener("click", event => {
+      event.preventDefault();
+      mese = spostaMese(mese, -1);
+      carica();
+    });
+
+    document.getElementById("rapportiNext").addEventListener("click", event => {
+      event.preventDefault();
+      mese = spostaMese(mese, 1);
+      carica();
+    });
+
+    async function caricaEsperienzePubbliche() {
+      const box = document.getElementById("esperienzePubblicheElenco");
+      if (!box) return;
+
+      try {
+        const dati = await chiamaApi("leggi_esperienze_pubbliche");
+        const esperienze = dati.esperienze || [];
+
+        if (!esperienze.length) {
+          box.innerHTML = `<div style="padding:16px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;">Nessuna esperienza pubblicata al momento.</div>`;
+          return;
+        }
+
+        box.innerHTML = "";
+
+        esperienze.forEach(e => {
+          const card = document.createElement("div");
+          card.style.cssText = "border:1px solid #e7dcff;background:#fbf9ff;border-radius:17px;padding:15px;margin-bottom:10px;";
+          card.innerHTML = `
+            <div style="font-weight:800;text-transform:capitalize;">${dataItaliana(e.data)}</div>
+            <div style="font-size:13px;color:#667085;margin:4px 0 9px;">📍 ${e.postazione_nome}</div>
+            <div style="white-space:pre-wrap;line-height:1.5;">${e.esperienza}</div>
+          `;
+          box.appendChild(card);
+        });
+      } catch (errore) {
+        box.innerHTML = `<div style="padding:14px;border:1px solid #ffd0d0;border-radius:14px;color:#a33a3a;">${errore.message || "Errore nel caricamento delle esperienze."}</div>`;
+      }
+    }
+
+    carica();
+    caricaEsperienzePubbliche();
+  }
+
+  document
+    .getElementById("rapportoEsperienze")
+    .addEventListener("click", function(event) {
+      event.preventDefault();
+      apriRapportiEsperienze();
+    });
+
+
+  function apriPaginaProvinciale() {
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button id="tornaPostazioniProvinciale" style="border:none;background:#eef6ff;color:#1768d7;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+            ← Torna alle Postazioni
+          </button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;">
+          <h2 style="font-size:26px;">📍 Provinciale</h2>
+          <span style="background:#ffe5e5;color:#c92c2c;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:700;">🔴 SOSPESA</span>
+        </div>
+
+        <div style="background:#fff3f3;border:1px solid #ffd2d2;border-radius:18px;padding:16px;margin-bottom:18px;color:#8a3434;line-height:1.5;">
+          ⚠️ La postazione è attualmente sospesa. Le indicazioni sono consultabili, ma la postazione non deve essere utilizzata fino a nuova comunicazione.
+        </div>
+
+        <img src="provinciale-panoramica.png" loading="lazy" alt="Panoramica Provinciale"
+             style="width:100%;display:block;border-radius:18px;margin-bottom:18px;">
+
+        <h3 style="font-size:21px;margin-bottom:10px;">📍 Postazione principale</h3>
+        <div style="background:#f7f9fc;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:14px;line-height:1.6;color:#3f4a5f;">
+          Prendete come riferimento la Banca Intesa Sanpaolo. L'espositore va posizionato sotto l'insegna della banca, perfettamente dritto e visibile da entrambi i lati. Chi è in turno si dispone ai lati dell'espositore con le spalle verso il muro.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px;">
+          <img src="provinciale-principale-1.png" loading="lazy" alt="Provinciale posizione principale 1" style="width:100%;border-radius:16px;">
+          <img src="provinciale-principale-2.png" loading="lazy" alt="Provinciale posizione principale 2" style="width:100%;border-radius:16px;">
+          <img src="provinciale-principale-3.png" loading="lazy" alt="Provinciale posizione principale 3" style="width:100%;border-radius:16px;">
+        </div>
+
+        <h3 style="font-size:21px;margin-bottom:10px;">🔄 Postazione alternativa</h3>
+        <div style="background:#f7f9fc;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:14px;line-height:1.6;color:#3f4a5f;">
+          La postazione alternativa si trova di fronte alla banca. L'espositore va rivolto verso la banca e mantenuto perfettamente dritto. Chi è in turno si posiziona di fronte all'espositore con le spalle verso la banca.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:18px;">
+          <img src="provinciale-alternativa-1.png" loading="lazy" alt="Provinciale posizione alternativa 1" style="width:100%;border-radius:16px;">
+          <img src="provinciale-alternativa-2.png" loading="lazy" alt="Provinciale posizione alternativa 2" style="width:100%;border-radius:16px;">
+          <img src="provinciale-alternativa-3.png" loading="lazy" alt="Provinciale posizione alternativa 3" style="width:100%;border-radius:16px;">
+        </div>
+
+        <a href="https://www.google.com/maps/search/?api=1&query=38.172556,15.543250" target="_blank"
+           style="display:block;text-align:center;background:#1877e8;color:white;padding:15px;border-radius:15px;text-decoration:none;font-size:16px;font-weight:750;margin-bottom:18px;">
+          🧭 APRI NEL NAVIGATORE
+        </a>
+
+        <button id="tornaPostazioniProvincialeBasso" style="width:100%;border:none;background:#eef6ff;color:#1768d7;padding:14px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+          ← Torna alle Postazioni
+        </button>
+      `;
+
+      document.getElementById("tornaPostazioniProvinciale").addEventListener("click", function(){ apriPostazioni(); });
+      document.getElementById("tornaPostazioniProvincialeBasso").addEventListener("click", function(){ apriPostazioni(); });
+  }
+
+  // Delegazione: il pulsante Provinciale viene creato solo quando si apre il menu Postazioni.
+  document.addEventListener("click", function(event) {
+    const bottoneProvinciale = event.target.closest("#apriProvinciale");
+    if (bottoneProvinciale) {
+      event.preventDefault();
+      apriPaginaProvinciale();
+    }
+  });
+
+
+
+
+  document
+    .getElementById("disposizionePubblicazioni")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button
+            id="tornaHomeDisposizione"
+            style="
+              border:none;
+              background:#fff5e8;
+              color:#b96810;
+              padding:12px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="
+          background:linear-gradient(135deg,#fff7ed,#fffdf9);
+          border:1px solid #f5d7b2;
+          border-radius:20px;
+          padding:20px;
+          margin-bottom:18px;
+        ">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="
+              min-width:52px;
+              height:52px;
+              border-radius:16px;
+              background:linear-gradient(135deg,#f4a340,#d97913);
+              color:white;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:27px;
+            ">📚</div>
+            <div>
+              <h2 style="font-size:25px;margin:0;">Disposizione delle pubblicazioni</h2>
+              <div style="color:#80694e;margin-top:4px;">Configurazione da seguire nel periodo in corso</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:16px;
+          line-height:1.65;
+          color:#3f4a5f;
+        ">
+          <p>
+            Cari fratelli, questa sezione viene aggiornata regolarmente per indicare
+            la disposizione attuale delle pubblicazioni per l'opera pubblica.
+          </p>
+          <p style="margin-top:10px;">
+            La configurazione mostrata è quella da seguire nel periodo in corso.
+            Controllate questa pagina di tanto in tanto, così da mantenere
+            l'espositore sempre allineato alle indicazioni più recenti.
+          </p>
+        </div>
+
+        <div style="
+          background:#eef6ff;
+          border:1px solid #c8ddf7;
+          border-radius:18px;
+          padding:17px;
+          margin-bottom:16px;
+          line-height:1.6;
+          color:#33435f;
+        ">
+          <div>
+            Nei settori inserire l'opuscolo
+            <strong>“Puoi vivere felice per sempre”</strong>, come da immagine.
+          </div>
+          <div style="margin-top:8px;">
+            Il poster da esporre è <strong>“Corso biblico gratuito”</strong>.
+          </div>
+        </div>
+
+        <img
+          src="disposizione-pubblicazioni.png"
+          loading="lazy"
+          alt="Disposizione aggiornata delle pubblicazioni"
+          style="
+            width:100%;
+            display:block;
+            border-radius:18px;
+            margin-bottom:18px;
+          ">
+
+        <div style="
+          background:#ffffff;
+          border:1px solid #e1e7ef;
+          border-radius:18px;
+          padding:18px;
+          margin-bottom:16px;
+          line-height:1.65;
+          color:#3f4a5f;
+        ">
+          <div style="font-weight:750;margin-bottom:8px;">✅ Ricordate di:</div>
+          <div>• consultare sempre l'immagine aggiornata;</div>
+          <div>• riprodurre la disposizione esattamente come mostrato;</div>
+          <div>• mantenere opuscoli ed espositore puliti e in ordine;</div>
+          <div>• verificare periodicamente eventuali modifiche.</div>
+        </div>
+
+        <div style="
+          background:#fff8e8;
+          border:1px solid #ffe0a3;
+          border-radius:18px;
+          padding:16px;
+          margin-bottom:18px;
+          color:#725315;
+          line-height:1.55;
+        ">
+          📌 <strong>Nota importante:</strong> gli aggiornamenti possono essere frequenti.
+          La disposizione visibile nella Mini App rappresenta la versione più recente da seguire.
+        </div>
+
+        <button
+          id="tornaHomeDisposizioneBasso"
+          style="
+            width:100%;
+            border:none;
+            background:#fff5e8;
+            color:#b96810;
+            padding:14px 18px;
+            border-radius:14px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+          ">
+          ← Torna alla Home
+        </button>
+      `;
+
+      document
+        .getElementById("tornaHomeDisposizione")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeDisposizioneBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+    });
+
+
+  document
+    .getElementById("assistenza")
+    .addEventListener("click", function(event) {
+
+      event.preventDefault();
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button
+            id="tornaHomeAssistenza"
+            style="
+              border:none;
+              background:#fff1f1;
+              color:#d83737;
+              padding:12px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="
+          background:linear-gradient(135deg,#fff5f5,#fffafa);
+          border:1px solid #ffd5d5;
+          border-radius:20px;
+          padding:20px;
+          margin-bottom:18px;
+        ">
+          <h2 style="font-size:25px; margin-bottom:6px;">
+            🛟 Assistenza
+          </h2>
+          <div style="color:#765858;">
+            Contatta uno dei fratelli indicati sotto direttamente su Telegram.
+          </div>
+        </div>
+
+        <a
+          href="https://t.me/SamMaio_2007"
+onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/SamMaio_2007');"
+          style="
+            display:flex;
+            align-items:center;
+            gap:14px;
+            padding:18px;
+            margin-bottom:12px;
+            border:1px solid #dfe5ec;
+            border-radius:18px;
+            background:#ffffff;
+            color:#15213c;
+            text-decoration:none;
+          ">
+          <div style="
+            min-width:52px;
+            height:52px;
+            border-radius:16px;
+            background:#229ED9;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:27px;
+          ">👤</div>
+          <div style="flex:1;">
+            <div style="font-size:18px; font-weight:750;">Samuel</div>
+            <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <a
+          href="https://t.me/fre_80"
+onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/fre_80');"
+          style="
+            display:flex;
+            align-items:center;
+            gap:14px;
+            padding:18px;
+            margin-bottom:18px;
+            border:1px solid #dfe5ec;
+            border-radius:18px;
+            background:#ffffff;
+            color:#15213c;
+            text-decoration:none;
+          ">
+          <div style="
+            min-width:52px;
+            height:52px;
+            border-radius:16px;
+            background:#229ED9;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:27px;
+          ">👤</div>
+          <div style="flex:1;">
+            <div style="font-size:18px; font-weight:750;">Francesco</div>
+            <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
+          </div>
+          <div class="arrow">›</div>
+        </a>
+
+        <div style="margin-bottom:10px;">
+          <button
+            id="tornaHomeAssistenzaBasso"
+            style="
+              width:100%;
+              border:none;
+              background:#fff1f1;
+              color:#d83737;
+              padding:14px 18px;
+              border-radius:14px;
+              font-size:16px;
+              font-weight:700;
+              cursor:pointer;
+            ">
+            ← Torna alla Home
+          </button>
+        </div>
+
+      `;
+
+      document
+        .getElementById("tornaHomeAssistenza")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+      document
+        .getElementById("tornaHomeAssistenzaBasso")
+        .addEventListener("click", function() {
+          location.reload();
+        });
+
+    });
+
+
+  async function apriAreaAmministratori(event) {
+
+      event?.preventDefault?.();
+
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData || "";
+
+      const oggi = new Date();
+      let annoAdmin = oggi.getFullYear();
+      let meseAdmin = oggi.getMonth() + 1;
+
+      const meseKeyAdmin = () =>
+        `${annoAdmin}-${String(meseAdmin).padStart(2, "0")}`;
+
+      const nomeMeseAdmin = () =>
+        new Intl.DateTimeFormat("it-IT", {
+          month: "long",
+          year: "numeric"
+        }).format(new Date(annoAdmin, meseAdmin - 1, 1));
+
+      const formattaDataAdmin = (iso) => {
+        const [a, m, g] = iso.split("-").map(Number);
+        return new Intl.DateTimeFormat("it-IT", {
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        }).format(new Date(a, m - 1, g));
+      };
+
+      document.querySelector(".content").innerHTML = `
+
+        <div style="margin-bottom:18px;">
+          <button id="tornaHomeAdmin"
+            style="border:none;background:#f3f1ff;color:#6942d4;padding:12px 18px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;">
+            ← Torna alla Home
+          </button>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#f5f1ff,#fbfaff);border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:18px;">
+          <h2 style="font-size:25px;margin:0 0 6px 0;">👥 Area amministratori</h2>
+          <div style="color:#6a6380;line-height:1.5;">
+            Gestisci utenti, programma, postazioni, conferme e disponibilità.
+          </div>
+        </div>
+
+
+
+        <div style="
+          display:grid;
+          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:10px;
+          margin-bottom:18px;
+        ">
+
+          <button id="adminGestioneProgramma" data-no-scroll="true"
+            style="border:1px solid #dcd5ff;background:#f8f6ff;color:#352b66;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            🗓️<br>Gestione programma
+          </button>
+
+          <button id="adminTurniAttiviDisponibilita" data-no-scroll="true"
+            style="border:1px solid #cfe8dc;background:#f4fbf7;color:#256847;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📆<br>Turni attivi
+          </button>
+
+          <button id="adminGestionePostazioni" data-no-scroll="true"
+            style="border:1px solid #cfe8dc;background:#f4fbf7;color:#256847;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📍<br>Gestione postazioni
+          </button>
+
+          <button id="adminGestioneUtenti" data-no-scroll="true"
+            style="border:1px solid #d8e5f7;background:#f5f9ff;color:#315b91;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            👥<br>Gestione utenti
+          </button>
+
+          <button id="adminConfermeTurni" data-no-scroll="true"
+            style="position:relative;border:1px solid #f0ddba;background:#fffaf0;color:#8a5b13;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            <span id="badgeDaGestire" style="display:none;position:absolute;right:8px;top:8px;background:#c92c2c;color:#fff;border-radius:999px;padding:3px 7px;font-size:11px;">0</span>
+            ✅<br>Conferme / rifiuti
+          </button>
+
+          <button id="adminRapportiEsperienze" data-no-scroll="true"
+            style="position:relative;border:1px solid #cce9e7;background:#f4fbfa;color:#147c78;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📝<br>Rapporti ed esperienze
+          </button>
+
+          <button id="adminProgrammaPdf" data-no-scroll="true"
+            style="border:1px solid #efcfd2;background:#fff7f7;color:#9a3c46;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📄<br>Programma PDF
+          </button>
+
+          <button id="adminGestioneAggiornamenti" data-no-scroll="true"
+            style="border:1px solid #cfe1f5;background:#f5f9ff;color:#315b91;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            📢<br>Gestione aggiornamenti
+          </button>
+
+
+          <button id="adminStoricoProgrammi" data-no-scroll="true"
+            style="border:1px solid #e0e4ea;background:#fafbfc;color:#596273;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            🗂️<br>Storico
+          </button>
+
+          <button id="adminGestioneAmministratori" data-no-scroll="true"
+            style="display:none;border:1px solid #d9d2f4;background:#f8f6ff;color:#4f3f8e;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            👑<br>Gestione amministratori
+          </button>
+
+        </div>
+
+        
 
         <div style="
           background:#ffffff;
@@ -1811,24 +3979,38 @@ document
           </div>
 
           <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:16px;margin-bottom:16px;">
-            <label style="display:block;font-weight:750;margin-bottom:7px;">Nuova data</label>
+            <label style="display:block;font-weight:750;margin-bottom:7px;">
+              Nuova data
+            </label>
+
             <div style="display:grid;grid-template-columns:1fr auto;gap:9px;">
-              <input id="nuovaDataDisponibilita" type="date"
+              <input
+                id="nuovaDataDisponibilita"
+                type="date"
                 style="width:100%;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;">
-              <button id="aggiungiDataDisponibilita" data-no-scroll="true"
+
+              <button
+                id="aggiungiDataDisponibilita"
+                data-no-scroll="true"
                 style="border:none;background:#168a4a;color:#fff;padding:12px 16px;border-radius:13px;font-size:15px;font-weight:800;">
                 ➕ Aggiungi
               </button>
             </div>
           </div>
 
-          <div id="turniAttiviStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+          <div id="turniAttiviStato"
+            style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+
           <div id="turniAttiviElenco"></div>
 
           ${pulsanteIndietroFondo("tornaAreaAdminTurniAttiviFondo", "← Torna all’Area amministratori")}
         `;
 
-        collegaRitornoDoppio("tornaAreaAdminTurniAttivi", "tornaAreaAdminTurniAttiviFondo", "admin");
+        collegaRitornoDoppio(
+          "tornaAreaAdminTurniAttivi",
+          "tornaAreaAdminTurniAttiviFondo",
+          "admin"
+        );
 
         const statoBox = document.getElementById("turniAttiviStato");
         const elencoBox = document.getElementById("turniAttiviElenco");
@@ -1837,15 +4019,20 @@ document
         function mostra(msg, errore = false) {
           statoBox.style.display = "block";
           statoBox.style.background = errore ? "#fff1f1" : "#eef9f1";
-          statoBox.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+          statoBox.style.border =
+            errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
           statoBox.style.color = errore ? "#a33a3a" : "#28733d";
           statoBox.textContent = msg;
         }
 
         async function carica() {
           elencoBox.innerHTML = "";
+
           try {
-            const dati = await chiamaApi("leggi_turni_attivi_disponibilita_admin");
+            const dati = await chiamaApi(
+              "leggi_turni_attivi_disponibilita_admin"
+            );
+
             const righe = dati.turni_attivi || [];
 
             if (!righe.length) {
@@ -1858,64 +4045,95 @@ document
 
             righe.forEach(riga => {
               const card = document.createElement("div");
+
               card.style.cssText =
                 "display:flex;align-items:center;gap:10px;border:1px solid #e1e7ef;border-radius:16px;padding:14px;background:#fff;margin-bottom:9px;";
 
               card.innerHTML = `
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:17px;font-weight:800;text-transform:capitalize;">${dataItaliana(riga.data)}</div>
+                  <div style="font-size:17px;font-weight:800;text-transform:capitalize;">
+                    ${dataItaliana(riga.data)}
+                  </div>
+
                   <div style="font-size:13px;color:${riga.attivo ? "#168a4a" : "#8b95a5"};margin-top:3px;">
                     ${riga.attivo ? "● Attiva" : "○ Disattivata"}
                   </div>
                 </div>
-                <button class="toggleDataDisponibilita" data-id="${riga.id}" data-attiva="${riga.attivo}"
+
+                <button
+                  class="toggleDataDisponibilita"
+                  data-id="${riga.id}"
+                  data-attiva="${riga.attivo}"
                   style="border:none;background:${riga.attivo ? "#fff0f0" : "#eef9f1"};color:${riga.attivo ? "#c92c2c" : "#168a4a"};padding:9px 11px;border-radius:11px;font-size:13px;font-weight:750;">
                   ${riga.attivo ? "Disattiva" : "Riattiva"}
                 </button>
               `;
+
               elencoBox.appendChild(card);
             });
 
-            elencoBox.querySelectorAll(".toggleDataDisponibilita").forEach(btn => {
-              btn.addEventListener("click", async e => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  await chiamaApi("aggiorna_turno_attivo_disponibilita_admin", {
-                    id: Number(btn.dataset.id),
-                    attivo: btn.dataset.attiva !== "true"
-                  });
-                  await carica();
-                } catch (errore) {
-                  mostra(errore.message || "Impossibile aggiornare la data.", true);
-                }
+            elencoBox
+              .querySelectorAll(".toggleDataDisponibilita")
+              .forEach(btn => {
+                btn.addEventListener("click", async event => {
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  try {
+                    await chiamaApi(
+                      "aggiorna_turno_attivo_disponibilita_admin",
+                      {
+                        id: Number(btn.dataset.id),
+                        attivo: btn.dataset.attiva !== "true"
+                      }
+                    );
+
+                    await carica();
+                  } catch (errore) {
+                    mostra(
+                      errore.message || "Impossibile aggiornare la data.",
+                      true
+                    );
+                  }
+                });
               });
-            });
+
           } catch (errore) {
-            mostra(errore.message || "Impossibile caricare le date.", true);
+            mostra(
+              errore.message || "Impossibile caricare le date.",
+              true
+            );
           }
         }
 
-        document.getElementById("aggiungiDataDisponibilita").addEventListener("click", async e => {
-          e.preventDefault();
-          e.stopPropagation();
+        document
+          .getElementById("aggiungiDataDisponibilita")
+          .addEventListener("click", async event => {
+            event.preventDefault();
+            event.stopPropagation();
 
-          if (!inputData.value) {
-            mostra("⚠️ Seleziona prima una data.", true);
-            return;
-          }
+            if (!inputData.value) {
+              mostra("⚠️ Seleziona prima una data.", true);
+              return;
+            }
 
-          try {
-            await chiamaApi("crea_turno_attivo_disponibilita_admin", {
-              data: inputData.value
-            });
-            mostra("✅ Data aggiunta.");
-            inputData.value = "";
-            await carica();
-          } catch (errore) {
-            mostra(errore.message || "Impossibile aggiungere la data.", true);
-          }
-        });
+            try {
+              await chiamaApi(
+                "crea_turno_attivo_disponibilita_admin",
+                { data: inputData.value }
+              );
+
+              mostra("✅ Data aggiunta.");
+              inputData.value = "";
+              await carica();
+
+            } catch (errore) {
+              mostra(
+                errore.message || "Impossibile aggiungere la data.",
+                true
+              );
+            }
+          });
 
         await carica();
       }
@@ -3686,119 +5904,4 @@ document
 </script>
 
 </body>
-</html>  document
-    .getElementById("disponibilita")
-    .addEventListener("click", async function(event) {
-      event.preventDefault();
-
-      const initData = window.Telegram?.WebApp?.initData || "";
-      let mese = meseCorrenteKey();
-
-      document.querySelector(".content").innerHTML = `
-        ${pulsanteIndietro("tornaHomeDisponibilita", "← Torna alla Home")}
-
-        <div style="background:linear-gradient(135deg,#eef6ff,#fbfdff);border:1px solid #cfe1f5;border-radius:20px;padding:20px;margin-bottom:18px;">
-          <h2 style="font-size:25px;margin:0 0 6px;">📆 Disponibilità</h2>
-          <div style="color:#5f6f82;line-height:1.5;">
-            Indica semplicemente se sei disponibile nelle date previste.
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-          <button id="dispMesePrev" data-no-scroll="true" style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
-          <div id="dispTitoloMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
-          <button id="dispMeseNext" data-no-scroll="true" style="border:none;background:#eef6ff;color:#1768d7;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
-        </div>
-
-        <div id="dispStato" style="display:none;padding:13px 14px;border-radius:14px;margin-bottom:14px;line-height:1.45;font-size:14px;"></div>
-        <div id="dispDate"></div>
-
-        ${pulsanteIndietroFondo("tornaHomeDisponibilitaFondo", "← Torna alla Home")}
-      `;
-
-      document.getElementById("tornaHomeDisponibilita")?.addEventListener("click", () => location.reload());
-      document.getElementById("tornaHomeDisponibilitaFondo")?.addEventListener("click", () => location.reload());
-
-      const titolo = document.getElementById("dispTitoloMese");
-      const stato = document.getElementById("dispStato");
-      const elenco = document.getElementById("dispDate");
-
-      function mostra(msg, errore = false) {
-        stato.style.display = "block";
-        stato.style.background = errore ? "#fff1f1" : "#f3f7fb";
-        stato.style.border = errore ? "1px solid #ffd0d0" : "1px solid #dce6f2";
-        stato.style.color = errore ? "#a33a3a" : "#526174";
-        stato.textContent = msg;
-      }
-
-      function renderDate(date) {
-        elenco.innerHTML = "";
-        if (!date.length) {
-          elenco.innerHTML = `<div style="padding:20px;border:1px solid #e1e7ef;border-radius:18px;text-align:center;color:#667085;background:#fff;">Nessuna data prevista per questo mese.</div>`;
-          return;
-        }
-
-        date.forEach(item => {
-          const card = document.createElement("div");
-          card.style.cssText = "border:1px solid #e1e7ef;border-radius:18px;padding:16px;background:#fff;margin-bottom:10px;";
-          const statoTesto = item.disponibile === true ? "✅ Disponibile" : item.disponibile === false ? "❌ Non disponibile" : "⚪ Non indicato";
-
-          card.innerHTML = `
-            <div style="font-size:18px;font-weight:800;text-transform:capitalize;margin-bottom:5px;">${dataItaliana(item.data)}</div>
-            <div style="font-size:14px;color:#667085;margin-bottom:12px;">${statoTesto}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
-              <button type="button" class="dispSi" data-id="${item.id}" style="border:${item.disponibile === true ? "2px" : "1px"} solid #168a4a;background:${item.disponibile === true ? "#eaf8ef" : "#fff"};color:#168a4a;padding:12px 8px;border-radius:13px;font-size:14px;font-weight:800;">✅ Disponibile</button>
-              <button type="button" class="dispNo" data-id="${item.id}" style="border:${item.disponibile === false ? "2px" : "1px"} solid #c92c2c;background:${item.disponibile === false ? "#fff0f0" : "#fff"};color:#c92c2c;padding:12px 8px;border-radius:13px;font-size:14px;font-weight:800;">❌ Non disponibile</button>
-            </div>`;
-          elenco.appendChild(card);
-        });
-
-        elenco.querySelectorAll(".dispSi,.dispNo").forEach(btn => {
-          btn.addEventListener("click", async e => {
-            e.preventDefault();
-            e.stopPropagation();
-            try {
-              await chiamaApi("salva_disponibilita_turno_attivo", {
-                turno_attivo_id: Number(btn.dataset.id),
-                disponibile: btn.classList.contains("dispSi")
-              });
-              await carica();
-            } catch (errore) {
-              mostra(errore.message || "Impossibile salvare la disponibilità.", true);
-            }
-          });
-        });
-      }
-
-      async function carica() {
-        titolo.textContent = titoloMese(mese);
-        elenco.innerHTML = "";
-        mostra("⏳ Caricamento disponibilità…");
-
-        if (!initData) {
-          mostra("⚠️ Apri la Mini App direttamente da Telegram per usare le disponibilità.", true);
-          return;
-        }
-
-        try {
-          const dati = await chiamaApi("leggi_disponibilita_turni_attivi", { mese });
-          renderDate(dati.date || []);
-          stato.style.display = "none";
-        } catch (errore) {
-          mostra(errore.message || "Impossibile caricare le disponibilità.", true);
-        }
-      }
-
-      document.getElementById("dispMesePrev").addEventListener("click", () => {
-        mese = spostaMese(mese, -1);
-        carica();
-      });
-      document.getElementById("dispMeseNext").addEventListener("click", () => {
-        mese = spostaMese(mese, 1);
-        carica();
-      });
-
-      await carica();
-    });
-
-
+</html>
