@@ -4674,11 +4674,20 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             .join("");
         }
 
-        async function caricaUtentiPerTurno(turnoAttivoId) {
-          const dati = await chiamaApi("leggi_utenti_priorita_admin", {
-            turno_attivo_id: turnoAttivoId
+        let utentiMese = [];
+        let disponibilitaMese = {};
+
+        function utentiPerTurno(turnoAttivoId) {
+          const mappa = disponibilitaMese[String(turnoAttivoId)] || {};
+          return utentiMese.map(utente => {
+            const chiave = String(utente.telegram_id);
+            return {
+              ...utente,
+              disponibilita: Object.prototype.hasOwnProperty.call(mappa, chiave)
+                ? mappa[chiave]
+                : null
+            };
           });
-          return dati.utenti || [];
         }
 
         async function salvaNomi(turno, card) {
@@ -4705,13 +4714,13 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           }
         }
 
-        async function costruisciCard(turno) {
+        function costruisciCard(turno) {
           const card = document.createElement("div");
           card.style.cssText =
             "border:1px solid #e1e7ef;border-radius:17px;padding:15px;background:#fff;min-width:0;";
           card.dataset.turnoCard = String(turno.id);
 
-          const utenti = await caricaUtentiPerTurno(turno.turno_attivo_id);
+          const utenti = utentiPerTurno(turno.turno_attivo_id);
           const assegnati = (turno.assegnazioni || []).filter(a => a.attiva !== false);
           const numero = Math.max(
             Number(turno.numero_persone || 3),
@@ -4833,6 +4842,12 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
               return;
             }
 
+            const priorita = await chiamaApi("leggi_utenti_priorita_mese_admin", {
+              turno_attivo_ids: turni.map(turno => Number(turno.turno_attivo_id))
+            });
+            utentiMese = priorita.utenti || [];
+            disponibilitaMese = priorita.disponibilita || {};
+
             const settimane = raggruppaTurniPerSettimana(turni);
 
             for (const settimana of settimane) {
@@ -4866,7 +4881,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
               griglia.className = "program-week-grid";
 
               for (const turno of settimana.turni) {
-                griglia.appendChild(await costruisciCard(turno));
+                griglia.appendChild(costruisciCard(turno));
               }
 
               sezione.appendChild(titoloSet);
@@ -5409,8 +5424,19 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
         const elenco = document.getElementById("aggUtenteElenco");
 
         try {
-          const dati = await chiamaApi("leggi_aggiornamenti");
-          const aggiornamenti = dati.aggiornamenti || [];
+          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              initData: window.Telegram?.WebApp?.initData || "",
+              azione: "leggi_aggiornamenti"
+            })
+          });
+          const dati = await risposta.json();
+          if (!risposta.ok || !dati.ok) {
+            throw new Error(dati.error || "Impossibile caricare gli aggiornamenti.");
+          }
+          const aggiornamenti = Array.isArray(dati.aggiornamenti) ? dati.aggiornamenti : [];
 
           if (!aggiornamenti.length) {
             stato.textContent = "Nessun aggiornamento pubblicato al momento.";
@@ -5424,7 +5450,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             card.style.cssText =
               "border:1px solid #dfe8f3;border-radius:17px;padding:15px;margin-bottom:12px;background:#fff;";
 
-            const immagini = (a.immagini || []).map(i => `
+            const immagini = (Array.isArray(a.immagini) ? a.immagini : []).map(i => `
               <img
                 src="${i.url}"
                 alt=""
