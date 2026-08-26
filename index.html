@@ -1868,13 +1868,13 @@ document
     document
       .getElementById("tornaHome")
       .addEventListener("click", function() {
-        location.reload();
+        tornaAllaHome();
       });
 
     document
       .getElementById("tornaHomeBasso")
       .addEventListener("click", function() {
-        location.reload();
+        tornaAllaHome();
       });
 
   }
@@ -2399,13 +2399,13 @@ document
       document
         .getElementById("tornaHomeIstruzioni")
         .addEventListener("click", function() {
-          location.reload();
+          tornaAllaHome();
         });
 
       document
         .getElementById("tornaHomeIstruzioniBasso")
         .addEventListener("click", function() {
-          location.reload();
+          tornaAllaHome();
         });
 
     }
@@ -2485,10 +2485,10 @@ document
       `;
 
       document.getElementById("tornaHomeDisponibilita")
-        ?.addEventListener("click", () => location.reload());
+        ?.addEventListener("click", () => tornaAllaHome());
 
       document.getElementById("tornaHomeDisponibilitaFondo")
-        ?.addEventListener("click", () => location.reload());
+        ?.addEventListener("click", () => tornaAllaHome());
 
       const titolo = document.getElementById("dispTitoloMese");
       const stato = document.getElementById("dispStato");
@@ -3049,6 +3049,15 @@ document
     return dati;
   }
 
+  function tornaAllaHome() {
+    // Se la Mini App è stata aperta da un pulsante del bot (start_param),
+    // evita che il reload riapra automaticamente la stessa schermata.
+    try {
+      sessionStorage.setItem("opera_ignora_start_param_una_volta", "1");
+    } catch (_) {}
+    window.location.reload();
+  }
+
   function pulsanteIndietro(id, testo = "← Torna alla Home") {
     return `
       <button id="${id}" style="
@@ -3092,7 +3101,7 @@ document
       if (destinazione === "admin") {
         apriAreaAmministratori();
       } else {
-        location.reload();
+        tornaAllaHome();
       }
     };
 
@@ -3964,13 +3973,13 @@ document
       document
         .getElementById("tornaHomeDisposizione")
         .addEventListener("click", function() {
-          location.reload();
+          tornaAllaHome();
         });
 
       document
         .getElementById("tornaHomeDisposizioneBasso")
         .addEventListener("click", function() {
-          location.reload();
+          tornaAllaHome();
         });
     });
 
@@ -6624,12 +6633,12 @@ document
 
       document.getElementById("tornaHomeAdmin")
         .addEventListener("click", function() {
-          location.reload();
+          tornaAllaHome();
         });
 
       document.getElementById("tornaHomeAdminBasso")
         .addEventListener("click", function() {
-          location.reload();
+          tornaAllaHome();
         });
 
       caricaRichiesteAccesso();
@@ -6655,7 +6664,16 @@ document
     const startParam =
       window.Telegram?.WebApp?.initDataUnsafe?.start_param || "";
 
-    if (!startParam) return;
+    let ignoraStartParam = false;
+    try {
+      ignoraStartParam =
+        sessionStorage.getItem("opera_ignora_start_param_una_volta") === "1";
+      if (ignoraStartParam) {
+        sessionStorage.removeItem("opera_ignora_start_param_una_volta");
+      }
+    } catch (_) {}
+
+    if (!startParam || ignoraStartParam) return;
 
     setTimeout(function() {
       if (startParam === "admin") {
