@@ -4276,6 +4276,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
       `;
 
       const richiesteBox = document.getElementById("richiesteAccessoAdmin");
+      const conteggioRichieste = document.getElementById("conteggioRichiesteAdmin");
 
       const adminGestioneProgramma = document.getElementById("adminGestioneProgramma");
       const adminTurniAttiviDisponibilita = document.getElementById("adminTurniAttiviDisponibilita");
@@ -6291,7 +6292,16 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           '<div style="color:#667085;">⏳ Caricamento richieste…</div>';
 
         try {
-          const dati = await chiamaApi("leggi_richieste_accesso");
+          const dati = await Promise.race([
+            chiamaApi("leggi_richieste_accesso"),
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Tempo di caricamento richieste scaduto")),
+                8000
+              )
+            )
+          ]);
+
           const richieste = Array.isArray(dati.richieste) ? dati.richieste : [];
 
           conteggioRichieste.textContent = String(richieste.length);
@@ -6413,8 +6423,6 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             </div>`;
         }
       }
-
-      caricaRichiesteAccesso();
 
       document.getElementById("tornaHomeAdmin")
         .addEventListener("click", function() {
