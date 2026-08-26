@@ -753,32 +753,23 @@
     }
 
     try {
-      const [rapporti, richieste] = await Promise.all([
+      const [rapporti, richieste, assistenza] = await Promise.all([
         chiamaApi("contatore_rapporti_admin").catch(() => ({ nuovi_rapporti: 0 })),
-        fetch(TELEGRAM_VERIFY_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            initData: window.Telegram?.WebApp?.initData || "",
-            azione: "leggi_richieste_accesso"
-          })
-        }).then(async risposta => {
-          const dati = await risposta.json();
-          if (!risposta.ok || !dati.ok) throw new Error(dati.error || "Errore richieste");
-          return dati;
-        }).catch(() => ({ richieste: [] }))
+        chiamaApi("leggi_richieste_accesso").catch(() => ({ richieste: [] })),
+        chiamaApi("contatore_assistenza_admin").catch(() => ({ aperte: 0 }))
       ]);
 
       const nRapporti = Number(rapporti.nuovi_rapporti || 0);
       const nRichieste = Array.isArray(richieste.richieste)
         ? richieste.richieste.length
         : 0;
-      const totale = nRapporti + nRichieste;
+      const nAssistenza = Number(assistenza.aperte || 0);
+      const totale = nRapporti + nRichieste + nAssistenza;
 
       badge.textContent = String(totale);
       badge.style.display = totale > 0 ? "block" : "none";
       badge.title =
-        `${nRichieste} richieste di accesso · ${nRapporti} nuovi rapporti`;
+        `${nRichieste} richieste di accesso · ${nRapporti} nuovi rapporti · ${nAssistenza} assistenza`;
     } catch (_) {}
   }
 
@@ -3022,6 +3013,15 @@ document
     return { details, corpo };
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   async function chiamaApi(azione, extra = {}) {
     const initData = window.Telegram?.WebApp?.initData || "";
 
@@ -3975,145 +3975,174 @@ document
     });
 
 
+  async function apriAssistenzaUtente(event) {
+    event?.preventDefault?.();
+
+    document.querySelector(".content").innerHTML = `
+      ${pulsanteIndietro("tornaHomeAssistenza")}
+
+      <div style="background:linear-gradient(135deg,#fff5f5,#fffafa);border:1px solid #ffd5d5;border-radius:20px;padding:20px;margin-bottom:16px;">
+        <h2 style="font-size:25px;margin:0 0 6px;">🛟 Assistenza</h2>
+        <div style="color:#765858;line-height:1.5;">
+          Scrivi qui. Gli amministratori gestiscono la conversazione direttamente nella Mini App.
+        </div>
+      </div>
+
+      <div id="assistenzaUtenteStato" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+      <div id="assistenzaUtenteElenco">⏳ Caricamento…</div>
+      <div id="assistenzaNuovaBox"></div>
+
+      ${pulsanteIndietroFondo("tornaHomeAssistenzaBasso")}
+    `;
+
+    collegaRitornoDoppio("tornaHomeAssistenza", "tornaHomeAssistenzaBasso");
+
+    const elenco = document.getElementById("assistenzaUtenteElenco");
+    const nuovaBox = document.getElementById("assistenzaNuovaBox");
+    const statoBox = document.getElementById("assistenzaUtenteStato");
+
+    const mostra = (msg, errore=false) => {
+      statoBox.style.display = "block";
+      statoBox.style.background = errore ? "#fff1f1" : "#eef9f1";
+      statoBox.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+      statoBox.style.color = errore ? "#a33a3a" : "#28733d";
+      statoBox.textContent = msg;
+    };
+
+    const fmt = value => {
+      if (!value) return "";
+      return new Intl.DateTimeFormat("it-IT", {
+        day:"2-digit", month:"2-digit", year:"numeric",
+        hour:"2-digit", minute:"2-digit"
+      }).format(new Date(value));
+    };
+
+    function renderMessaggi(messaggi) {
+      return (messaggi || []).map(m => `
+        <div style="
+          margin:8px 0;
+          padding:11px 12px;
+          border-radius:14px;
+          background:${m.autore_ruolo === "admin" ? "#eef6ff" : "#f7f8fa"};
+          border:1px solid ${m.autore_ruolo === "admin" ? "#cfe1f5" : "#e5e8ed"};
+        ">
+          <div style="font-size:12px;color:#667085;margin-bottom:4px;">
+            <strong>${m.autore_ruolo === "admin" ? "Amministratore" : "Tu"} · ${m.autore_nome}</strong>
+            · ${fmt(m.created_at)}
+          </div>
+          <div style="white-space:pre-wrap;line-height:1.45;">${escapeHtml(String(m.messaggio || ""))}</div>
+        </div>
+      `).join("");
+    }
+
+    function nuovoMessaggioBox(ticket) {
+      if (ticket.stato === "risolta") return "";
+
+      return `
+        <textarea id="assistenzaRispostaUtente" maxlength="1500" rows="4"
+          placeholder="Scrivi un altro messaggio..."
+          style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;font-family:inherit;resize:vertical;margin-top:10px;"></textarea>
+        <button id="assistenzaInviaUtente"
+          style="width:100%;border:none;background:#d83737;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;margin-top:8px;">
+          📨 Invia messaggio
+        </button>
+      `;
+    }
+
+    function nuovaRichiestaBox() {
+      return `
+        <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:16px;margin-top:14px;">
+          <div style="font-weight:800;margin-bottom:8px;">Nuova richiesta</div>
+          <textarea id="assistenzaNuovoMessaggio" maxlength="1500" rows="5"
+            placeholder="Descrivi cosa ti serve..."
+            style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #dfe5ec;border-radius:13px;font-size:16px;font-family:inherit;resize:vertical;"></textarea>
+          <button id="assistenzaCreaTicket"
+            style="width:100%;border:none;background:#d83737;color:#fff;padding:12px;border-radius:13px;font-size:15px;font-weight:800;margin-top:8px;">
+            🛟 Invia richiesta
+          </button>
+        </div>
+      `;
+    }
+
+    async function carica() {
+      elenco.innerHTML = "⏳ Caricamento…";
+      nuovaBox.innerHTML = "";
+
+      try {
+        const dati = await chiamaApi("leggi_assistenza_utente");
+        const tickets = dati.tickets || [];
+        const aperto = tickets.find(t => t.stato === "aperta" || t.stato === "in_gestione");
+
+        if (!tickets.length) {
+          elenco.innerHTML = `
+            <div style="padding:16px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;text-align:center;">
+              Nessuna conversazione di assistenza.
+            </div>`;
+        } else {
+          elenco.innerHTML = tickets.map(t => `
+            <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:16px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;">
+                <strong>Richiesta #${t.id}</strong>
+                <span style="font-size:12px;font-weight:800;padding:5px 8px;border-radius:999px;background:${
+                  t.stato === "risolta" ? "#eef9f1" : t.stato === "in_gestione" ? "#fff7df" : "#fff1f1"
+                };color:${
+                  t.stato === "risolta" ? "#28733d" : t.stato === "in_gestione" ? "#765b12" : "#a33a3a"
+                };">${
+                  t.stato === "risolta" ? "✅ Risolta" : t.stato === "in_gestione" ? "🟡 In gestione" : "🔴 Aperta"
+                }</span>
+              </div>
+              ${t.presa_in_carico_nome ? `<div style="font-size:13px;color:#667085;margin-bottom:8px;">In gestione da ${escapeHtml(t.presa_in_carico_nome)}</div>` : ""}
+              <div>${renderMessaggi(t.messaggi)}</div>
+              ${aperto && aperto.id === t.id ? nuovoMessaggioBox(t) : ""}
+            </div>
+          `).join("");
+        }
+
+        if (!aperto) {
+          nuovaBox.innerHTML = nuovaRichiestaBox();
+          document.getElementById("assistenzaCreaTicket")?.addEventListener("click", async () => {
+            const input = document.getElementById("assistenzaNuovoMessaggio");
+            const msg = String(input?.value || "").trim();
+            if (msg.length < 3) {
+              mostra("⚠️ Scrivi almeno 3 caratteri.", true);
+              return;
+            }
+            try {
+              await chiamaApi("crea_ticket_assistenza", { messaggio: msg });
+              mostra("✅ Richiesta inviata.");
+              await carica();
+            } catch (e) {
+              mostra("⚠️ " + (e.message || "Invio non riuscito"), true);
+            }
+          });
+        } else {
+          document.getElementById("assistenzaInviaUtente")?.addEventListener("click", async () => {
+            const input = document.getElementById("assistenzaRispostaUtente");
+            const msg = String(input?.value || "").trim();
+            if (!msg) return;
+            try {
+              await chiamaApi("invia_messaggio_assistenza_utente", {
+                ticket_id: Number(aperto.id),
+                messaggio: msg
+              });
+              mostra("✅ Messaggio inviato.");
+              await carica();
+            } catch (e) {
+              mostra("⚠️ " + (e.message || "Invio non riuscito"), true);
+            }
+          });
+        }
+      } catch (e) {
+        elenco.innerHTML = `<div style="padding:16px;border:1px solid #ffd0d0;background:#fff1f1;border-radius:16px;color:#a33a3a;">⚠️ ${escapeHtml(e.message || "Errore assistenza")}</div>`;
+      }
+    }
+
+    await carica();
+  }
+
   document
     .getElementById("assistenza")
-    .addEventListener("click", function(event) {
-
-      event.preventDefault();
-
-      document.querySelector(".content").innerHTML = `
-
-        <div style="margin-bottom:18px;">
-          <button
-            id="tornaHomeAssistenza"
-            style="
-              border:none;
-              background:#fff1f1;
-              color:#d83737;
-              padding:12px 18px;
-              border-radius:14px;
-              font-size:16px;
-              font-weight:700;
-              cursor:pointer;
-            ">
-            ← Torna alla Home
-          </button>
-        </div>
-
-        <div style="
-          background:linear-gradient(135deg,#fff5f5,#fffafa);
-          border:1px solid #ffd5d5;
-          border-radius:20px;
-          padding:20px;
-          margin-bottom:18px;
-        ">
-          <h2 style="font-size:25px; margin-bottom:6px;">
-            🛟 Assistenza
-          </h2>
-          <div style="color:#765858;">
-            Contatta uno dei fratelli indicati sotto direttamente su Telegram.
-          </div>
-        </div>
-
-        <a
-          href="https://t.me/SamMaio_2007"
-onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/SamMaio_2007');"
-          style="
-            display:flex;
-            align-items:center;
-            gap:14px;
-            padding:18px;
-            margin-bottom:12px;
-            border:1px solid #dfe5ec;
-            border-radius:18px;
-            background:#ffffff;
-            color:#15213c;
-            text-decoration:none;
-          ">
-          <div style="
-            min-width:52px;
-            height:52px;
-            border-radius:16px;
-            background:#229ED9;
-            color:white;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:27px;
-          ">👤</div>
-          <div style="flex:1;">
-            <div style="font-size:18px; font-weight:750;">Samuel</div>
-            <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
-          </div>
-          <div class="arrow">›</div>
-        </a>
-
-        <a
-          href="https://t.me/fre_80"
-onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/fre_80');"
-          style="
-            display:flex;
-            align-items:center;
-            gap:14px;
-            padding:18px;
-            margin-bottom:18px;
-            border:1px solid #dfe5ec;
-            border-radius:18px;
-            background:#ffffff;
-            color:#15213c;
-            text-decoration:none;
-          ">
-          <div style="
-            min-width:52px;
-            height:52px;
-            border-radius:16px;
-            background:#229ED9;
-            color:white;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:27px;
-          ">👤</div>
-          <div style="flex:1;">
-            <div style="font-size:18px; font-weight:750;">Francesco</div>
-            <div style="margin-top:4px; color:#667085;">Apri chat Telegram</div>
-          </div>
-          <div class="arrow">›</div>
-        </a>
-
-        <div style="margin-bottom:10px;">
-          <button
-            id="tornaHomeAssistenzaBasso"
-            style="
-              width:100%;
-              border:none;
-              background:#fff1f1;
-              color:#d83737;
-              padding:14px 18px;
-              border-radius:14px;
-              font-size:16px;
-              font-weight:700;
-              cursor:pointer;
-            ">
-            ← Torna alla Home
-          </button>
-        </div>
-
-      `;
-
-      document
-        .getElementById("tornaHomeAssistenza")
-        .addEventListener("click", function() {
-          location.reload();
-        });
-
-      document
-        .getElementById("tornaHomeAssistenzaBasso")
-        .addEventListener("click", function() {
-          location.reload();
-        });
-
-    });
+    .addEventListener("click", apriAssistenzaUtente);
 
 
   async function apriAreaAmministratori(event) {
@@ -4201,6 +4230,12 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
             📝<br>Rapporti ed esperienze
           </button>
 
+          <button id="adminAssistenzaUtenti" data-no-scroll="true"
+            style="position:relative;border:1px solid #ffd5d5;background:#fff7f7;color:#a33a3a;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
+            <span id="badgeAssistenzaAdmin" style="display:none;position:absolute;right:8px;top:8px;background:#c92c2c;color:#fff;border-radius:999px;padding:3px 7px;font-size:11px;">0</span>
+            🛟<br>Assistenza utenti
+          </button>
+
           <button id="adminProgrammaPdf" data-no-scroll="true"
             style="border:1px solid #efcfd2;background:#fff7f7;color:#9a3c46;padding:16px 12px;border-radius:17px;font-size:15px;font-weight:750;cursor:pointer;min-height:92px;">
             📄<br>Programma PDF
@@ -4284,6 +4319,8 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
       const adminGestioneUtenti = document.getElementById("adminGestioneUtenti");
       const adminConfermeTurni = document.getElementById("adminConfermeTurni");
       const adminRapportiEsperienze = document.getElementById("adminRapportiEsperienze");
+      const adminAssistenzaUtenti = document.getElementById("adminAssistenzaUtenti");
+      const badgeAssistenzaAdmin = document.getElementById("badgeAssistenzaAdmin");
       const badgeRapportiAdmin = document.getElementById("badgeRapportiAdmin");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
       const adminGestioneAggiornamenti = document.getElementById("adminGestioneAggiornamenti");
@@ -5896,6 +5933,7 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
       adminGestioneUtenti.addEventListener("click", apriGestioneUtentiAdmin);
       adminConfermeTurni.addEventListener("click", apriConfermeAdmin);
       adminRapportiEsperienze.addEventListener("click", apriRapportiEsperienzeAdmin);
+      adminAssistenzaUtenti.addEventListener("click", apriAssistenzaAdmin);
       adminGestioneAmministratori.addEventListener("click", apriGestioneAmministratori);
       configuraSuperAdmin();
 
@@ -6287,6 +6325,166 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
       }
 
 
+
+      async function apriAssistenzaAdmin(event) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminAssistenza", "← Torna all’Area amministratori")}
+          <div style="background:#fff7f7;border:1px solid #ffd5d5;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:25px;margin:0 0 6px;">🛟 Assistenza utenti</h2>
+            <div style="color:#765858;">Conversazioni condivise tra tutti gli amministratori.</div>
+          </div>
+          <div id="statoAssistenzaAdmin" style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
+          <div id="elencoAssistenzaAdmin">⏳ Caricamento…</div>
+          ${pulsanteIndietroFondo("tornaAreaAdminAssistenzaFondo", "← Torna all’Area amministratori")}
+        `;
+
+        collegaRitornoDoppio("tornaAreaAdminAssistenza", "tornaAreaAdminAssistenzaFondo", "admin");
+
+        const elenco = document.getElementById("elencoAssistenzaAdmin");
+        const stato = document.getElementById("statoAssistenzaAdmin");
+
+        const mostra = (msg, errore=false) => {
+          stato.style.display = "block";
+          stato.style.background = errore ? "#fff1f1" : "#eef9f1";
+          stato.style.border = errore ? "1px solid #ffd0d0" : "1px solid #c7e9d0";
+          stato.style.color = errore ? "#a33a3a" : "#28733d";
+          stato.textContent = msg;
+        };
+
+        const fmt = value => {
+          if (!value) return "";
+          return new Intl.DateTimeFormat("it-IT", {
+            day:"2-digit", month:"2-digit", year:"numeric",
+            hour:"2-digit", minute:"2-digit"
+          }).format(new Date(value));
+        };
+
+        async function carica() {
+          elenco.innerHTML = "⏳ Caricamento…";
+          try {
+            const dati = await chiamaApi("leggi_assistenza_admin");
+            const tickets = dati.tickets || [];
+            const aperti = tickets.filter(t => t.stato !== "risolta");
+            const risolti = tickets.filter(t => t.stato === "risolta");
+
+            if (badgeAssistenzaAdmin) {
+              badgeAssistenzaAdmin.textContent = String(aperti.length);
+              badgeAssistenzaAdmin.style.display = aperti.length ? "block" : "none";
+            }
+
+            if (!tickets.length) {
+              elenco.innerHTML = `<div style="padding:18px;border:1px solid #c7e9d0;background:#eef9f1;border-radius:16px;color:#28733d;text-align:center;">✅ Nessuna richiesta di assistenza.</div>`;
+              return;
+            }
+
+            const renderTicket = t => `
+              <div style="background:#fff;border:1px solid #e1e7ef;border-radius:18px;padding:16px;margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px;">
+                  <div>
+                    <div style="font-weight:800;font-size:18px;">${escapeHtml(t.nome_completo || "Utente")}</div>
+                    <div style="font-size:12px;color:#667085;">Richiesta #${t.id} · ${fmt(t.created_at)}</div>
+                  </div>
+                  <span style="font-size:12px;font-weight:800;padding:5px 8px;border-radius:999px;background:${
+                    t.stato === "risolta" ? "#eef9f1" : t.stato === "in_gestione" ? "#fff7df" : "#fff1f1"
+                  };color:${
+                    t.stato === "risolta" ? "#28733d" : t.stato === "in_gestione" ? "#765b12" : "#a33a3a"
+                  };">${
+                    t.stato === "risolta" ? "✅ Risolta" : t.stato === "in_gestione" ? "🟡 In gestione" : "🔴 Aperta"
+                  }</span>
+                </div>
+
+                ${t.presa_in_carico_nome ? `<div style="padding:9px;border-radius:11px;background:#fff7df;color:#765b12;font-size:13px;margin-bottom:9px;">👤 In gestione da ${escapeHtml(t.presa_in_carico_nome)}</div>` : ""}
+
+                <div style="margin-bottom:10px;">
+                  ${(t.messaggi || []).map(m => `
+                    <div style="margin:7px 0;padding:10px 11px;border-radius:13px;background:${m.autore_ruolo === "admin" ? "#eef6ff" : "#f7f8fa"};border:1px solid ${m.autore_ruolo === "admin" ? "#cfe1f5" : "#e5e8ed"};">
+                      <div style="font-size:12px;color:#667085;margin-bottom:4px;"><strong>${escapeHtml(m.autore_nome)}</strong> · ${m.autore_ruolo === "admin" ? "Amministratore" : "Utente"} · ${fmt(m.created_at)}</div>
+                      <div style="white-space:pre-wrap;line-height:1.45;">${escapeHtml(m.messaggio || "")}</div>
+                    </div>
+                  `).join("")}
+                </div>
+
+                ${t.stato !== "risolta" ? `
+                  <textarea id="rispostaAdmin_${t.id}" maxlength="1500" rows="3"
+                    placeholder="Scrivi una risposta..."
+                    style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #dfe5ec;border-radius:12px;font-size:15px;font-family:inherit;resize:vertical;"></textarea>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                    ${t.stato === "aperta" ? `<button data-prendi="${t.id}" style="border:none;background:#1768d7;color:#fff;padding:11px;border-radius:12px;font-weight:800;">🙋 Prendi in carico</button>` : `<div style="padding:11px;border-radius:12px;background:#fff7df;color:#765b12;text-align:center;font-weight:700;">In gestione</div>`}
+                    <button data-rispondi="${t.id}" style="border:none;background:#168a4a;color:#fff;padding:11px;border-radius:12px;font-weight:800;">📨 Invia risposta</button>
+                    <button data-risolvi="${t.id}" style="grid-column:1/-1;border:1px solid #c7e9d0;background:#eef9f1;color:#28733d;padding:11px;border-radius:12px;font-weight:800;">✅ Segna come risolta</button>
+                  </div>
+                ` : `
+                  <button data-elimina="${t.id}" style="width:100%;border:1px solid #ffd0d0;background:#fff1f1;color:#a33a3a;padding:10px;border-radius:12px;font-weight:800;">🗑️ Elimina richiesta</button>
+                `}
+              </div>
+            `;
+
+            elenco.innerHTML = `
+              ${aperti.length ? `<div style="font-weight:800;margin:4px 0 10px;">Richieste aperte</div>${aperti.map(renderTicket).join("")}` : ""}
+              ${risolti.length ? `<div style="font-weight:800;margin:18px 0 10px;">Storico recente (60 giorni)</div>${risolti.map(renderTicket).join("")}` : ""}
+            `;
+
+            elenco.querySelectorAll("[data-prendi]").forEach(btn => btn.addEventListener("click", async () => {
+              try {
+                await chiamaApi("prendi_in_carico_assistenza", { ticket_id: Number(btn.dataset.prendi) });
+                await carica();
+              } catch (e) {
+                mostra("⚠️ " + (e.message || "Operazione non riuscita"), true);
+                await carica();
+              }
+            }));
+
+            elenco.querySelectorAll("[data-rispondi]").forEach(btn => btn.addEventListener("click", async () => {
+              const id = Number(btn.dataset.rispondi);
+              const input = document.getElementById(`rispostaAdmin_${id}`);
+              const msg = String(input?.value || "").trim();
+              if (!msg) return;
+              try {
+                await chiamaApi("invia_messaggio_assistenza_admin", {
+                  ticket_id: id,
+                  messaggio: msg
+                });
+                mostra("✅ Risposta inviata. L’utente è stato avvisato dal bot.");
+                await carica();
+              } catch (e) {
+                mostra("⚠️ " + (e.message || "Invio non riuscito"), true);
+              }
+            }));
+
+            elenco.querySelectorAll("[data-risolvi]").forEach(btn => btn.addEventListener("click", async () => {
+              try {
+                await chiamaApi("risolvi_assistenza", { ticket_id: Number(btn.dataset.risolvi) });
+                mostra("✅ Richiesta chiusa.");
+                await carica();
+              } catch (e) {
+                mostra("⚠️ " + (e.message || "Operazione non riuscita"), true);
+              }
+            }));
+
+            elenco.querySelectorAll("[data-elimina]").forEach(btn => btn.addEventListener("click", async () => {
+              if (!confirm("Eliminare definitivamente questa richiesta e tutta la conversazione?")) return;
+              try {
+                await chiamaApi("elimina_assistenza_admin", { ticket_id: Number(btn.dataset.elimina) });
+                mostra("✅ Richiesta eliminata.");
+                await carica();
+              } catch (e) {
+                mostra("⚠️ " + (e.message || "Eliminazione non riuscita"), true);
+              }
+            }));
+
+            await aggiornaBadgeRichiesteAdmin();
+          } catch (e) {
+            elenco.innerHTML = `<div style="padding:16px;border:1px solid #ffd0d0;background:#fff1f1;border-radius:16px;color:#a33a3a;">⚠️ ${escapeHtml(e.message || "Errore assistenza")}</div>`;
+          }
+        }
+
+        await carica();
+      }
+
+
       async function caricaRichiesteAccesso() {
         richiesteBox.innerHTML =
           '<div style="color:#667085;">⏳ Caricamento richieste…</div>';
@@ -6436,6 +6634,15 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
 
       caricaRichiesteAccesso();
 
+      chiamaApi("contatore_assistenza_admin")
+        .then(d => {
+          const n = Number(d.aperte || 0);
+          if (badgeAssistenzaAdmin) {
+            badgeAssistenzaAdmin.textContent = String(n);
+            badgeAssistenzaAdmin.style.display = n > 0 ? "block" : "none";
+          }
+        }).catch(() => {});
+
     }
 
   document
@@ -6493,6 +6700,28 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           setTimeout(() => {
             apriRapportiEsperienzeAdmin();
           }, 80);
+        }
+        return;
+      }
+
+      if (startParam === "admin_assistenza") {
+        if (
+          PROFILO_TELEGRAM?.registrato &&
+          (PROFILO_TELEGRAM?.ruolo === "admin" ||
+           PROFILO_TELEGRAM?.ruolo === "super_admin") &&
+          PROFILO_TELEGRAM?.attivo === true
+        ) {
+          apriAreaAmministratori();
+          setTimeout(() => {
+            document.getElementById("adminAssistenzaUtenti")?.click();
+          }, 100);
+        }
+        return;
+      }
+
+      if (startParam === "assistenza") {
+        if (PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.attivo === true) {
+          apriAssistenzaUtente();
         }
         return;
       }
