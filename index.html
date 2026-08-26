@@ -6291,133 +6291,130 @@ onclick="event.preventDefault(); Telegram.WebApp.openTelegramLink('https://t.me/
           '<div style="color:#667085;">⏳ Caricamento richieste…</div>';
 
         try {
-          const risposta = await fetch(TELEGRAM_VERIFY_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              initData,
-              azione: "leggi_richieste_accesso"
-            })
-          });
+          const dati = await chiamaApi("leggi_richieste_accesso");
+          const richieste = Array.isArray(dati.richieste) ? dati.richieste : [];
 
-          const dati = await risposta.json();
-
-          if (!risposta.ok || !dati.ok) {
-            throw new Error(dati.error || "Errore nel caricamento richieste");
-          }
-
-          const richieste = dati.richieste || [];
           conteggioRichieste.textContent = String(richieste.length);
           richiesteBox.innerHTML = "";
 
           if (!richieste.length) {
             richiesteBox.innerHTML = `
-              <div style="
-                background:#eef9f1;
-                border:1px solid #c7e9d0;
-                color:#28733d;
-                border-radius:14px;
-                padding:13px;
-                line-height:1.45;
-              ">
+              <div style="background:#eef9f1;border:1px solid #c7e9d0;color:#28733d;border-radius:14px;padding:13px;line-height:1.45;">
                 ✅ Nessuna richiesta in attesa.
-              </div>
-            `;
+              </div>`;
             return;
           }
 
-          richieste.forEach((richiesta) => {
+          richieste.forEach(richiesta => {
             const card = document.createElement("div");
             card.style.cssText =
-              "border-top:1px solid #eef1f4;padding:13px 0;";
+              "border-top:1px solid #eef1f4;padding:14px 0;";
 
             const nome = document.createElement("div");
             nome.style.cssText =
-              "font-size:17px;font-weight:750;color:#344054;margin-bottom:8px;";
-            nome.textContent =
-              richiesta.nome_completo || "Nome non disponibile";
+              "font-size:17px;font-weight:800;color:#344054;margin-bottom:4px;";
+            nome.textContent = richiesta.nome_completo || "Nome non disponibile";
 
             const info = document.createElement("div");
             info.style.cssText =
               "font-size:13px;color:#667085;margin-bottom:10px;";
-            info.textContent = "Nuovo utente Telegram in attesa";
+            info.textContent = `Telegram ID: ${richiesta.telegram_id}`;
+
+            const genere = document.createElement("select");
+            genere.style.cssText =
+              "width:100%;padding:11px;border:1px solid #dfe5ec;border-radius:12px;font-size:15px;background:#fff;margin-bottom:9px;";
+            genere.innerHTML = `
+              <option value="">Seleziona Uomo / Donna</option>
+              <option value="uomo" ${richiesta.genere === "uomo" ? "selected" : ""}>👨 Uomo</option>
+              <option value="donna" ${richiesta.genere === "donna" ? "selected" : ""}>👩 Donna</option>
+            `;
+
+            const azioni = document.createElement("div");
+            azioni.style.cssText =
+              "display:grid;grid-template-columns:1fr 1fr;gap:8px;";
 
             const approva = document.createElement("button");
-            approva.type = "button";
-            approva.dataset.noScroll = "true";
+            approva.textContent = "✅ Approva";
             approva.style.cssText =
-              "width:100%;border:none;background:#168a4a;color:white;padding:12px 14px;border-radius:13px;font-size:15px;font-weight:750;cursor:pointer;";
-            approva.textContent = "✅ Approva accesso";
+              "border:none;background:#18864b;color:#fff;padding:11px;border-radius:12px;font-weight:800;cursor:pointer;";
 
-            approva.addEventListener("click", async function() {
+            const rifiuta = document.createElement("button");
+            rifiuta.textContent = "❌ Rifiuta";
+            rifiuta.style.cssText =
+              "border:1px solid #efc3c3;background:#fff4f4;color:#a33a3a;padding:11px;border-radius:12px;font-weight:800;cursor:pointer;";
+
+            approva.addEventListener("click", async () => {
+              if (!genere.value) {
+                mostraStatoAdmin("⚠️ Seleziona Uomo o Donna prima di approvare.", "errore");
+                genere.focus();
+                return;
+              }
+
               approva.disabled = true;
-              approva.style.opacity = "0.65";
+              rifiuta.disabled = true;
               approva.textContent = "⏳ Approvazione…";
 
               try {
-                const rispostaApprova = await fetch(TELEGRAM_VERIFY_URL, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    initData,
-                    azione: "approva_utente",
-                    telegram_id: richiesta.telegram_id
-                  })
+                await chiamaApi("approva_utente", {
+                  telegram_id: Number(richiesta.telegram_id),
+                  genere: genere.value
                 });
 
-                const risultato = await rispostaApprova.json();
-
-                if (!rispostaApprova.ok || !risultato.ok) {
-                  throw new Error(
-                    risultato.error || "Errore durante l’approvazione"
-                  );
-                }
-
-                mostraStatoAdmin(
-                  `✅ ${richiesta.nome_completo} è stato approvato.`,
-                  "ok"
-                );
-
+                mostraStatoAdmin(`✅ ${richiesta.nome_completo} è stato approvato.`, "ok");
                 await caricaRichiesteAccesso();
                 await aggiornaBadgeRichiesteAdmin();
               } catch (errore) {
-                mostraStatoAdmin(
-                  "⚠️ " +
-                  (
-                    errore instanceof Error
-                      ? errore.message
-                      : "Non è stato possibile approvare l’utente."
-                  ),
-                  "errore"
-                );
-
+                mostraStatoAdmin("⚠️ " + (errore.message || "Errore durante l’approvazione."), "errore");
                 approva.disabled = false;
-                approva.style.opacity = "1";
-                approva.textContent = "✅ Approva accesso";
+                rifiuta.disabled = false;
+                approva.textContent = "✅ Approva";
               }
             });
 
+            rifiuta.addEventListener("click", async () => {
+              if (!confirm(`Rifiutare la richiesta di ${richiesta.nome_completo || "questo utente"}?`)) {
+                return;
+              }
+
+              approva.disabled = true;
+              rifiuta.disabled = true;
+              rifiuta.textContent = "⏳ Rifiuto…";
+
+              try {
+                await chiamaApi("rifiuta_utente", {
+                  telegram_id: Number(richiesta.telegram_id)
+                });
+
+                mostraStatoAdmin(`❌ Richiesta di ${richiesta.nome_completo} rifiutata.`, "ok");
+                await caricaRichiesteAccesso();
+                await aggiornaBadgeRichiesteAdmin();
+              } catch (errore) {
+                mostraStatoAdmin("⚠️ " + (errore.message || "Errore durante il rifiuto."), "errore");
+                approva.disabled = false;
+                rifiuta.disabled = false;
+                rifiuta.textContent = "❌ Rifiuta";
+              }
+            });
+
+            azioni.appendChild(approva);
+            azioni.appendChild(rifiuta);
             card.appendChild(nome);
             card.appendChild(info);
-            card.appendChild(approva);
+            card.appendChild(genere);
+            card.appendChild(azioni);
             richiesteBox.appendChild(card);
           });
+
         } catch (errore) {
           conteggioRichieste.textContent = "!";
           richiesteBox.innerHTML = `
-            <div style="
-              background:#fff1f1;
-              border:1px solid #ffd0d0;
-              color:#a33a3a;
-              border-radius:14px;
-              padding:13px;
-              line-height:1.45;
-            ">
-              ⚠️ Non è stato possibile caricare le richieste.
-            </div>
-          `;
+            <div style="background:#fff1f1;border:1px solid #ffd0d0;color:#a33a3a;border-radius:14px;padding:13px;line-height:1.45;">
+              ⚠️ ${errore.message || "Non è stato possibile caricare le richieste."}
+            </div>`;
         }
       }
+
+      caricaRichiesteAccesso();
 
       document.getElementById("tornaHomeAdmin")
         .addEventListener("click", function() {
