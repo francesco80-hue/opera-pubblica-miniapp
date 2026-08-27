@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1768d7">
+  <title>Guida Mini App - Opera Pubblica Bordonaro</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --text:#182235;
+      --muted:#667085;
+      --line:#e1e7ef;
+      --blue:#1768d7;
+      --blue-soft:#eef6ff;
+      --green:#168a4a;
+      --green-soft:#eef9f1;
+      --red:#d83737;
+      --red-soft:#fff1f1;
+      --orange:#b96810;
+      --orange-soft:#fff5e8;
+      --purple:#6942d4;
+      --purple-soft:#f3f1ff;
+      --teal:#147c78;
+      --teal-soft:#f1fbfa;
+      --shadow:0 8px 26px rgba(35,54,88,.08);
+    }
+
+    *{box-sizing:border-box}
+
+    html{scroll-behavior:smooth}
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#edf4ff 0,#f7f9fc 220px,#f4f7fb 100%);
+      color:var(--text);
+      line-height:1.5;
+    }
+
+    .wrap{
+      width:min(760px,100%);
+      margin:0 auto;
+      padding:18px 14px 36px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,#1768d7,#5a94ea);
+      color:#fff;
+      border-radius:24px;
+      padding:24px 20px;
+      box-shadow:var(--shadow);
+      margin-bottom:16px;
+    }
+
+    .hero .eyebrow{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      opacity:.86;
+      margin-bottom:6px;
+    }
+
+    .hero h1{
+      margin:0 0 7px;
+      font-size:28px;
+      line-height:1.18;
+    }
+
+    .hero p{
+      margin:0;
+      font-size:15px;
+      opacity:.96;
+    }
+
+    .quick{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      margin:14px 0 18px;
+    }
+
+    .quick a{
+      text-decoration:none;
+      color:#25415f;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      text-align:center;
+      padding:10px 7px;
+      font-size:12px;
+      font-weight:750;
+      box-shadow:0 3px 12px rgba(35,54,88,.04);
+    }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      margin-bottom:14px;
+      box-shadow:0 3px 14px rgba(35,54,88,.035);
+    }
+
+    .section h2{
+      margin:0 0 12px;
+      font-size:21px;
+      color:#24364f;
+    }
+
+    .section p{
+      margin:7px 0;
+      color:#435066;
+    }
+
+    .steps{
+      display:grid;
+      gap:11px;
+    }
+
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:#f8fafc;
+      border:1px solid #e8edf3;
+      border-radius:15px;
+      padding:12px;
+    }
+
+    .num{
+      flex:none;
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      background:var(--blue);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:850;
+    }
+
+    .step strong{
+      display:block;
+      margin-bottom:2px;
+      color:#26364a;
+    }
+
+    .buttons{
+      display:grid;
+      gap:9px;
+    }
+
+    .app-button{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      border-radius:16px;
+      padding:13px 14px;
+      border:1px solid var(--line);
+      background:#fff;
+    }
+
+    .ico{
+      flex:none;
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:23px;
+    }
+
+    .app-button strong{
+      display:block;
+      font-size:16px;
+      margin-bottom:2px;
+    }
+
+    .app-button small{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .blue .ico{background:var(--blue-soft)}
+    .green .ico{background:var(--green-soft)}
+    .red .ico{background:var(--red-soft)}
+    .orange .ico{background:var(--orange-soft)}
+    .purple .ico{background:var(--purple-soft)}
+    .teal .ico{background:var(--teal-soft)}
+
+    .list{
+      margin:8px 0 0;
+      padding-left:21px;
+      color:#435066;
+    }
+
+    .list li{margin:7px 0}
+
+    .note{
+      background:#fff8e8;
+      border:1px solid #f2dda8;
+      color:#6c5517;
+      border-radius:15px;
+      padding:13px 14px;
+      margin-top:10px;
+      font-size:14px;
+    }
+
+    .cta{
+      display:block;
+      text-align:center;
+      background:var(--blue);
+      color:#fff;
+      text-decoration:none;
+      font-weight:800;
+      padding:14px 16px;
+      border-radius:15px;
+      margin-top:12px;
+    }
+
+    .footer{
+      text-align:center;
+      color:#7b8494;
+      font-size:12px;
+      padding:9px 6px 0;
+    }
+
+    @media (max-width:520px){
+      .wrap{padding:12px 10px 28px}
+      .hero{border-radius:20px;padding:21px 17px}
+      .hero h1{font-size:24px}
+      .quick{grid-template-columns:1fr 1fr}
+      .section{padding:15px;border-radius:18px}
+      .app-button{padding:12px}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Opera Pubblica Bordonaro</div>
+      <h1>Guida rapida alla Mini App</h1>
+      <p>Le funzioni principali spiegate in modo semplice, dal primo accesso all’utilizzo quotidiano.</p>
+    </section>
+
+    <nav class="quick" aria-label="Indice rapido">
+      <a href="#primo-accesso">Primo accesso</a>
+      <a href="#pulsanti">Pulsanti</a>
+      <a href="#turni">Miei turni</a>
+      <a href="#disponibilita">Disponibilità</a>
+      <a href="#rapporti">Rapporti</a>
+      <a href="#assistenza">Assistenza</a>
+    </nav>
+
+    <section class="section">
+      <h2>📱 A cosa serve</h2>
+      <p>La Mini App raccoglie in un unico posto il programma dell’opera pubblica, i tuoi turni, le disponibilità, le postazioni, le istruzioni, i rapporti e l’assistenza.</p>
+    </section>
+
+    <section class="section" id="primo-accesso">
+      <h2>🔐 Primo accesso</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <strong>Attiva le notifiche</strong>
+            Ti servono per ricevere su Telegram nuovi turni, aggiornamenti e risposte dell’assistenza.
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <strong>Inserisci nome e cognome</strong>
+            Scrivi il tuo nome completo e invia la richiesta di accesso.
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <strong>Attendi l’approvazione</strong>
+            Quando un amministratore approva la richiesta, tutte le funzioni della Mini App diventano disponibili.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pulsanti">
+      <h2>🧭 Pulsanti principali</h2>
+
+      <div class="buttons">
+        <div class="app-button blue">
+          <div class="ico">📢</div>
+          <div><strong>Ultimi aggiornamenti</strong><small>Comunicazioni e novità più recenti.</small></div>
+        </div>
+
+        <div class="app-button blue">
+          <div class="ico">📅</div>
+          <div><strong>Programma</strong><small>Consulta il programma generale del mese.</small></div>
+        </div>
+
+        <div class="app-button purple">
+          <div class="ico">🙋</div>
+          <div><strong>I miei turni</strong><small>Vedi i turni assegnati a te, accettali o rifiutali e, se vuoi, aggiungili al calendario.</small></div>
+        </div>
+
+        <div class="app-button green">
+          <div class="ico">✅</div>
+          <div><strong>Disponibilità</strong><small>Indica per quali turni sei disponibile oppure non disponibile.</small></div>
+        </div>
+
+        <div class="app-button green">
+          <div class="ico">📍</div>
+          <div><strong>Postazioni</strong><small>Consulta le postazioni attive e le relative informazioni.</small></div>
+        </div>
+
+        <div class="app-button purple">
+          <div class="ico">📖</div>
+          <div><strong>Istruzioni</strong><small>Leggi le istruzioni utili per svolgere correttamente il servizio.</small></div>
+        </div>
+
+        <div class="app-button orange">
+          <div class="ico">📚</div>
+          <div><strong>Disposizione pubblicazioni</strong><small>Consulta come devono essere sistemate le pubblicazioni.</small></div>
+        </div>
+
+        <div class="app-button teal">
+          <div class="ico">📝</div>
+          <div><strong>Rapporti ed esperienze</strong><small>Compila il rapporto del turno e, se vuoi, condividi una bella esperienza.</small></div>
+        </div>
+
+        <div class="app-button red">
+          <div class="ico">🛟</div>
+          <div><strong>Assistenza</strong><small>Scrivi direttamente agli amministratori e continua la conversazione nella Mini App.</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="turni">
+      <h2>🙋 Come gestire un turno</h2>
+      <ol class="list">
+        <li>Apri <strong>I miei turni</strong>.</li>
+        <li>Controlla giorno, orario e postazione.</li>
+        <li>Premi <strong>Accetta</strong> se puoi svolgerlo.</li>
+        <li>Se vuoi, usa <strong>Aggiungi al calendario</strong>.</li>
+        <li>Se successivamente non puoi più svolgerlo, puoi usare <strong>Rifiuta</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="section" id="disponibilita">
+      <h2>✅ Come dare la disponibilità</h2>
+      <ol class="list">
+        <li>Apri <strong>Disponibilità</strong>.</li>
+        <li>Vai al mese che ti interessa.</li>
+        <li>Controlla i turni attivi.</li>
+        <li>Indica <strong>Disponibile</strong> oppure <strong>Non disponibile</strong>.</li>
+      </ol>
+      <div class="note">La disponibilità aiuta gli amministratori a preparare il programma, ma non equivale automaticamente a un’assegnazione.</div>
+    </section>
+
+    <section class="section" id="rapporti">
+      <h2>📝 Rapporti ed esperienze</h2>
+      <ol class="list">
+        <li>Apri <strong>Rapporti ed esperienze</strong>.</li>
+        <li>Scegli il turno concluso.</li>
+        <li>Inserisci i dati richiesti.</li>
+        <li>Se vuoi, aggiungi una bella esperienza.</li>
+        <li>Premi <strong>Salva</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="section" id="assistenza">
+      <h2>🛟 Assistenza</h2>
+      <p>Se hai una domanda o un problema, apri <strong>Assistenza</strong> e scrivi il tuo messaggio. Gli amministratori possono risponderti direttamente nella conversazione interna.</p>
+      <p>Quando arriva una risposta, il bot può avvisarti e riportarti direttamente nella sezione Assistenza.</p>
+    </section>
+
+    <section class="section">
+      <h2>💡 Ricorda</h2>
+      <div class="note">
+        Controlla regolarmente la Mini App: programma, turni, disponibilità e comunicazioni possono essere aggiornati.
+      </div>
+      <a class="cta" href="https://t.me/OperaPubblicaBordonaroBot?startapp">📱 Apri la Mini App</a>
+    </section>
+
+    <div class="footer">
+      Opera Pubblica Bordonaro · Guida rapida Mini App
+    </div>
+  </main>
+</body>
+</html>
