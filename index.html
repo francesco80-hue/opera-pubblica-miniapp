@@ -5044,7 +5044,7 @@ document
           <div style="background:#f5f1ff;border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:16px;">
             <h2 style="font-size:25px;margin:0 0 6px;">🗓️ Gestione programma</h2>
             <div style="color:#6a6380;line-height:1.5;">
-              I turni arrivano automaticamente da Turni attivi. Qui devi solo scegliere le persone.
+              Prepara le assegnazioni e salvale in bozza. Solo il pulsante verde “Invia i turni” pubblica le modifiche e avvisa i membri.
             </div>
           </div>
 
@@ -5059,10 +5059,19 @@ document
               style="border:none;background:#f3f1ff;color:#6942d4;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
           </div>
 
+          <button id="pubblicaMeseAlto" type="button" data-no-scroll="true"
+            style="width:100%;background:#178b4b;color:white;border:none;border-radius:15px;padding:14px 12px;font-size:16px;font-weight:850;margin-bottom:12px;cursor:pointer;">
+            🟢 Invia i turni
+          </button>
           <div id="adminTurniStato"
             style="display:none;padding:13px;border-radius:14px;margin-bottom:12px;"></div>
 
           <div id="adminTurniElenco"></div>
+
+          <button id="pubblicaMeseFondo" type="button" data-no-scroll="true"
+            style="width:100%;background:#178b4b;color:white;border:none;border-radius:15px;padding:14px 12px;font-size:16px;font-weight:850;margin:12px 0 18px;cursor:pointer;">
+            🟢 Invia i turni
+          </button>
 
           ${pulsanteIndietroFondo("tornaAreaAdminProgrammaFondo", "← Torna all’Area amministratori")}
         `;
@@ -5076,6 +5085,68 @@ document
         const statoBox = document.getElementById("adminTurniStato");
         const elencoBox = document.getElementById("adminTurniElenco");
         const meseBox = document.getElementById("adminTurniMese");
+        const inviaAlto = document.getElementById("pubblicaMeseAlto");
+        const inviaFondo = document.getElementById("pubblicaMeseFondo");
+        let numeroBozze = 0;
+
+        function aggiornaPulsantiInvio(turni) {
+          numeroBozze = turni.filter(t => Array.isArray(t.bozza_telegram_ids)).length;
+          [inviaAlto, inviaFondo].forEach(btn => {
+            btn.disabled = numeroBozze === 0;
+            btn.textContent = numeroBozze
+              ? `🟢 Invia i turni · ${numeroBozze} ${numeroBozze === 1 ? "turno da pubblicare" : "turni da pubblicare"}`
+              : "✅ Nessuna modifica da inviare";
+            btn.style.opacity = numeroBozze ? "1" : "0.5";
+            btn.style.cursor = numeroBozze ? "pointer" : "not-allowed";
+          });
+        }
+
+        function apriConfermaInvio() {
+          if (!numeroBozze) return;
+          const maschera = document.createElement("div");
+          maschera.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.60);display:flex;align-items:center;justify-content:center;padding:18px;";
+          maschera.innerHTML = `
+            <div role="dialog" aria-modal="true" aria-label="Conferma invio turni"
+              style="background:white;width:min(420px,100%);padding:22px;border-radius:22px;box-shadow:0 12px 50px #18223540;">
+              <h3 style="margin:0 0 10px;font-size:21px;">📤 Invia i turni</h3>
+              <p style="color:#44506a;line-height:1.5;margin:0 0 18px;">
+                Vuoi pubblicare le modifiche di <b>${titoloMese(mese)}</b>?
+                Verranno pubblicati <b>${numeroBozze} ${numeroBozze === 1 ? 'turno' : 'turni'}</b> in bozza.
+                Solo le persone con assegnazioni nuove o modificate riceveranno una notifica.
+                Le risposte alle assegnazioni rimaste uguali saranno conservate.
+              </p>
+              <div style="display:flex;gap:10px;">
+                <button type="button" class="annullaInvio" data-no-scroll="true"
+                  style="flex:1;border:1px solid #d6dde5;padding:13px;border-radius:12px;background:#f5f7fa;font-weight:750;">Annulla</button>
+                <button type="button" class="confermaInvio" data-no-scroll="true"
+                  style="flex:1;border:none;padding:13px;border-radius:12px;background:#168a4a;color:#fff;font-weight:800;">Invia i turni</button>
+              </div>
+            </div>`;
+          document.body.appendChild(maschera);
+          maschera.querySelector(".annullaInvio").addEventListener("click", () => maschera.remove());
+          maschera.querySelector(".confermaInvio").addEventListener("click", async event => {
+            const pulsante = event.currentTarget;
+            pulsante.disabled = true;
+            pulsante.textContent = "Invio in corso…";
+            try {
+              const risultato = await chiamaApi("pubblica_programma_mese_admin", { mese });
+              maschera.remove();
+              cacheProgrammaAdmin.delete(mese);
+              cacheProgrammaUtente.delete(mese);
+              const info = risultato.pubblicazione || {};
+              await caricaTurni();
+              stato(`✅ Programma aggiornato: ${Number(info.turni_pubblicati || 0)} turni, ` +
+                    `${Number(info.nuovi || 0)} nuove assegnazioni e ${Number(info.rimossi || 0)} rimozioni. ` +
+                    `Le notifiche non ancora consegnate verranno riprovate automaticamente.`);
+            } catch (errore) {
+              pulsante.disabled = false;
+              pulsante.textContent = "Riprova invio";
+              stato("⚠️ " + (errore.message || "Pubblicazione non riuscita"), true);
+            }
+          });
+        }
+        inviaAlto.addEventListener("click", apriConfermaInvio);
+        inviaFondo.addEventListener("click", apriConfermaInvio);
 
         function stato(msg, errore = false) {
           statoBox.style.display = "block";
@@ -5165,8 +5236,8 @@ document
 
             cacheProgrammaAdmin.delete(mese);
 
-            stato("✅ Nomi salvati. I nuovi assegnati hanno ricevuto la notifica.");
             await caricaTurni();
+            stato("✅ Turno salvato come bozza. Nessuna notifica inviata.");
           } catch (errore) {
             stato(errore.message || "Impossibile salvare i nomi.", true);
           }
@@ -5179,7 +5250,15 @@ document
           card.dataset.turnoCard = String(turno.id);
 
           const utenti = utentiPerTurno(turno.turno_attivo_id);
-          const assegnati = (turno.assegnazioni || []).filter(a => a.attiva !== false);
+          const pubblicati = (turno.assegnazioni || []).filter(a => a.attiva !== false);
+          const haBozza = Array.isArray(turno.bozza_telegram_ids);
+          // Gli amministratori vedono i nomi preparati; i membri solo quelli pubblicati.
+          const assegnati = haBozza
+            ? turno.bozza_telegram_ids.map(id => {
+                const giaPubblicato = pubblicati.find(a => Number(a.telegram_id) === Number(id));
+                return giaPubblicato || { telegram_id:Number(id), stato:"bozza", attiva:true };
+              })
+            : pubblicati;
           const numero = Math.max(
             Number(turno.numero_persone || 3),
             assegnati.length,
@@ -5211,8 +5290,9 @@ document
                   assegnato
                     ? `<div style="font-size:12px;color:#667085;margin:4px 2px 0;">
                         ${
-                          assegnato.stato === "accettato" ? "✅ Accettato" :
-                          assegnato.stato === "rifiutato" ? "❌ Rifiutato" :
+                          assegnato.stato === "accettato" ? "✅ Accettato (già pubblicato)" :
+                          assegnato.stato === "rifiutato" ? "❌ Rifiutato (già pubblicato)" :
+                          assegnato.stato === "bozza" ? "📝 Nuovo nome in bozza" :
                           "⏳ In attesa"
                         }
                        </div>`
@@ -5225,6 +5305,9 @@ document
           card.innerHTML = `
             <div style="font-size:17px;font-weight:800;text-transform:capitalize;">
               ${dataItaliana(turno.data)}
+            </div>
+            <div style="font-size:12px;font-weight:800;margin-top:6px;color:${haBozza ? '#8a5b13' : '#28733d'};">
+              ${haBozza ? '📝 Modifiche in bozza · non inviate' : '✅ Nessuna modifica in bozza'}
             </div>
 
             <div style="color:#556078;margin-top:4px;">
@@ -5245,7 +5328,7 @@ document
               class="salvaNomiProgramma"
               data-no-scroll="true"
               style="width:100%;border:none;background:#6942d4;color:#fff;padding:11px;border-radius:12px;font-size:14px;font-weight:800;margin-top:4px;">
-              💾 Salva nomi
+              💾 Salva turno (solo bozza)
             </button>
           `;
 
@@ -5330,6 +5413,7 @@ document
           try {
             const datiMese = await caricaDatiMeseAdmin(mese);
             const turni = datiMese.turni;
+            aggiornaPulsantiInvio(turni);
             utentiMese = datiMese.utenti;
             disponibilitaMese = datiMese.disponibilita;
 
