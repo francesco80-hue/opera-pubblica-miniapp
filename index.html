@@ -2720,7 +2720,13 @@ document
       event.preventDefault();
 
       const initData = window.Telegram?.WebApp?.initData || "";
-      let mese = meseCorrenteKey();
+      // Se aperta da un invito Telegram, visualizza subito il mese richiesto.
+      // Non modifica le impostazioni o le schermate di chi apre normalmente la Mini App.
+      const meseDalLink = window.__operaDisponibilitaMeseRichiesto;
+      let mese = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(meseDalLink || ""))
+        ? meseDalLink
+        : meseCorrenteKey();
+      window.__operaDisponibilitaMeseRichiesto = null;
 
       document.querySelector(".content").innerHTML = `
         ${pulsanteIndietro("tornaHomeDisponibilita", "← Torna alla Home")}
@@ -7125,6 +7131,18 @@ document
       if (startParam === "assistenza") {
         if (PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.attivo === true) {
           apriAssistenzaUtente();
+        }
+        return;
+      }
+
+      // Deep link mensile: disponibilita_2026_11 → Novembre 2026.
+      // Apre la vera pagina Disponibilità con il mese già selezionato.
+      const meseDisponibilita = /^disponibilita_(\d{4})_(0[1-9]|1[0-2])$/.exec(startParam);
+      if (meseDisponibilita) {
+        if (PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.attivo === true) {
+          window.__operaDisponibilitaMeseRichiesto =
+            `${meseDisponibilita[1]}-${meseDisponibilita[2]}`;
+          document.getElementById("disponibilita")?.click();
         }
         return;
       }
