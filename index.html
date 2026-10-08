@@ -319,7 +319,7 @@
     .hero {
       margin: 10px 12px 0;
       width: calc(100% - 24px);
-      height: 156px;
+      height: auto;
       border-radius: 20px;
       overflow: hidden;
       background:#dff6f4;
@@ -327,10 +327,15 @@
     }
     .hero img {
       width:100%;
-      height:100%;
-      object-fit:cover;
+      height:auto;
+      object-fit:contain;
       object-position:center;
       display:block;
+    }
+
+    /* Nelle schermate amministrative il banner non viene mostrato. */
+    .app.admin-view .hero {
+      display:none;
     }
 
     #telegramStatus {
@@ -343,30 +348,34 @@
     .content { padding:12px 14px 24px; }
 
     .verse {
-      gap:11px;
-      padding:10px 13px;
+      gap:10px;
+      padding:8px 11px;
       margin-bottom:12px;
       border-radius:18px;
-      min-height:76px;
+      min-height:64px;
       box-shadow:0 3px 12px rgba(35,54,88,.055);
     }
     .verse-icon {
-      min-width:50px;
-      width:50px;
-      height:50px;
-      border-radius:14px;
-      font-size:25px;
+      min-width:46px;
+      width:46px;
+      height:46px;
+      border-radius:13px;
+      font-size:23px;
     }
     .verse-text {
-      font-size:15px;
-      line-height:1.22;
+      font-size:14.2px;
+      line-height:1.16;
       min-width:0;
     }
-    .verse-text strong { display:block; }
+    .verse-text strong {
+      display:block;
+      margin:0;
+    }
     .verse-text a {
-      margin-top:3px;
-      font-size:14px;
-      line-height:1.15;
+      display:block;
+      margin-top:2px;
+      font-size:13.5px;
+      line-height:1.1;
       font-weight:750;
     }
 
@@ -496,10 +505,10 @@
     @media (max-width:520px) {
       .hero { height:116px; margin:8px 9px 0; width:calc(100% - 18px); border-radius:16px; }
       .content { padding:10px 11px 22px; }
-      .verse { min-height:68px; padding:8px 10px; margin-bottom:10px; }
-      .verse-icon { min-width:44px; width:44px; height:44px; font-size:22px; border-radius:12px; }
-      .verse-text { font-size:13.2px; }
-      .verse-text a { font-size:12.8px; margin-top:2px; }
+      .verse { min-height:58px; padding:7px 9px; margin-bottom:10px; gap:9px; }
+      .verse-icon { min-width:42px; width:42px; height:42px; font-size:21px; border-radius:12px; }
+      .verse-text { font-size:12.9px; line-height:1.13; }
+      .verse-text a { font-size:12.6px; margin-top:1px; line-height:1.08; }
       .update { min-height:69px; margin-bottom:11px; padding:9px 11px; }
       .update-title { font-size:15px; }
       .update-subtitle { font-size:11.5px; }
@@ -619,8 +628,6 @@
         <strong>
           «Tutto abbia luogo dignitosamente e con ordine.»
         </strong>
-
-        <br>
 
         <a
           href="https://www.jw.org/finder?wtlocale=I&pub=nwtsty&srctype=wol&bible=46014040&srcid=share"
@@ -4255,6 +4262,9 @@ document
   async function apriAreaAmministratori(event) {
 
       event?.preventDefault?.();
+
+      // Nell’area amministratori nascondiamo il banner pubblico.
+      document.querySelector(".app")?.classList.add("admin-view");
 
       const tg = window.Telegram?.WebApp;
       const initData = tg?.initData || "";
