@@ -1027,6 +1027,12 @@
     });
   }
 
+  function etichettaAccesso(profilo) {
+    return ({in_attesa:"In attesa di approvazione", inattivo:"Accesso inattivo: contatta un amministratore",
+      rifiutato:"Richiesta rifiutata: contatta un amministratore", eliminato:"Accesso revocato: contatta un amministratore",
+      approvato:"Attivo"})[profilo?.stato_accesso] || "In attesa di approvazione";
+  }
+
   function aggiornaPrimoAccessoHome() {
     const box = document.getElementById("boxPrimoAccessoHome");
     if (!box) return;
@@ -1162,7 +1168,7 @@
         stato.textContent =
           "⏳ Telegram verificato" +
           (nomeVisualizzato ? ` — ${nomeVisualizzato}` : "") +
-          " · In attesa di approvazione";
+          " · " + etichettaAccesso(PROFILO_TELEGRAM);
       } else {
         stato.style.background = "#eef9f1";
         stato.style.borderColor = "#c7e9d0";
@@ -2835,6 +2841,7 @@ document
 
           profiloBox.style.display = registrato ? "none" : "block";
           attesaBox.style.display = registrato && !attivo ? "block" : "none";
+          attesaBox.textContent = etichettaAccesso(PROFILO_TELEGRAM);
           contenutoAutorizzato.style.display = attivo ? "block" : "none";
 
           return { registrato, attivo };
@@ -4340,7 +4347,7 @@ document
           border:1px solid ${m.autore_ruolo === "admin" ? "#cfe1f5" : "#e5e8ed"};
         ">
           <div style="font-size:12px;color:#667085;margin-bottom:4px;">
-            <strong>${m.autore_ruolo === "admin" ? "Amministratore" : "Tu"} · ${m.autore_nome}</strong>
+            <strong>${m.autore_ruolo === "admin" ? "Amministratore" : "Tu"} · ${escapeHtml(m.autore_nome || "")}</strong>
             · ${fmt(m.created_at)}
           </div>
           <div style="white-space:pre-wrap;line-height:1.45;">${escapeHtml(String(m.messaggio || ""))}</div>
@@ -5650,7 +5657,8 @@ document
               const card = document.createElement("div");
               card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
               card.innerHTML = `
-                <input class="utenteNomeAdmin" data-id="${u.telegram_id}" value="${(u.nome_completo || "").replace(/"/g, "&quot;")}" style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;margin-bottom:8px;">
+                <div style="font-size:13px;color:#667085;margin-bottom:8px;">${escapeHtml(etichettaAccesso(u))}</div>
+                <input class="utenteNomeAdmin" data-id="${u.telegram_id}" value="${escapeHtml(u.nome_completo || "")}" style="width:100%;padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;margin-bottom:8px;">
                 <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;">
                   <select class="utenteRuoloAdmin" data-id="${u.telegram_id}" style="padding:10px;border:1px solid #dfe5ec;border-radius:11px;font-size:16px;">
                     <option value="utente" ${u.ruolo === "utente" ? "selected" : ""}>Utente</option>
@@ -5670,6 +5678,23 @@ document
                 </select>
                 <button class="salvaUtenteAdmin" data-id="${u.telegram_id}" style="width:100%;border:none;background:#1768d7;color:white;padding:11px;border-radius:12px;font-weight:750;">Salva</button>
               `;
+              if (u.ruolo !== "super_admin" && Number(u.telegram_id) !== Number(window.Telegram?.WebApp?.initDataUnsafe?.user?.id) && (u.ruolo === "utente" || PROFILO_TELEGRAM?.ruolo === "super_admin")) {
+                const elimina = document.createElement("button");
+                elimina.textContent = "🗑️ Elimina utente";
+                elimina.style.cssText = "width:100%;border:1px solid #efc3c3;background:#fff4f4;color:#a33a3a;padding:11px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:8px;";
+                elimina.addEventListener("click", async () => {
+                  if (!confirm(`Eliminare l’accesso di ${u.nome_completo || "questo utente"}? Il profilo scomparirà dalla gestione utenti e non potrà accedere. Lo storico dei turni e le assegnazioni saranno conservati.`)) return;
+                  elimina.disabled = true;
+                  try {
+                    await chiamaApi("elimina_utente_admin", {telegram_id:Number(u.telegram_id),conferma:true});
+                    mostra("✅ Utente eliminato. Storico dei turni conservato.");
+                    await carica();
+                    await aggiornaBadgeRichiesteAdmin();
+                  } catch (e) { mostra(e.message || "Eliminazione non riuscita.",true); elimina.disabled=false; }
+                });
+                card.appendChild(elimina);
+              }
+              if (PROFILO_TELEGRAM?.ruolo !== "super_admin") card.querySelector(".utenteRuoloAdmin").disabled = true;
               elenco.appendChild(card);
             });
 
