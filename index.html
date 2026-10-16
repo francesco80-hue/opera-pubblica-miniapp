@@ -5632,6 +5632,9 @@ document
             <h2 style="font-size:25px;margin:0;">👥 Gestione utenti</h2>
           </div>
           <div id="utentiAdminStato" style="display:none;padding:12px;border-radius:13px;margin-bottom:12px;"></div>
+          <label for="utentiAdminCerca" style="display:block;font-size:14px;font-weight:750;color:#344054;margin-bottom:6px;">🔎 Cerca utente</label>
+          <input id="utentiAdminCerca" type="search" placeholder="Scrivi nome o cognome…" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #dfe5ec;border-radius:12px;font-size:16px;background:#fff;margin-bottom:12px;">
+          <div id="utentiAdminRisultati" role="status" aria-live="polite" style="font-size:13px;color:#667085;margin-bottom:12px;"></div>
           <div id="utentiAdminElenco"></div>
           ${pulsanteIndietroFondo("tornaAreaAdminUtentiFondo", "← Torna all’Area amministratori")}
         `;
@@ -5640,6 +5643,25 @@ document
 
         const elenco = document.getElementById("utentiAdminElenco");
         const stato = document.getElementById("utentiAdminStato");
+        const cerca = document.getElementById("utentiAdminCerca");
+        const risultati = document.getElementById("utentiAdminRisultati");
+        const normalizzaNome = valore => String(valore || "").normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("it-IT").trim();
+
+        function filtraUtenti() {
+          const parole = normalizzaNome(cerca.value).split(/\s+/).filter(Boolean);
+          let visibili = 0;
+          const schede = elenco.querySelectorAll("[data-nome-ricerca]");
+          schede.forEach(card => {
+            const corrisponde = parole.every(parola => card.dataset.nomeRicerca.includes(parola));
+            card.hidden = !corrisponde;
+            if (corrisponde) visibili++;
+          });
+          risultati.textContent = parole.length
+            ? (visibili ? `${visibili} utenti trovati su ${schede.length}.` : "Nessun utente trovato.")
+            : `${schede.length} utenti.`;
+        }
+        cerca.addEventListener("input", filtraUtenti);
 
         function mostra(msg, errore=false) {
           stato.style.display = "block";
@@ -5655,6 +5677,7 @@ document
 
             (dati.utenti || []).forEach(u => {
               const card = document.createElement("div");
+              card.dataset.nomeRicerca = normalizzaNome(u.nome_completo);
               card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
               card.innerHTML = `
                 <div style="font-size:13px;color:#667085;margin-bottom:8px;">${escapeHtml(etichettaAccesso(u))}</div>
@@ -5721,6 +5744,7 @@ document
                 }
               });
             });
+            filtraUtenti();
           } catch (errore) {
             mostra(errore.message || "Errore.", true);
           }
