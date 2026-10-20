@@ -3589,8 +3589,9 @@ document
     carica();
   }
 
-  async function apriMieiTurni() {
-    let mese = meseCorrenteKey();
+  async function apriMieiTurni(meseRichiesto = null) {
+    let mese = typeof meseRichiesto === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(meseRichiesto)
+      ? meseRichiesto : meseCorrenteKey();
 
     document.querySelector(".content").innerHTML = `
       ${pulsanteIndietro("tornaHomeMieiTurni")}
@@ -7235,6 +7236,13 @@ document
       if (postazioneLink) {
         if (PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.attivo === true) {
           apriPostazioneDaLink(Number(postazioneLink[1]));
+        }
+        return;
+      }
+      const meseTurni = /^miei_turni_(\d{4})_(0[1-9]|1[0-2])$/.exec(startParam);
+      if (meseTurni) {
+        if (PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.attivo === true) {
+          apriMieiTurni(meseTurni[1] + "-" + meseTurni[2]);
         }
         return;
       }
