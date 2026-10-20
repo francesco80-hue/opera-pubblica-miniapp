@@ -4598,6 +4598,10 @@ document
             style="display:none;border:1px solid #cfe1f5;background:#f5f9ff;color:#315b91;padding:12px;border-radius:15px;font-size:15px;font-weight:750;cursor:pointer;min-height:76px;">
             🔗<br>Configura bot Telegram
           </button>
+          <button id="adminPannelloGruppo" data-no-scroll="true"
+            style="display:none;border:1px solid #cfe1f5;background:#f5f9ff;color:#315b91;padding:12px;border-radius:15px;font-size:15px;font-weight:750;cursor:pointer;min-height:76px;">
+            📌<br>Pannello del gruppo
+          </button>
           <button id="adminGestioneAmministratori" data-no-scroll="true"
             style="display:none;border:1px solid #d9d2f4;background:#f8f6ff;color:#4f3f8e;padding:9px 8px;border-radius:15px;font-size:13.5px;font-weight:750;cursor:pointer;min-height:76px;">
             👑<br>Gestione amministratori
@@ -5876,6 +5880,7 @@ document
         if (ruoloCorrente === "super_admin") {
           adminGestioneAmministratori.style.display = "block";
           document.getElementById("adminConfiguraBot").style.display = "block";
+          document.getElementById("adminPannelloGruppo").style.display = "block";
         }
         aggiornaBadgeDaGestire();
         aggiornaBadgeRapporti();
@@ -6408,6 +6413,61 @@ document
       adminRapportiEsperienze.addEventListener("click", apriRapportiEsperienzeAdmin);
       adminAssistenzaUtenti.addEventListener("click", apriAssistenzaAdmin);
       adminGestioneAmministratori.addEventListener("click", apriGestioneAmministratori);
+      async function apriPannelloGruppo() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAdminPannello", "← Torna all’Area amministratori")}
+          <h2 style="font-size:25px;margin:18px 0;">Pannello del gruppo</h2>
+          <p style="color:#556078;line-height:1.5;margin-bottom:16px;">Pubblica il messaggio di riferimento nel gruppo con la Mini App, la guida e i due pulsanti personali. Le pubblicazioni successive aggiornano lo stesso messaggio.</p>
+          <img id="pannelloImmagine" alt="Anteprima del pannello" style="width:100%;border-radius:16px;margin-bottom:14px;">
+          <div id="pannelloTesto" style="white-space:pre-wrap;line-height:1.5;margin-bottom:14px;"></div>
+          <div id="pannelloPulsanti" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:16px;"></div>
+          <p id="pannelloEsito" style="line-height:1.5;margin-bottom:14px;" role="status">Caricamento anteprima…</p>
+          <button id="pubblicaPannello" disabled style="width:100%;padding:14px;background:#1768d7;color:white;border:0;border-radius:14px;font-size:16px;font-weight:750;">Pubblica nel gruppo</button>
+          ${pulsanteIndietroFondo("tornaAdminPannelloFondo", "← Torna all’Area amministratori")}
+        `;
+        collegaRitornoDoppio("tornaAdminPannello", "tornaAdminPannelloFondo", "admin");
+        const esito = document.getElementById("pannelloEsito");
+        const pulsante = document.getElementById("pubblicaPannello");
+        try {
+          const [anteprima,stato] = await Promise.all([
+            chiamaApi("anteprima_pannello_gruppo_super_admin"),
+            chiamaApi("stato_pannello_gruppo_super_admin"),
+          ]);
+          document.getElementById("pannelloImmagine").src = anteprima.pannello.photo;
+          document.getElementById("pannelloTesto").textContent = anteprima.pannello.caption;
+          anteprima.pannello.reply_markup.inline_keyboard.flat().forEach(p => {
+            const etichetta = document.createElement("div");
+            etichetta.textContent = p.text;
+            etichetta.style.cssText = "padding:12px 6px;border-radius:12px;background:#eef6ff;text-align:center;font-weight:650;font-size:14px;";
+            document.getElementById("pannelloPulsanti").appendChild(etichetta);
+          });
+          if (stato.pannello && stato.pannello.stato !== "pronto") {
+            esito.textContent = "C'è una pubblicazione in corso o da verificare. Controlla il gruppo prima di continuare.";
+            return;
+          }
+          pulsante.textContent = stato.pannello?.message_id ? "Aggiorna il pannello" : "Pubblica nel gruppo";
+          esito.textContent = "Controlla l'anteprima. Premendo il pulsante qui sotto, il bot invierà questo pannello nel gruppo.";
+          pulsante.disabled = false;
+        } catch (errore) {
+          esito.textContent = errore.message || "Impossibile preparare il pannello.";
+          return;
+        }
+        pulsante.addEventListener("click", async event => {
+          event.preventDefault();
+          pulsante.disabled = true;
+          esito.textContent = "Invio del pannello in corso…";
+          try {
+            const risultato = await chiamaApi("pubblica_pannello_gruppo_super_admin");
+            esito.textContent = risultato.aggiornato ? "Il pannello è stato aggiornato." : "Pannello pubblicato. Ora puoi fissarlo nel gruppo e rimuovere il vecchio pannello.";
+            pulsante.textContent = "Aggiorna il pannello";
+            pulsante.disabled = false;
+          } catch (errore) {
+            esito.textContent = errore.message || "Esito da verificare: controlla il gruppo prima di riprovare.";
+          }
+        });
+      }
+
+      document.getElementById("adminPannelloGruppo").addEventListener("click", apriPannelloGruppo);
       document.getElementById("adminConfiguraBot").addEventListener("click", async function(event) {
         event.preventDefault();
         event.stopPropagation();
