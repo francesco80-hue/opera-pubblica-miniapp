@@ -1368,6 +1368,24 @@
   }
 
 
+  async function apriPostazioneDaLink(id) {
+    if (!Number.isSafeInteger(id) || id <= 0) return;
+    try {
+      const {postazione:p} = await chiamaApi("leggi_postazione_link",{postazione_id:id});
+      if (!p || !p.attiva) {
+        alert("Postazione non disponibile o attualmente sospesa. Consulta I miei turni.");
+        return;
+      }
+      await apriPostazioni();
+      const nome = String(p.nome || "").trim().toLowerCase();
+      const bottone = nome === "piazza cairoli" ? "apriCairoli" :
+        nome === "provinciale" ? "apriProvinciale" :
+        (nome === "mercato zir" || nome === "zir" || nome.includes("zir")) ? "apriZir" : null;
+      if (bottone) document.getElementById(bottone)?.click();
+      else alert("Le informazioni dettagliate di questa postazione non sono ancora disponibili.");
+    } catch (_) { alert("Impossibile aprire la postazione. Riprova dalla sezione Postazioni."); }
+  }
+
   async function apriPostazioni(event) {
 
     if (event) {
@@ -4575,6 +4593,10 @@ document
             🗂️<br>Storico
           </button>
 
+          <button id="adminConfiguraBot" data-no-scroll="true"
+            style="display:none;border:1px solid #cfe1f5;background:#f5f9ff;color:#315b91;padding:12px;border-radius:15px;font-size:15px;font-weight:750;cursor:pointer;min-height:76px;">
+            🔗<br>Configura bot Telegram
+          </button>
           <button id="adminGestioneAmministratori" data-no-scroll="true"
             style="display:none;border:1px solid #d9d2f4;background:#f8f6ff;color:#4f3f8e;padding:9px 8px;border-radius:15px;font-size:13.5px;font-weight:750;cursor:pointer;min-height:76px;">
             👑<br>Gestione amministratori
@@ -5852,6 +5874,7 @@ document
       async function configuraSuperAdmin() {
         if (ruoloCorrente === "super_admin") {
           adminGestioneAmministratori.style.display = "block";
+          document.getElementById("adminConfiguraBot").style.display = "block";
         }
         aggiornaBadgeDaGestire();
         aggiornaBadgeRapporti();
@@ -6384,6 +6407,18 @@ document
       adminRapportiEsperienze.addEventListener("click", apriRapportiEsperienzeAdmin);
       adminAssistenzaUtenti.addEventListener("click", apriAssistenzaAdmin);
       adminGestioneAmministratori.addEventListener("click", apriGestioneAmministratori);
+      document.getElementById("adminConfiguraBot").addEventListener("click", async function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const bottone = event.currentTarget;
+        bottone.disabled = true;
+        try {
+          const risposta = await chiamaApi("configura_webhook_bot_super_admin");
+          alert(risposta.avviso_comandi || "Bot Telegram configurato correttamente.");
+        } catch (errore) {
+          alert(errore.message || "Impossibile configurare il bot Telegram.");
+        } finally { bottone.disabled = false; }
+      });
       configuraSuperAdmin();
 
       adminProgrammaPdf.addEventListener("click", async function(event) {
@@ -7196,6 +7231,13 @@ document
         return;
       }
 
+      const postazioneLink = /^postazione_([1-9]\d*)$/.exec(startParam);
+      if (postazioneLink) {
+        if (PROFILO_TELEGRAM?.registrato && PROFILO_TELEGRAM?.attivo === true) {
+          apriPostazioneDaLink(Number(postazioneLink[1]));
+        }
+        return;
+      }
       if (startParam === "miei_turni") {
         document.getElementById("mieiTurni")?.click();
       }
