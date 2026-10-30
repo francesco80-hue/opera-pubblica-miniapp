@@ -1048,7 +1048,6 @@
     const badge = document.getElementById("badgeAdminHome");
 
     if (
-      !badge ||
       !PROFILO_TELEGRAM?.registrato ||
       PROFILO_TELEGRAM?.attivo !== true ||
       !["admin", "super_admin"].includes(PROFILO_TELEGRAM?.ruolo)
@@ -1057,10 +1056,11 @@
     }
 
     try {
-      const [rapporti, richieste, assistenza] = await Promise.all([
+      const [rapporti, richieste, assistenza, rifiuti] = await Promise.all([
         chiamaApi("contatore_rapporti_admin").catch(() => ({ nuovi_rapporti: 0 })),
         chiamaApi("leggi_richieste_accesso").catch(() => ({ richieste: [] })),
-        chiamaApi("contatore_assistenza_admin").catch(() => ({ aperte: 0 }))
+        chiamaApi("contatore_assistenza_admin").catch(() => ({ aperte: 0 })),
+        chiamaApi("contatore_da_gestire_admin").catch(() => ({ rifiutati: 0 }))
       ]);
 
       const nRapporti = Number(rapporti.nuovi_rapporti || 0);
@@ -1068,12 +1068,15 @@
         ? richieste.richieste.length
         : 0;
       const nAssistenza = Number(assistenza.aperte || 0);
-      const totale = nRapporti + nRichieste + nAssistenza;
+      const nRifiuti=Number(rifiuti.rifiutati||0);
+      const totale = nRapporti + nRichieste + nAssistenza + nRifiuti;
 
-      badge.textContent = String(totale);
-      badge.style.display = totale > 0 ? "block" : "none";
-      badge.title =
-        `${nRichieste} richieste di accesso · ${nRapporti} nuovi rapporti · ${nAssistenza} assistenza`;
+      const dettaglio = `${nRichieste} richieste di accesso · ${nRapporti} nuovi rapporti · ${nAssistenza} assistenza · ${nRifiuti} rifiuti da sostituire`;
+      if(badge){badge.textContent=String(totale);badge.style.display=totale>0?"block":"none";badge.title=dettaglio;badge.setAttribute("aria-label",dettaglio);}
+      const sottotitolo=document.querySelector("#amministratori .admin-subtitle");
+      if(sottotitolo)sottotitolo.textContent=totale?dettaglio:"Accesso riservato agli amministratori";
+      const riepilogo=document.getElementById("adminRiepilogoSegnalazioni");
+      if(riepilogo)riepilogo.textContent=totale?dettaglio:"Nessuna segnalazione da gestire.";
     } catch (_) {}
   }
 
@@ -4653,6 +4656,7 @@ document
 
         <div style="background:linear-gradient(135deg,#f5f1ff,#fbfaff);border:1px solid #ded6ff;border-radius:20px;padding:20px;margin-bottom:18px;">
           <h2 style="font-size:25px;margin:0 0 6px 0;">👥 Area amministratori</h2>
+          <p id="adminRiepilogoSegnalazioni" role="status" style="font-size:13px;color:#667085;line-height:1.5;margin-top:10px;">Verifica segnalazioni…</p>
           <div style="color:#6a6380;line-height:1.5;">
             Gestisci utenti, programma, postazioni, conferme e disponibilità.
           </div>
@@ -4690,7 +4694,7 @@ document
           <button id="adminConfermeTurni" data-no-scroll="true"
             style="position:relative;border:1px solid #f0ddba;background:#fffaf0;color:#8a5b13;padding:9px 8px;border-radius:15px;font-size:13.5px;font-weight:750;cursor:pointer;min-height:76px;">
             <span id="badgeDaGestire" style="display:none;position:absolute;right:8px;top:8px;background:#c92c2c;color:#fff;border-radius:999px;padding:3px 7px;font-size:11px;">0</span>
-            ✅<br>Conferme / rifiuti
+            ❌<br>Rifiuti da sostituire
           </button>
 
           <button id="adminRapportiEsperienze" data-no-scroll="true"
@@ -5196,8 +5200,8 @@ document
         await Promise.all([caricaPostazioni(), carica()]);
       }
 
-      async function apriGestioneProgrammaAdmin(turnoDaEvidenziare = null) {
-        let mese = meseCorrenteKey();
+      async function apriGestioneProgrammaAdmin(turnoDaEvidenziare = null, meseDaAprire = "") {
+        let mese = /^\d{4}-(0[1-9]|1[0-2])$/.test(meseDaAprire) ? meseDaAprire : meseCorrenteKey();
         let utentiBase = [];
 
         document.querySelector(".content").innerHTML = `
@@ -5908,94 +5912,52 @@ document
       }
 
       async function apriConfermeAdmin() {
-        let mese = meseCorrenteKey();
-
-        document.querySelector(".content").innerHTML = `
-          ${pulsanteIndietro("tornaAreaAdminConferme", "← Torna all’Area amministratori")}
-          <div style="background:#fffaf0;border:1px solid #f0ddba;border-radius:20px;padding:20px;margin-bottom:16px;">
-            <h2 style="font-size:25px;margin:0;">✅ Conferme / rifiuti</h2>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <button id="confPrev" style="border:none;background:#fff3dc;color:#8a5b13;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">‹</button>
-            <div id="confMese" style="flex:1;text-align:center;font-size:20px;font-weight:800;text-transform:capitalize;"></div>
-            <button id="confNext" style="border:none;background:#fff3dc;color:#8a5b13;width:44px;height:44px;border-radius:14px;font-size:22px;font-weight:800;">›</button>
-          </div>
-          <div id="confElenco"></div>
-          ${pulsanteIndietroFondo("tornaAreaAdminConfermeFondo", "← Torna all’Area amministratori")}
-        `;
-
-        collegaRitornoDoppio("tornaAreaAdminConferme", "tornaAreaAdminConfermeFondo", "admin");
-
-        const meseEl = document.getElementById("confMese");
-        const elenco = document.getElementById("confElenco");
-
-        async function carica() {
-          meseEl.textContent = titoloMese(mese);
-          elenco.innerHTML = "⏳ Caricamento…";
-          try {
-            const dati = await chiamaApi("leggi_turni_admin", { mese });
-            const turni = dati.turni || [];
-            if (!turni.length) {
-              elenco.innerHTML = `<div style="padding:18px;border:1px solid #e1e7ef;border-radius:16px;color:#667085;">Nessun turno.</div>`;
-              return;
-            }
-            elenco.innerHTML = "";
-            turni.forEach(t => {
-              const card = document.createElement("div");
-              card.style.cssText = "border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:9px;background:#fff;";
-              const persone = (t.assegnazioni || []).map(a => {
-                const s = a.stato === "accettato" ? "✅ Accettato" : a.stato === "rifiutato" ? "❌ Rifiutato" : "⏳ In attesa";
-                return `<div style="padding:5px 0;border-top:1px solid #f0f2f5;"><strong>${a.nome_completo}</strong>${iconaPersona(a.genere)}<br><span style="font-size:14px;color:#667085;">${s}</span></div>`;
-              }).join("");
-              card.innerHTML = `
-                <div style="font-weight:800;text-transform:capitalize;">${dataItaliana(t.data)}</div>
-                <div style="color:#667085;margin:4px 0 8px;">${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)} · ${t.postazione_nome}</div>
-                ${persone || "<div style='color:#667085'>Nessuna persona assegnata.</div>"}
-              `;
-              elenco.appendChild(card);
+        document.querySelector(".content").innerHTML=`
+          ${pulsanteIndietro("tornaAreaAdminConferme","← Torna all’Area amministratori")}
+          <div style="background:#fff4f4;border:1px solid #efc3c3;border-radius:20px;padding:20px;margin-bottom:16px;"><h2 style="font-size:25px;margin:0;">❌ Rifiuti da sostituire</h2><p style="color:#667085;margin-top:8px;line-height:1.5;">Solo chi ha rifiutato. All’apertura vengono mostrati i turni ancora da svolgere, anche dei mesi successivi.</p></div>
+          <label for="rifiutiMese" style="display:block;font-weight:750;margin-bottom:6px;">Consulta un mese (facoltativo)</label>
+          <div style="display:flex;gap:8px;margin-bottom:16px;"><input id="rifiutiMese" type="month" style="min-width:0;flex:1;padding:11px;border:1px solid #dfe5ec;border-radius:12px;font:inherit;"><button id="rifiutiFuturi" style="padding:11px;border:0;border-radius:12px;background:#eef6ff;color:#1768d7;font-weight:750;">Da sostituire</button></div>
+          <p id="rifiutiRiepilogo" role="status" style="color:#667085;margin-bottom:12px;"></p><div id="confElenco"></div>
+          ${pulsanteIndietroFondo("tornaAreaAdminConfermeFondo","← Torna all’Area amministratori")}`;
+        collegaRitornoDoppio("tornaAreaAdminConferme","tornaAreaAdminConfermeFondo","admin");
+        const filtro=document.getElementById("rifiutiMese"),elenco=document.getElementById("confElenco"),riepilogo=document.getElementById("rifiutiRiepilogo");
+        let richiesta=0;
+        async function carica(){
+          const corrente=++richiesta;elenco.textContent="⏳ Caricamento…";riepilogo.textContent="";
+          try{
+            const dati=await chiamaApi("leggi_rifiuti_admin",{mese:filtro.value});if(corrente!==richiesta)return;
+            elenco.innerHTML="";riepilogo.textContent=filtro.value?`Rifiuti di ${titoloMese(filtro.value)}: ${dati.rifiutati}.`:`${dati.rifiutati} rifiuti nei turni ancora da svolgere.`;
+            if(!dati.turni?.length){elenco.innerHTML='<div style="padding:18px;border:1px solid #c7e9d0;background:#eef9f1;border-radius:16px;color:#28733d;">Nessun rifiuto da mostrare.</div>';return;}
+            dati.turni.forEach(t=>{
+              const card=document.createElement("div");card.style.cssText="border:1px solid #efc3c3;border-radius:16px;padding:14px;margin-bottom:10px;background:#fff;";
+              const persone=(t.assegnazioni||[]).map(a=>`<div style="padding:8px 0;border-top:1px solid #f0f2f5;"><strong>${escapeHtml(a.nome_completo)}</strong>${iconaPersona(a.genere)}<br><span style="color:#a33a3a;font-size:14px;">❌ Ha rifiutato</span></div>`).join('');
+              card.innerHTML=`<div style="font-weight:800;text-transform:capitalize;">${escapeHtml(dataItaliana(t.data))}</div><div style="color:#667085;margin:4px 0 10px;">${oraBreve(t.ora_inizio)}–${oraBreve(t.ora_fine)} · ${escapeHtml(t.postazione_nome)}</div>${persone}`;
+              const btn=document.createElement("button");btn.textContent="Apri il turno per la sostituzione";btn.style.cssText="width:100%;padding:11px;border:0;border-radius:12px;background:#1768d7;color:#fff;font-weight:750;margin-top:8px;";
+              btn.addEventListener("click",()=>apriGestioneProgrammaAdmin(t.id,String(t.data).slice(0,7)));card.appendChild(btn);elenco.appendChild(card);
             });
-
-          } catch (errore) {
-            elenco.innerHTML = `<div style="padding:14px;background:#fff1f1;color:#a33a3a;border-radius:14px;">⚠️ ${errore.message}</div>`;
-          }
+          }catch(e){if(corrente===richiesta)elenco.textContent=e.message||"Impossibile caricare i rifiuti.";}
         }
-
-        document.getElementById("confPrev").addEventListener("click", () => { mese = spostaMese(mese, -1); carica(); });
-        document.getElementById("confNext").addEventListener("click", () => { mese = spostaMese(mese, 1); carica(); });
-        carica();
+        filtro.addEventListener("change",carica);
+        document.getElementById("rifiutiFuturi").addEventListener("click",()=>{filtro.value="";carica();});
+        await carica();
       }
 
 
       async function aggiornaBadgeRapporti() {
         try {
-          const dati = await chiamaApi("contatore_rapporti_admin");
-          const n = Number(dati.nuovi_rapporti || 0);
-
-          const homeBadge = document.getElementById("badgeAdminHome");
-
-          if (n > 0) {
-            if (badgeRapportiAdmin) {
-              badgeRapportiAdmin.textContent = String(n);
-              badgeRapportiAdmin.style.display = "block";
-            }
-
-            if (homeBadge) {
-              homeBadge.textContent = String(n);
-              homeBadge.style.display = "block";
-            }
-          } else {
-            if (badgeRapportiAdmin) badgeRapportiAdmin.style.display = "none";
-            if (homeBadge) homeBadge.style.display = "none";
-          }
-        } catch (_) {}
+          const dati=await chiamaApi("contatore_rapporti_admin");
+          const n=Number(dati.nuovi_rapporti||0);
+          if(badgeRapportiAdmin){badgeRapportiAdmin.textContent=String(n);badgeRapportiAdmin.style.display=n>0?"block":"none";}
+          await aggiornaBadgeRichiesteAdmin();
+        }catch(_){}
       }
 
       async function aggiornaBadgeDaGestire() {
         try {
           const dati = await chiamaApi("contatore_da_gestire_admin");
-          const n = Number(dati.da_gestire || 0);
+          const n = Number(dati.rifiutati || 0);
           if (n > 0) {
-            badgeDaGestire.textContent = `${n} da gestire`;
+            badgeDaGestire.textContent = `${n} rifiuti`;
             badgeDaGestire.style.display = "block";
           } else {
             badgeDaGestire.style.display = "none";
