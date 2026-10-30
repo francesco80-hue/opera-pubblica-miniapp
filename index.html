@@ -5300,10 +5300,11 @@ document
               cacheProgrammaAdmin.delete(mese);
               cacheProgrammaUtente.delete(mese);
               const info = risultato.pubblicazione || {};
+              const avvisoPdf=Number(risultato.pdf_automatici?.da_riprovare||0)>0 ? " PDF in aggiornamento automatico: non occorre ripubblicare i turni." : " PDF aggiornato automaticamente.";
               await caricaTurni();
               stato(`✅ Programma aggiornato: ${Number(info.turni_pubblicati || 0)} turni, ` +
                     `${Number(info.nuovi || 0)} nuove assegnazioni e ${Number(info.rimossi || 0)} rimozioni. ` +
-                    `Le notifiche non ancora consegnate verranno riprovate automaticamente.`);
+                    `Le notifiche non ancora consegnate verranno riprovate automaticamente.` + avvisoPdf);
             } catch (errore) {
               pulsante.disabled = false;
               pulsante.textContent = "Riprova invio";
@@ -6506,7 +6507,7 @@ document
         document.querySelector(".content").innerHTML = `
           ${pulsanteIndietro("tornaAdminPannello", "← Torna all’Area amministratori")}
           <h2 style="font-size:25px;margin:18px 0;">Pannello del gruppo</h2>
-          <p style="color:#556078;line-height:1.5;margin-bottom:16px;">Modifica testo e immagine. Il pulsante PDF apre il programma già generato del mese corrente. Le pubblicazioni successive aggiornano lo stesso messaggio.</p>
+          <p style="color:#556078;line-height:1.5;margin-bottom:16px;">Modifica testo e immagine. Il pulsante PDF apre il programma aggiornato automaticamente del mese corrente. Le pubblicazioni successive aggiornano lo stesso messaggio.</p>
           <label for="pannelloTestoModifica" style="display:block;font-weight:750;margin-bottom:6px;">Testo del messaggio</label>
           <textarea id="pannelloTestoModifica" maxlength="2048" rows="8" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #dfe5ec;border-radius:12px;font:inherit;margin-bottom:12px;"></textarea>
           <label for="pannelloFile" style="display:block;font-weight:750;margin-bottom:6px;">Immagine (sostituisce quella attuale)</label>
@@ -6632,9 +6633,10 @@ document
 
           <button id="stampaProgrammaPdf" type="button" data-no-scroll="true"
             style="width:100%;border:none;background:#1768d7;color:#fff;padding:13px;border-radius:14px;font-size:16px;font-weight:800;margin-bottom:14px;">
-            📄 Genera / Apri PDF
+            📄 Apri PDF aggiornato
           </button>
 
+          <p style="color:#667085;line-height:1.5;margin-bottom:12px;">Il PDF si aggiorna automaticamente con le modifiche pubblicate. Le bozze diventano visibili dopo Invia i turni.</p>
           <div id="pdfStato" style="display:none;padding:12px;border-radius:12px;margin-bottom:10px;"></div>
           <div id="pdfAnteprima"></div>
 
