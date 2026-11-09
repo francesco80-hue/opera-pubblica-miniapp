@@ -4373,6 +4373,7 @@ document
         </div>
 
         <img
+          id="immagineDisposizionePubblicazioni"
           src="disposizione-pubblicazioni.png"
           loading="lazy"
           alt="Disposizione aggiornata delle pubblicazioni"
@@ -4440,6 +4441,23 @@ document
         .addEventListener("click", function() {
           tornaAllaHome();
         });
+
+      (async function caricaDisposizioneAggiornata() {
+        const immagine = document.getElementById("immagineDisposizionePubblicazioni");
+        try {
+          const dati = await chiamaApi("leggi_disposizione_pubblicazioni");
+          if (dati.configurata) {
+            if (dati.is_deleted || !dati.image_url) {
+              immagine.style.display = "none";
+            } else {
+              immagine.src = dati.image_url;
+              immagine.style.display = "block";
+            }
+          }
+        } catch (_) {
+          // Se l'API non è disponibile, resta visibile l'immagine statica già pubblicata.
+        }
+      })();
     });
 
 
@@ -4713,6 +4731,11 @@ document
             📄<br>Programma PDF
           </button>
 
+          <button id="adminGestioneDisposizione" data-no-scroll="true"
+            style="border:1px solid #f0d9b8;background:#fffaf2;color:#946018;padding:9px 8px;border-radius:15px;font-size:13.5px;font-weight:750;cursor:pointer;min-height:76px;">
+            📚<br>Disposizione pubblicazioni
+          </button>
+
           <button id="adminGestioneAggiornamenti" data-no-scroll="true"
             style="border:1px solid #cfe1f5;background:#f5f9ff;color:#315b91;padding:9px 8px;border-radius:15px;font-size:13.5px;font-weight:750;cursor:pointer;min-height:76px;">
             📢<br>Gestione aggiornamenti
@@ -4799,6 +4822,7 @@ document
       const badgeAssistenzaAdmin = document.getElementById("badgeAssistenzaAdmin");
       const badgeRapportiAdmin = document.getElementById("badgeRapportiAdmin");
       const adminProgrammaPdf = document.getElementById("adminProgrammaPdf");
+      const adminGestioneDisposizione = document.getElementById("adminGestioneDisposizione");
       const adminGestioneAggiornamenti = document.getElementById("adminGestioneAggiornamenti");
       const adminStoricoProgrammi = document.getElementById("adminStoricoProgrammi");
       const adminGestioneAmministratori = document.getElementById("adminGestioneAmministratori");
@@ -6492,6 +6516,161 @@ document
         carica();
       }
 
+
+      async function apriGestioneDisposizioneAdmin() {
+        document.querySelector(".content").innerHTML = `
+          ${pulsanteIndietro("tornaAreaAdminDisposizione", "← Torna all’Area amministratori")}
+          <div style="background:#fff8ed;border:1px solid #f0d9b8;border-radius:20px;padding:20px;margin-bottom:16px;">
+            <h2 style="font-size:24px;margin:0 0 6px;">📚 Gestione disposizione pubblicazioni</h2>
+            <div style="color:#80694e;line-height:1.5;">Carica, sostituisci, elimina o ripristina l’immagine mostrata nella sezione pubblica.</div>
+          </div>
+          <div id="disposizioneAdminStato" role="status" style="display:none;padding:12px;border-radius:12px;margin-bottom:12px;"></div>
+          <div style="border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:14px;background:#fff;">
+            <div style="font-weight:800;margin-bottom:8px;">Immagine attualmente pubblicata</div>
+            <img id="disposizioneAdminCorrente" alt="Disposizione attuale" style="display:none;width:100%;border-radius:12px;margin-bottom:10px;">
+            <div id="disposizioneAdminVuota" style="display:none;padding:18px;text-align:center;background:#f7f8fa;border-radius:12px;color:#667085;">Nessuna immagine attualmente pubblicata.</div>
+            <div style="font-weight:800;margin:14px 0 8px;">Anteprima della nuova immagine</div>
+            <input id="disposizioneAdminFile" type="file" accept="image/jpeg,image/png" style="width:100%;margin-bottom:8px;">
+            <div style="font-size:12px;color:#667085;line-height:1.45;margin-bottom:10px;">JPEG o PNG, massimo 4 MB. L’immagine sarà visibile a tutti gli utenti della Mini App.</div>
+            <img id="disposizioneAdminAnteprima" alt="Anteprima nuova immagine" style="display:none;width:100%;border-radius:12px;margin-bottom:12px;">
+            <button id="disposizioneAdminSalva" type="button" disabled data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-bottom:8px;">💾 Pubblica nuova disposizione</button>
+            <button id="disposizioneAdminElimina" type="button" data-no-scroll="true" style="width:100%;border:1px solid #f1caca;background:#fff5f5;color:#a33a3a;padding:12px;border-radius:12px;font-weight:800;margin-bottom:8px;">🗑️ Elimina disposizione attuale</button>
+          </div>
+          <div style="border:1px solid #d8e5f7;border-radius:16px;padding:14px;background:#f8fbff;margin-bottom:16px;">
+            <div style="font-weight:800;margin-bottom:8px;">Versione precedente</div>
+            <img id="disposizioneAdminPrecedente" alt="Versione precedente" style="display:none;width:100%;border-radius:12px;margin-bottom:10px;">
+            <div id="disposizioneAdminPrecedenteVuota" style="color:#667085;font-size:13px;">Non è disponibile una versione precedente.</div>
+            <button id="disposizioneAdminRipristina" type="button" data-no-scroll="true" disabled style="width:100%;border:1px solid #b8d2ef;background:#eaf3ff;color:#245d98;padding:12px;border-radius:12px;font-weight:800;">↶ Ripristina versione precedente</button>
+          </div>
+          ${pulsanteIndietroFondo("tornaAreaAdminDisposizioneFondo", "← Torna all’Area amministratori")}
+        `;
+        collegaRitornoDoppio("tornaAreaAdminDisposizione", "tornaAreaAdminDisposizioneFondo", "admin");
+
+        const stato = document.getElementById("disposizioneAdminStato");
+        const corrente = document.getElementById("disposizioneAdminCorrente");
+        const vuota = document.getElementById("disposizioneAdminVuota");
+        const precedente = document.getElementById("disposizioneAdminPrecedente");
+        const precedenteVuota = document.getElementById("disposizioneAdminPrecedenteVuota");
+        const ripristina = document.getElementById("disposizioneAdminRipristina");
+        const fileInput = document.getElementById("disposizioneAdminFile");
+        const anteprima = document.getElementById("disposizioneAdminAnteprima");
+        const salva = document.getElementById("disposizioneAdminSalva");
+        const elimina = document.getElementById("disposizioneAdminElimina");
+        let fileScelto = null;
+        let urlAnteprima = "";
+
+        function mostra(msg, errore=false) {
+          stato.style.display = "block";
+          stato.style.background = errore ? "#fff1f1" : "#eef9f1";
+          stato.style.color = errore ? "#a33a3a" : "#28733d";
+          stato.textContent = msg;
+        }
+
+        async function caricaStato() {
+          const dati = await chiamaApi("leggi_disposizione_pubblicazioni");
+          const urlAttuale = dati.configurata ? (dati.is_deleted ? null : dati.image_url) : "disposizione-pubblicazioni.png";
+          if (urlAttuale) {
+            corrente.src = urlAttuale;
+            corrente.style.display = "block";
+            vuota.style.display = "none";
+          } else {
+            corrente.removeAttribute("src");
+            corrente.style.display = "none";
+            vuota.style.display = "block";
+          }
+          if (dati.previous_image_url) {
+            precedente.src = dati.previous_image_url;
+            precedente.style.display = "block";
+            precedenteVuota.style.display = "none";
+            ripristina.disabled = false;
+          } else {
+            precedente.removeAttribute("src");
+            precedente.style.display = "none";
+            precedenteVuota.style.display = "block";
+            ripristina.disabled = true;
+          }
+          elimina.disabled = !urlAttuale || !dati.configurata;
+          elimina.style.opacity = elimina.disabled ? "0.5" : "1";
+        }
+
+        fileInput.addEventListener("change", () => {
+          const file = fileInput.files?.[0];
+          if (!file) return;
+          if (!["image/jpeg","image/png"].includes(file.type) || file.size > 4*1024*1024) {
+            mostra("Scegli un'immagine JPEG o PNG fino a 4 MB.", true);
+            fileInput.value = "";
+            fileScelto = null;
+            salva.disabled = true;
+            return;
+          }
+          fileScelto = file;
+          if (urlAnteprima) URL.revokeObjectURL(urlAnteprima);
+          urlAnteprima = URL.createObjectURL(file);
+          anteprima.src = urlAnteprima;
+          anteprima.style.display = "block";
+          salva.disabled = false;
+        });
+
+        salva.addEventListener("click", async () => {
+          if (!fileScelto) return;
+          if (!confirm("Pubblicare questa nuova immagine? La disposizione attuale verrà conservata come versione precedente.")) return;
+          salva.disabled = true;
+          mostra("Caricamento e pubblicazione in corso…");
+          try {
+            const base64 = await new Promise((resolve,reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(String(reader.result).split(",")[1]);
+              reader.onerror = () => reject(new Error("Lettura immagine non riuscita."));
+              reader.readAsDataURL(fileScelto);
+            });
+            await chiamaApi("salva_disposizione_pubblicazioni_admin",{base64});
+            fileScelto = null;
+            fileInput.value = "";
+            anteprima.style.display = "none";
+            if (urlAnteprima) URL.revokeObjectURL(urlAnteprima);
+            urlAnteprima = "";
+            mostra("✅ Nuova disposizione pubblicata correttamente.");
+            await caricaStato();
+          } catch (errore) {
+            mostra(errore.message || "Pubblicazione non riuscita.", true);
+            salva.disabled = !fileScelto;
+          }
+        });
+
+        elimina.addEventListener("click", async () => {
+          if (!confirm("Eliminare la disposizione attualmente pubblicata? La versione sarà conservata per poterla ripristinare.")) return;
+          elimina.disabled = true;
+          try {
+            await chiamaApi("elimina_disposizione_pubblicazioni_admin");
+            mostra("✅ Disposizione rimossa dalla pagina pubblica. La versione precedente è conservata.");
+            await caricaStato();
+          } catch (errore) {
+            mostra(errore.message || "Eliminazione non riuscita.", true);
+            await caricaStato();
+          }
+        });
+
+        ripristina.addEventListener("click", async () => {
+          if (!confirm("Ripristinare la versione precedente? L'immagine attualmente pubblicata verrà conservata come versione precedente.")) return;
+          ripristina.disabled = true;
+          try {
+            await chiamaApi("ripristina_disposizione_pubblicazioni_admin");
+            mostra("✅ Versione precedente ripristinata.");
+            await caricaStato();
+          } catch (errore) {
+            mostra(errore.message || "Ripristino non riuscito.", true);
+            await caricaStato();
+          }
+        });
+
+        try {
+          await caricaStato();
+        } catch (errore) {
+          mostra(errore.message || "Impossibile caricare la disposizione.", true);
+        }
+      }
+
+      adminGestioneDisposizione.addEventListener("click", apriGestioneDisposizioneAdmin);
       adminGestioneProgramma.addEventListener("click", apriGestioneProgrammaAdmin);
       adminTurniAttiviDisponibilita.addEventListener("click", apriTurniAttiviDisponibilitaAdmin);
 
