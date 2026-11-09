@@ -6526,7 +6526,7 @@ document
           <div style="border:1px solid #d8e5f7;border-radius:16px;padding:14px;margin-bottom:16px;background:#f8fbff;">
             <h3 style="margin:0 0 10px;">✏️ Testi della pagina pubblica</h3>
             <div style="font-size:13px;color:#667085;margin-bottom:12px;">Puoi cancellare il contenuto di qualsiasi campo. I campi vuoti non verranno visualizzati.</div>
-            \${campiTesto.map(([id,label]) => '<label for="testoDisposizione_' + id + '" style="display:block;font-weight:750;margin:12px 0 5px;">' + label + '</label><textarea id="testoDisposizione_' + id + '" data-testo-disposizione="' + id + '" maxlength="2000" rows="2" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #dfe5ef;border-radius:10px;font:inherit;resize:vertical;"></textarea>').join("")}
+            ${campiTesto.map(([id,label]) => '<label for="testoDisposizione_' + id + '" style="display:block;font-weight:750;margin:12px 0 5px;">' + label + '</label><textarea id="testoDisposizione_' + id + '" data-testo-disposizione="' + id + '" maxlength="2000" rows="2" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #dfe5ef;border-radius:10px;font:inherit;resize:vertical;"></textarea>').join("")}
             <button id="disposizioneSalvaTesti" type="button" data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-top:14px;">💾 Salva i testi della pagina</button>
           </div>
           <div style="border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:14px;background:#fff;">
