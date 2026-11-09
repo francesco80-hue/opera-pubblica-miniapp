@@ -4334,15 +4334,13 @@ document
           </div>
         </div>
 
-        <div id="dispIntroBox" style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
-          <p id="dispIntro1">Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.</p>
-          <p id="dispIntro2" style="margin-top:10px;">La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.</p>
-        </div>
+        <div id="dispTextAbove" style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;white-space:pre-wrap;">Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.
 
-        <div id="dispBlueBox" style="background:#eef6ff;border:1px solid #c8ddf7;border-radius:18px;padding:17px;margin-bottom:16px;line-height:1.6;color:#33435f;">
-          <div id="dispBlue1">Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.</div>
-          <div id="dispBlue2" style="margin-top:8px;">Il poster da esporre è “Corso biblico gratuito”.</div>
-        </div>
+La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.
+
+Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.
+
+Il poster da esporre è “Corso biblico gratuito”.</div>
 
         <img
           id="immagineDisposizionePubblicazioni"
@@ -4356,16 +4354,14 @@ document
             margin-bottom:18px;
           ">
 
-        <div id="dispRemindersBox" style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
-          <div id="dispRemindersTitle" style="font-weight:750;margin-bottom:8px;">✅ Ricordate di:</div>
-          <div id="dispReminder1">• consultare sempre l'immagine aggiornata;</div>
-          <div id="dispReminder2">• riprodurre la disposizione esattamente come mostrato;</div>
-          <div id="dispReminder3">• mantenere opuscoli ed espositore puliti e in ordine;</div>
-          <div id="dispReminder4">• verificare periodicamente eventuali modifiche.</div>
-        </div>
+        <div id="dispTextBelow" style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;white-space:pre-wrap;">✅ Ricordate di:
+• consultare sempre l'immagine aggiornata;
+• riprodurre la disposizione esattamente come mostrato;
+• mantenere opuscoli ed espositore puliti e in ordine;
+• verificare periodicamente eventuali modifiche.</div>
 
-        <div id="dispNoteBox" style="background:#fff8e8;border:1px solid #ffe0a3;border-radius:18px;padding:16px;margin-bottom:18px;color:#725315;line-height:1.55;">
-          <div id="dispNote">📌 Nota importante: gli aggiornamenti possono essere frequenti. La disposizione visibile nella Mini App rappresenta la versione più recente da seguire.</div>
+        <div style="background:#fff8e8;border:1px solid #ffe0a3;border-radius:18px;padding:16px;margin-bottom:18px;color:#725315;line-height:1.55;">
+          📌 <strong>Nota importante:</strong> gli aggiornamenti possono essere frequenti. La disposizione visibile nella Mini App rappresenta la versione più recente da seguire.
         </div>
 
         <button
@@ -4401,36 +4397,28 @@ document
         const immagine = document.getElementById("immagineDisposizionePubblicazioni");
         try {
           const dati = await chiamaApi("leggi_disposizione_pubblicazioni");
-          const defaults = {
-            page_title:"Disposizione delle pubblicazioni",
-            page_subtitle:"Configurazione da seguire nel periodo in corso",
-            intro_1:"Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.",
-            intro_2:"La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.",
-            blue_1:"Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.",
-            blue_2:"Il poster da esporre è “Corso biblico gratuito”.",
-            reminders_title:"✅ Ricordate di:",
-            reminder_1:"• consultare sempre l'immagine aggiornata;",
-            reminder_2:"• riprodurre la disposizione esattamente come mostrato;",
-            reminder_3:"• mantenere opuscoli ed espositore puliti e in ordine;",
-            reminder_4:"• verificare periodicamente eventuali modifiche.",
-            note:"📌 Nota importante: gli aggiornamenti possono essere frequenti. La disposizione visibile nella Mini App rappresenta la versione più recente da seguire."
-          };
-          const mapping = {
-            page_title:"dispPageTitle",page_subtitle:"dispPageSubtitle",
-            intro_1:"dispIntro1",intro_2:"dispIntro2",blue_1:"dispBlue1",blue_2:"dispBlue2",
-            reminders_title:"dispRemindersTitle",reminder_1:"dispReminder1",reminder_2:"dispReminder2",
-            reminder_3:"dispReminder3",reminder_4:"dispReminder4",note:"dispNote"
-          };
-          Object.entries(mapping).forEach(([key,id]) => {
-            const el=document.getElementById(id);
-            const value=Object.prototype.hasOwnProperty.call(dati.testi||{},key) ? dati.testi[key] : defaults[key];
-            el.textContent=typeof value==="string" ? value : "";
-            el.style.display=el.textContent.trim() ? "" : "none";
-          });
-          document.getElementById("dispHeaderBox").style.display = ["dispPageTitle","dispPageSubtitle"].some(id=>document.getElementById(id).textContent.trim()) ? "" : "none";
-          [["dispIntroBox",["dispIntro1","dispIntro2"]],["dispBlueBox",["dispBlue1","dispBlue2"]],["dispRemindersBox",["dispRemindersTitle","dispReminder1","dispReminder2","dispReminder3","dispReminder4"]],["dispNoteBox",["dispNote"]]].forEach(([box,ids])=>{
-            document.getElementById(box).style.display=ids.some(id=>document.getElementById(id).textContent.trim()) ? "" : "none";
-          });
+          const testi = dati.testi || {};
+          const sopraDefault = [
+            testi.intro_1 ?? "Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.",
+            testi.intro_2 ?? "La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.",
+            testi.blue_1 ?? "Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.",
+            testi.blue_2 ?? "Il poster da esporre è “Corso biblico gratuito”."
+          ].filter(Boolean).join("\n\n");
+          const sottoDefault = [
+            testi.reminders_title ?? "✅ Ricordate di:",
+            testi.reminder_1 ?? "• consultare sempre l'immagine aggiornata;",
+            testi.reminder_2 ?? "• riprodurre la disposizione esattamente come mostrato;",
+            testi.reminder_3 ?? "• mantenere opuscoli ed espositore puliti e in ordine;",
+            testi.reminder_4 ?? "• verificare periodicamente eventuali modifiche."
+          ].filter(Boolean).join("\n");
+          const sopra = typeof testi.testo_sopra === "string" ? testi.testo_sopra : sopraDefault;
+          const sotto = typeof testi.testo_sotto === "string" ? testi.testo_sotto : sottoDefault;
+          const elSopra=document.getElementById("dispTextAbove");
+          const elSotto=document.getElementById("dispTextBelow");
+          elSopra.textContent=sopra;
+          elSotto.textContent=sotto;
+          elSopra.style.display=sopra.trim() ? "" : "none";
+          elSotto.style.display=sotto.trim() ? "" : "none";
           if (dati.configurata) {
             if (dati.is_deleted || !dati.image_url) {
               immagine.style.display = "none";
