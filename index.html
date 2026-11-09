@@ -4308,7 +4308,7 @@ document
           </button>
         </div>
 
-        <div style="
+        <div id="dispHeaderBox" style="
           background:linear-gradient(135deg,#fff7ed,#fffdf9);
           border:1px solid #f5d7b2;
           border-radius:20px;
@@ -4427,6 +4427,7 @@ document
             el.textContent=typeof value==="string" ? value : "";
             el.style.display=el.textContent.trim() ? "" : "none";
           });
+          document.getElementById("dispHeaderBox").style.display = ["dispPageTitle","dispPageSubtitle"].some(id=>document.getElementById(id).textContent.trim()) ? "" : "none";
           [["dispIntroBox",["dispIntro1","dispIntro2"]],["dispBlueBox",["dispBlue1","dispBlue2"]],["dispRemindersBox",["dispRemindersTitle","dispReminder1","dispReminder2","dispReminder3","dispReminder4"]],["dispNoteBox",["dispNote"]]].forEach(([box,ids])=>{
             document.getElementById(box).style.display=ids.some(id=>document.getElementById(id).textContent.trim()) ? "" : "none";
           });
