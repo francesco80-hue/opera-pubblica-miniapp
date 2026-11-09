@@ -6557,10 +6557,24 @@ Il poster da esporre è “Corso biblico gratuito”.</div>
 
         async function caricaStato() {
           const dati = await chiamaApi("leggi_disposizione_pubblicazioni");
-          campiTesto.forEach(([id]) => {
-            const campo=document.getElementById("testoDisposizione_"+id);
-            campo.value=typeof dati.testi?.[id]==="string" ? dati.testi[id] : "";
-          });
+          const legacy=dati.testi || {};
+          const testoSopraDefault=[
+            legacy.intro_1 ?? "Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.",
+            legacy.intro_2 ?? "La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.",
+            legacy.blue_1 ?? "Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.",
+            legacy.blue_2 ?? "Il poster da esporre è “Corso biblico gratuito”."
+          ].filter(Boolean).join("\n\n");
+          const testoSottoDefault=[
+            legacy.reminders_title ?? "✅ Ricordate di:",
+            legacy.reminder_1 ?? "• consultare sempre l'immagine aggiornata;",
+            legacy.reminder_2 ?? "• riprodurre la disposizione esattamente come mostrato;",
+            legacy.reminder_3 ?? "• mantenere opuscoli ed espositore puliti e in ordine;",
+            legacy.reminder_4 ?? "• verificare periodicamente eventuali modifiche."
+          ].filter(Boolean).join("\n");
+          document.getElementById("testoDisposizione_testo_sopra").value =
+            typeof legacy.testo_sopra === "string" ? legacy.testo_sopra : testoSopraDefault;
+          document.getElementById("testoDisposizione_testo_sotto").value =
+            typeof legacy.testo_sotto === "string" ? legacy.testo_sotto : testoSottoDefault;
           document.getElementById("disposizioneSalvaTesti").onclick = salvaTesti;
           const urlAttuale = dati.configurata ? (dati.is_deleted ? null : dati.image_url) : "disposizione-pubblicazioni.png";
           if (urlAttuale) {
@@ -6596,7 +6610,7 @@ Il poster da esporre è “Corso biblico gratuito”.</div>
 
         salva.addEventListener("click", async () => {
           if (!fileScelto) return;
-          if (!confirm("Pubblicare questa nuova immagine? La disposizione attuale verrà conservata come versione precedente.")) return;
+          if (!confirm("Sostituire l’immagine attualmente pubblicata con questa nuova immagine?")) return;
           salva.disabled = true;
           mostra("Caricamento e pubblicazione in corso…");
           try {
