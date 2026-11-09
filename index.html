@@ -6504,31 +6504,21 @@ document
 
       async function apriGestioneDisposizioneAdmin() {
         const campiTesto = [
-          ["page_title","Titolo della pagina"],
-          ["page_subtitle","Sottotitolo"],
-          ["intro_1","Testo introduttivo 1"],
-          ["intro_2","Testo introduttivo 2"],
-          ["blue_1","Testo riquadro blu 1"],
-          ["blue_2","Testo riquadro blu 2"],
-          ["reminders_title","Titolo delle raccomandazioni"],
-          ["reminder_1","Raccomandazione 1"],
-          ["reminder_2","Raccomandazione 2"],
-          ["reminder_3","Raccomandazione 3"],
-          ["reminder_4","Raccomandazione 4"],
-          ["note","Nota finale"]
+          ["testo_sopra","Testo da mostrare prima dell’immagine"],
+          ["testo_sotto","Testo da mostrare dopo l’immagine"]
         ];
         document.querySelector(".content").innerHTML = `
           ${pulsanteIndietro("tornaAreaAdminDisposizione", "← Torna all’Area amministratori")}
           <div style="background:#fff8ed;border:1px solid #f0d9b8;border-radius:20px;padding:20px;margin-bottom:16px;">
             <h2 style="font-size:24px;margin:0 0 6px;">📚 Gestione disposizione pubblicazioni</h2>
-            <div style="color:#80694e;line-height:1.5;">Modifica o cancella liberamente ogni testo della pagina pubblica. Lascia vuoto un campo per non mostrare quel contenuto.</div>
+            <div style="color:#80694e;line-height:1.5;">Il titolo e il sottotitolo restano fissi. Modifica i due testi già presenti: uno apparirà sopra l’immagine e l’altro sotto. Lascia vuoto un campo per nascondere quel testo.</div>
           </div>
           <div id="disposizioneAdminStato" role="status" style="display:none;padding:12px;border-radius:12px;margin-bottom:12px;"></div>
           <div style="border:1px solid #d8e5f7;border-radius:16px;padding:14px;margin-bottom:16px;background:#f8fbff;">
-            <h3 style="margin:0 0 10px;">✏️ Testi della pagina pubblica</h3>
-            <div style="font-size:13px;color:#667085;margin-bottom:12px;">Puoi cancellare il contenuto di qualsiasi campo. I campi vuoti non verranno visualizzati.</div>
-            ${campiTesto.map(([id,label]) => '<label for="testoDisposizione_' + id + '" style="display:block;font-weight:750;margin:12px 0 5px;">' + label + '</label><textarea id="testoDisposizione_' + id + '" data-testo-disposizione="' + id + '" maxlength="2000" rows="2" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #dfe5ef;border-radius:10px;font:inherit;resize:vertical;"></textarea>').join("")}
-            <button id="disposizioneSalvaTesti" type="button" data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-top:14px;">💾 Salva i testi della pagina</button>
+            <h3 style="margin:0 0 10px;">✏️ Testi della pagina</h3>
+            <div style="font-size:13px;color:#667085;margin-bottom:12px;">Il testo sopra contiene già “Cari fratelli…” e “Nei settori inserire…”. Quello sotto contiene già “Ricordate di…” e le raccomandazioni. Puoi modificarli liberamente.</div>
+            ${campiTesto.map(([id,label]) => '<label for="testoDisposizione_' + id + '" style="display:block;font-weight:750;margin:12px 0 5px;">' + label + '</label><textarea id="testoDisposizione_' + id + '" data-testo-disposizione="' + id + '" maxlength="6000" rows="7" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #dfe5ef;border-radius:10px;font:inherit;resize:vertical;"></textarea>').join("")}
+            <button id="disposizioneSalvaTesti" type="button" data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-top:14px;">💾 Salva i testi</button>
           </div>
           <div style="border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:14px;background:#fff;">
             <h3 style="margin:0 0 10px;">🖼️ Immagine attualmente pubblicata</h3>
