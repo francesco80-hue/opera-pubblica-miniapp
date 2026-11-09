@@ -4328,48 +4328,20 @@ document
               font-size:27px;
             ">📚</div>
             <div>
-              <h2 style="font-size:25px;margin:0;">Disposizione delle pubblicazioni</h2>
-              <div style="color:#80694e;margin-top:4px;">Configurazione da seguire nel periodo in corso</div>
+              <h2 id="dispPageTitle" style="font-size:25px;margin:0;">Disposizione delle pubblicazioni</h2>
+              <div id="dispPageSubtitle" style="color:#80694e;margin-top:4px;">Configurazione da seguire nel periodo in corso</div>
             </div>
           </div>
         </div>
 
-        <div style="
-          background:#ffffff;
-          border:1px solid #e1e7ef;
-          border-radius:18px;
-          padding:18px;
-          margin-bottom:16px;
-          line-height:1.65;
-          color:#3f4a5f;
-        ">
-          <p>
-            Cari fratelli, questa sezione viene aggiornata regolarmente per indicare
-            la disposizione attuale delle pubblicazioni per l'opera pubblica.
-          </p>
-          <p style="margin-top:10px;">
-            La configurazione mostrata è quella da seguire nel periodo in corso.
-            Controllate questa pagina di tanto in tanto, così da mantenere
-            l'espositore sempre allineato alle indicazioni più recenti.
-          </p>
+        <div id="dispIntroBox" style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
+          <p id="dispIntro1">Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.</p>
+          <p id="dispIntro2" style="margin-top:10px;">La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.</p>
         </div>
 
-        <div style="
-          background:#eef6ff;
-          border:1px solid #c8ddf7;
-          border-radius:18px;
-          padding:17px;
-          margin-bottom:16px;
-          line-height:1.6;
-          color:#33435f;
-        ">
-          <div>
-            Nei settori inserire l'opuscolo
-            <strong>“Puoi vivere felice per sempre”</strong>, come da immagine.
-          </div>
-          <div style="margin-top:8px;">
-            Il poster da esporre è <strong>“Corso biblico gratuito”</strong>.
-          </div>
+        <div id="dispBlueBox" style="background:#eef6ff;border:1px solid #c8ddf7;border-radius:18px;padding:17px;margin-bottom:16px;line-height:1.6;color:#33435f;">
+          <div id="dispBlue1">Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.</div>
+          <div id="dispBlue2" style="margin-top:8px;">Il poster da esporre è “Corso biblico gratuito”.</div>
         </div>
 
         <img
@@ -4384,33 +4356,16 @@ document
             margin-bottom:18px;
           ">
 
-        <div style="
-          background:#ffffff;
-          border:1px solid #e1e7ef;
-          border-radius:18px;
-          padding:18px;
-          margin-bottom:16px;
-          line-height:1.65;
-          color:#3f4a5f;
-        ">
-          <div style="font-weight:750;margin-bottom:8px;">✅ Ricordate di:</div>
-          <div>• consultare sempre l'immagine aggiornata;</div>
-          <div>• riprodurre la disposizione esattamente come mostrato;</div>
-          <div>• mantenere opuscoli ed espositore puliti e in ordine;</div>
-          <div>• verificare periodicamente eventuali modifiche.</div>
+        <div id="dispRemindersBox" style="background:#ffffff;border:1px solid #e1e7ef;border-radius:18px;padding:18px;margin-bottom:16px;line-height:1.65;color:#3f4a5f;">
+          <div id="dispRemindersTitle" style="font-weight:750;margin-bottom:8px;">✅ Ricordate di:</div>
+          <div id="dispReminder1">• consultare sempre l'immagine aggiornata;</div>
+          <div id="dispReminder2">• riprodurre la disposizione esattamente come mostrato;</div>
+          <div id="dispReminder3">• mantenere opuscoli ed espositore puliti e in ordine;</div>
+          <div id="dispReminder4">• verificare periodicamente eventuali modifiche.</div>
         </div>
 
-        <div style="
-          background:#fff8e8;
-          border:1px solid #ffe0a3;
-          border-radius:18px;
-          padding:16px;
-          margin-bottom:18px;
-          color:#725315;
-          line-height:1.55;
-        ">
-          📌 <strong>Nota importante:</strong> gli aggiornamenti possono essere frequenti.
-          La disposizione visibile nella Mini App rappresenta la versione più recente da seguire.
+        <div id="dispNoteBox" style="background:#fff8e8;border:1px solid #ffe0a3;border-radius:18px;padding:16px;margin-bottom:18px;color:#725315;line-height:1.55;">
+          <div id="dispNote">📌 Nota importante: gli aggiornamenti possono essere frequenti. La disposizione visibile nella Mini App rappresenta la versione più recente da seguire.</div>
         </div>
 
         <button
@@ -4446,6 +4401,35 @@ document
         const immagine = document.getElementById("immagineDisposizionePubblicazioni");
         try {
           const dati = await chiamaApi("leggi_disposizione_pubblicazioni");
+          const defaults = {
+            page_title:"Disposizione delle pubblicazioni",
+            page_subtitle:"Configurazione da seguire nel periodo in corso",
+            intro_1:"Cari fratelli, questa sezione viene aggiornata regolarmente per indicare la disposizione attuale delle pubblicazioni per l'opera pubblica.",
+            intro_2:"La configurazione mostrata è quella da seguire nel periodo in corso. Controllate questa pagina di tanto in tanto, così da mantenere l'espositore sempre allineato alle indicazioni più recenti.",
+            blue_1:"Nei settori inserire l'opuscolo “Puoi vivere felice per sempre”, come da immagine.",
+            blue_2:"Il poster da esporre è “Corso biblico gratuito”.",
+            reminders_title:"✅ Ricordate di:",
+            reminder_1:"• consultare sempre l'immagine aggiornata;",
+            reminder_2:"• riprodurre la disposizione esattamente come mostrato;",
+            reminder_3:"• mantenere opuscoli ed espositore puliti e in ordine;",
+            reminder_4:"• verificare periodicamente eventuali modifiche.",
+            note:"📌 Nota importante: gli aggiornamenti possono essere frequenti. La disposizione visibile nella Mini App rappresenta la versione più recente da seguire."
+          };
+          const mapping = {
+            page_title:"dispPageTitle",page_subtitle:"dispPageSubtitle",
+            intro_1:"dispIntro1",intro_2:"dispIntro2",blue_1:"dispBlue1",blue_2:"dispBlue2",
+            reminders_title:"dispRemindersTitle",reminder_1:"dispReminder1",reminder_2:"dispReminder2",
+            reminder_3:"dispReminder3",reminder_4:"dispReminder4",note:"dispNote"
+          };
+          Object.entries(mapping).forEach(([key,id]) => {
+            const el=document.getElementById(id);
+            const value=Object.prototype.hasOwnProperty.call(dati.testi||{},key) ? dati.testi[key] : defaults[key];
+            el.textContent=typeof value==="string" ? value : "";
+            el.style.display=el.textContent.trim() ? "" : "none";
+          });
+          [["dispIntroBox",["dispIntro1","dispIntro2"]],["dispBlueBox",["dispBlue1","dispBlue2"]],["dispRemindersBox",["dispRemindersTitle","dispReminder1","dispReminder2","dispReminder3","dispReminder4"]],["dispNoteBox",["dispNote"]]].forEach(([box,ids])=>{
+            document.getElementById(box).style.display=ids.some(id=>document.getElementById(id).textContent.trim()) ? "" : "none";
+          });
           if (dati.configurata) {
             if (dati.is_deleted || !dati.image_url) {
               immagine.style.display = "none";
@@ -6518,26 +6502,46 @@ document
 
 
       async function apriGestioneDisposizioneAdmin() {
+        const campiTesto = [
+          ["page_title","Titolo della pagina"],
+          ["page_subtitle","Sottotitolo"],
+          ["intro_1","Testo introduttivo 1"],
+          ["intro_2","Testo introduttivo 2"],
+          ["blue_1","Testo riquadro blu 1"],
+          ["blue_2","Testo riquadro blu 2"],
+          ["reminders_title","Titolo delle raccomandazioni"],
+          ["reminder_1","Raccomandazione 1"],
+          ["reminder_2","Raccomandazione 2"],
+          ["reminder_3","Raccomandazione 3"],
+          ["reminder_4","Raccomandazione 4"],
+          ["note","Nota finale"]
+        ];
         document.querySelector(".content").innerHTML = `
           ${pulsanteIndietro("tornaAreaAdminDisposizione", "← Torna all’Area amministratori")}
           <div style="background:#fff8ed;border:1px solid #f0d9b8;border-radius:20px;padding:20px;margin-bottom:16px;">
             <h2 style="font-size:24px;margin:0 0 6px;">📚 Gestione disposizione pubblicazioni</h2>
-            <div style="color:#80694e;line-height:1.5;">Carica, sostituisci, elimina o ripristina l’immagine mostrata nella sezione pubblica.</div>
+            <div style="color:#80694e;line-height:1.5;">Modifica o cancella liberamente ogni testo della pagina pubblica. Lascia vuoto un campo per non mostrare quel contenuto.</div>
           </div>
           <div id="disposizioneAdminStato" role="status" style="display:none;padding:12px;border-radius:12px;margin-bottom:12px;"></div>
+          <div style="border:1px solid #d8e5f7;border-radius:16px;padding:14px;margin-bottom:16px;background:#f8fbff;">
+            <h3 style="margin:0 0 10px;">✏️ Testi della pagina pubblica</h3>
+            <div style="font-size:13px;color:#667085;margin-bottom:12px;">Puoi cancellare il contenuto di qualsiasi campo. I campi vuoti non verranno visualizzati.</div>
+            ${campiTesto.map(([id,label]) => `<label for="testoDisposizione_${id}" style="display:block;font-weight:750;margin:12px 0 5px;">${label}</label><textarea id="testoDisposizione_${id}" data-testo-disposizione="${id}" maxlength="2000" rows="2" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid #dfe5ef;border-radius:10px;font:inherit;resize:vertical;"></textarea>`).join("")}
+            <button id="disposizioneSalvaTesti" type="button" data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-top:14px;">💾 Salva i testi della pagina</button>
+          </div>
           <div style="border:1px solid #e1e7ef;border-radius:16px;padding:14px;margin-bottom:14px;background:#fff;">
-            <div style="font-weight:800;margin-bottom:8px;">Immagine attualmente pubblicata</div>
+            <h3 style="margin:0 0 10px;">🖼️ Immagine attualmente pubblicata</h3>
             <img id="disposizioneAdminCorrente" alt="Disposizione attuale" style="display:none;width:100%;border-radius:12px;margin-bottom:10px;">
             <div id="disposizioneAdminVuota" style="display:none;padding:18px;text-align:center;background:#f7f8fa;border-radius:12px;color:#667085;">Nessuna immagine attualmente pubblicata.</div>
-            <div style="font-weight:800;margin:14px 0 8px;">Anteprima della nuova immagine</div>
+            <div style="font-weight:800;margin:14px 0 8px;">Sostituisci immagine</div>
             <input id="disposizioneAdminFile" type="file" accept="image/jpeg,image/png" style="width:100%;margin-bottom:8px;">
-            <div style="font-size:12px;color:#667085;line-height:1.45;margin-bottom:10px;">JPEG o PNG, massimo 4 MB. L’immagine sarà visibile a tutti gli utenti della Mini App.</div>
+            <div style="font-size:12px;color:#667085;line-height:1.45;margin-bottom:10px;">JPEG o PNG, massimo 4 MB.</div>
             <img id="disposizioneAdminAnteprima" alt="Anteprima nuova immagine" style="display:none;width:100%;border-radius:12px;margin-bottom:12px;">
-            <button id="disposizioneAdminSalva" type="button" disabled data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-bottom:8px;">💾 Pubblica nuova disposizione</button>
-            <button id="disposizioneAdminElimina" type="button" data-no-scroll="true" style="width:100%;border:1px solid #f1caca;background:#fff5f5;color:#a33a3a;padding:12px;border-radius:12px;font-weight:800;margin-bottom:8px;">🗑️ Elimina disposizione attuale</button>
+            <button id="disposizioneAdminSalva" type="button" disabled data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-bottom:8px;">💾 Pubblica nuova immagine</button>
+            <button id="disposizioneAdminElimina" type="button" data-no-scroll="true" style="width:100%;border:1px solid #f1caca;background:#fff5f5;color:#a33a3a;padding:12px;border-radius:12px;font-weight:800;margin-bottom:8px;">🗑️ Elimina immagine attuale</button>
           </div>
           <div style="border:1px solid #d8e5f7;border-radius:16px;padding:14px;background:#f8fbff;margin-bottom:16px;">
-            <div style="font-weight:800;margin-bottom:8px;">Versione precedente</div>
+            <div style="font-weight:800;margin-bottom:8px;">Versione precedente dell’immagine</div>
             <img id="disposizioneAdminPrecedente" alt="Versione precedente" style="display:none;width:100%;border-radius:12px;margin-bottom:10px;">
             <div id="disposizioneAdminPrecedenteVuota" style="color:#667085;font-size:13px;">Non è disponibile una versione precedente.</div>
             <button id="disposizioneAdminRipristina" type="button" data-no-scroll="true" disabled style="width:100%;border:1px solid #b8d2ef;background:#eaf3ff;color:#245d98;padding:12px;border-radius:12px;font-weight:800;">↶ Ripristina versione precedente</button>
@@ -6566,8 +6570,28 @@ document
           stato.textContent = msg;
         }
 
+        async function salvaTesti() {
+          const pulsante=document.getElementById("disposizioneSalvaTesti");
+          pulsante.disabled=true;
+          try {
+            const testi={};
+            campiTesto.forEach(([id])=>testi[id]=document.getElementById("testoDisposizione_"+id).value);
+            await chiamaApi("salva_testi_disposizione_pubblicazioni_admin",{testi});
+            mostra("✅ Testi della pagina salvati. I campi vuoti non saranno mostrati.");
+          } catch(errore) {
+            mostra(errore.message || "Salvataggio dei testi non riuscito.",true);
+          } finally {
+            pulsante.disabled=false;
+          }
+        }
+
         async function caricaStato() {
           const dati = await chiamaApi("leggi_disposizione_pubblicazioni");
+          campiTesto.forEach(([id]) => {
+            const campo=document.getElementById("testoDisposizione_"+id);
+            campo.value=typeof dati.testi?.[id]==="string" ? dati.testi[id] : "";
+          });
+          document.getElementById("disposizioneSalvaTesti").onclick = salvaTesti;
           const urlAttuale = dati.configurata ? (dati.is_deleted ? null : dati.image_url) : "disposizione-pubblicazioni.png";
           if (urlAttuale) {
             corrente.src = urlAttuale;
