@@ -6531,22 +6531,13 @@ document
             <button id="disposizioneAdminSalva" type="button" disabled data-no-scroll="true" style="width:100%;border:0;background:#1768d7;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin-bottom:8px;">💾 Pubblica nuova immagine</button>
             <button id="disposizioneAdminElimina" type="button" data-no-scroll="true" style="width:100%;border:1px solid #f1caca;background:#fff5f5;color:#a33a3a;padding:12px;border-radius:12px;font-weight:800;margin-bottom:8px;">🗑️ Elimina immagine attuale</button>
           </div>
-          <div style="border:1px solid #d8e5f7;border-radius:16px;padding:14px;background:#f8fbff;margin-bottom:16px;">
-            <div style="font-weight:800;margin-bottom:8px;">Versione precedente dell’immagine</div>
-            <img id="disposizioneAdminPrecedente" alt="Versione precedente" style="display:none;width:100%;border-radius:12px;margin-bottom:10px;">
-            <div id="disposizioneAdminPrecedenteVuota" style="color:#667085;font-size:13px;">Non è disponibile una versione precedente.</div>
-            <button id="disposizioneAdminRipristina" type="button" data-no-scroll="true" disabled style="width:100%;border:1px solid #b8d2ef;background:#eaf3ff;color:#245d98;padding:12px;border-radius:12px;font-weight:800;">↶ Ripristina versione precedente</button>
-          </div>
-          ${pulsanteIndietroFondo("tornaAreaAdminDisposizioneFondo", "← Torna all’Area amministratori")}
+         ${pulsanteIndietroFondo("tornaAreaAdminDisposizioneFondo", "← Torna all’Area amministratori")}
         `;
         collegaRitornoDoppio("tornaAreaAdminDisposizione", "tornaAreaAdminDisposizioneFondo", "admin");
 
         const stato = document.getElementById("disposizioneAdminStato");
         const corrente = document.getElementById("disposizioneAdminCorrente");
         const vuota = document.getElementById("disposizioneAdminVuota");
-        const precedente = document.getElementById("disposizioneAdminPrecedente");
-        const precedenteVuota = document.getElementById("disposizioneAdminPrecedenteVuota");
-        const ripristina = document.getElementById("disposizioneAdminRipristina");
         const fileInput = document.getElementById("disposizioneAdminFile");
         const anteprima = document.getElementById("disposizioneAdminAnteprima");
         const salva = document.getElementById("disposizioneAdminSalva");
@@ -6592,17 +6583,6 @@ document
             corrente.removeAttribute("src");
             corrente.style.display = "none";
             vuota.style.display = "block";
-          }
-          if (dati.previous_image_url) {
-            precedente.src = dati.previous_image_url;
-            precedente.style.display = "block";
-            precedenteVuota.style.display = "none";
-            ripristina.disabled = false;
-          } else {
-            precedente.removeAttribute("src");
-            precedente.style.display = "none";
-            precedenteVuota.style.display = "block";
-            ripristina.disabled = true;
           }
           elimina.disabled = !urlAttuale || !dati.configurata;
           elimina.style.opacity = elimina.disabled ? "0.5" : "1";
@@ -6661,19 +6641,6 @@ document
             await caricaStato();
           } catch (errore) {
             mostra(errore.message || "Eliminazione non riuscita.", true);
-            await caricaStato();
-          }
-        });
-
-        ripristina.addEventListener("click", async () => {
-          if (!confirm("Ripristinare la versione precedente? L'immagine attualmente pubblicata verrà conservata come versione precedente.")) return;
-          ripristina.disabled = true;
-          try {
-            await chiamaApi("ripristina_disposizione_pubblicazioni_admin");
-            mostra("✅ Versione precedente ripristinata.");
-            await caricaStato();
-          } catch (errore) {
-            mostra(errore.message || "Ripristino non riuscito.", true);
             await caricaStato();
           }
         });
